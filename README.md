@@ -32,14 +32,14 @@ If you have installed Dory, access the application here:
 http://spider.intranet.docker
 ```
 
-Otherwise, you can access the applicaiton here:
+Otherwise, you can access the application here:
 
 ```
 http://localhost:8080/
 ```
 
 ### Create a mirror of a website
-A possible solution is to preconfigure website spider software to mirror the Intranet. Currently, we are using HTTrack (GUI) to achieve this. It would be advantageous to use the HTTrack CLI with preset values, in the interim, you can use the GIU to failiurise yourself with the functionality of HTTrack, this is how you do it.
+A possible solution is to preconfigure website spider software to mirror the Intranet. Currently, we are using HTTrack (GUI) to achieve this. It would be advantageous to use the HTTrack CLI with preset values, in the interim, you can use the GIU to failures yourself with the functionality of HTTrack, this is how you do it.
 
 #### HTTrack
 Once you have accessed the local server running HTTrack (http://spider.intranet.docker) you can begin to configure your mirror operation.
