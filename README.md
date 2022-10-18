@@ -16,7 +16,7 @@ The initial idea for this project is this is a scraping process, and the process
 Clone to your machine:
 
 ```
-git clone https://github.com/ministryofjustice/intranet-archive.git
+git clone https://github.com/ministryofjustice/intranet-archive.git && cd intranet-archive
 ```
 
 Start docker compose:
@@ -37,3 +37,19 @@ Otherwise, you can access the applicaiton here:
 ```
 http://localhost:8080/
 ```
+
+### Create a mirror of a website
+A possible solution is to preconfigure website spider software to mirror the Intranet. Currently, we are using HTTrack (GUI) to achieve this. It would be advantageous to use the HTTrack CLI with preset values, in the interim, you can use the GIU to failiurise yourself with the functionality of HTTrack, this is how you do it.
+
+#### HTTrack
+Once you have accessed the local server running HTTrack (http://spider.intranet.docker) you can begin to configure your mirror operation.
+
+**Docs**<br>
+Please find more about configurations here: https://www.httrack.com/html/shelldoc.html
+
+**Where has the website been copied to?**<br>
+Once your mirror operation has completed, the site files will be available in a directory called ***spider***, off the root of this application. For example;
+
+```
+./intranet-archive/spider/
+``` 
