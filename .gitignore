@@ -1,0 +1,7 @@
+# Environment
+.idea
+.DS*
+._DS*
+
+# Spider directory is ephemoral
+spider
