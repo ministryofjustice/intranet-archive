@@ -3,5 +3,7 @@
 .DS*
 ._DS*
 
+.env
+
 # Spider directory is ephemoral
 spider

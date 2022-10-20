@@ -1,8 +1,11 @@
 .PNONEY: run
 
 # Start the application
-run: dory
+run: env dory
 	docker compose up
+
+env:
+	if [[ ! -f ".env" ]]; then cp .env.example .env; fi
 
 # Bring docker compose down
 down:
