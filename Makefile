@@ -1,11 +1,14 @@
-.PNONEY: run
+default: launch
 
 # Start the application
 run: env dory
 	docker compose up
 
+up_daemon: env dory
+	docker compose up -d
+
 env:
-	if [[ ! -f ".env" ]]; then cp .env.example .env; fi
+	@if [[ ! -f ".env" ]]; then cp .env.example .env; fi
 
 # Bring docker compose down
 down:
@@ -13,7 +16,14 @@ down:
 
 # Start the Dory Proxy
 dory:
-	@chmod +x ./bin/dory-check.sh && ./bin/dory-check.sh
+	@chmod +x ./bin/dory-start.sh && ./bin/dory-start.sh
+
+s3sync:
+	@docker compose exec spider ./usr/sbin/s3fs-init.sh
+
+launch: up_daemon s3sync
+	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
+	@docker compose logs -f spider
 
 # Get inside the spider container
 shell:
