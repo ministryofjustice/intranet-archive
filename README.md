@@ -54,3 +54,30 @@ Once your mirror operation has completed, the site files will be available in a 
 ```
 ./intranet-archive/spider/
 ``` 
+
+## HTTrack Options & Configuration
+
+It will be necessary to set some options before copying a website. There are some configurations below to help with specific settings:
+
+#### Scan Rules
+
+```
+-*justice.gov.uk/agency-switcher* -*agency=* -*wp-json/oembed* -*justice.gov.uk/?p=* +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/*
+```
+#### Spider
+
+The Intranet will jot allow access to crawlers via the robots.txt file. Because of this we need to let HTTrack know that we wish to ignore this particular file. Do this via the Spider option, set it to:
+```
+no robots.txt rules
+```
+
+#### Cookies
+
+We can set cookies in HTTrack to help lock out specific agencies when archiving the site. An example of a cookies.txt file that is used to lock out HMCTS is below.
+
+```
+# HTTrack Website Copier Cookie File
+# This file format is compatible with Netscape cookies
+intranet.justice.gov.uk	TRUE	/	FALSE	1999999999	dw_agency	hmcts
+```
+
