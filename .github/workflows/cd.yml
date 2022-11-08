@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [[self-hosted, linux, ARM64], ubuntu-latest]
+        os: [self-hosted, linux, ARM64]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
