@@ -19,14 +19,14 @@ echo_c "$DIV" grey
 echo_c " AWS S3 Synchronisation Config" green
 echo_c "$DIV\n" grey
 
-echo_c " Granting S3FS access to S3 bucket '${AWS_S3_BUCKET}'...\n" yellow
-echo "${AWS_ACCESS_KEY}":"${AWS_SECRET_KEY}" >~/.passwd-s3fs
+echo_c " Granting S3FS access to S3 bucket '${S3_BUCKET_NAME}'...\n" yellow
+echo "${S3_ACCESS_KEY_ID}":"${S3_SECRET_ACCESS_KEY}" >~/.passwd-s3fs
 echo_c " Done.\n\n" green
 
 chmod 600 ~/.passwd-s3fs
 
 echo_c " Starting S3FS...\n" yellow
-s3fs "${AWS_S3_BUCKET}" ~/websites -o passwd_file=/root/.passwd-s3fs -o nonempty
+s3fs "${S3_BUCKET_NAME}" ~/websites -o passwd_file=/root/.passwd-s3fs -o nonempty
 echo_c " Done.\n" green
 
 echo_c "$DIV" grey

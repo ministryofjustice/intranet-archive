@@ -1,10 +1,17 @@
-# MoJ Intranet Archive
+# <img alt="MoJ logo" src="https://www.gov.uk/assets/collections/govuk_publishing_components/crests/org_crest_18px-7026afebba9918a0830ebf68cf496cbb0b81f3514b884dc2c32904780baa3368.png" width="30">&nbsp; Intranet Archive
+
+[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=for-the-badge&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fintranet-archive)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#intranet-archive)
+
 
 ```diff
 - WIP; a simple application for generating snapshots of the MoJ Intranet 
 ```
 
-The initial idea for this project is this is a scraping process, and the process fires up when needed, takes a snapshot of intranet, stores the result in an S3 bucket and then closes down, until next time.
+The initial idea for this project is; this application is a scraping process, and the process fires up when needed, takes a snapshot of intranet, stores the result in an S3 bucket and then closes down, until next time.
+
+### Current state
+
+A GUI is presented to configure scrape rules.
 
 ## Requires
 

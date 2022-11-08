@@ -1,5 +1,7 @@
 default: launch
 
+IMAGE := ministryofjustice/intranet-archive
+
 # Start the application
 run: env dory
 	docker compose up
@@ -25,6 +27,8 @@ launch: up_daemon s3sync
 	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
 	@docker compose logs -f spider
 
+image: Dockerfile Makefile
+	docker build -t $(IMAGE) .
 # Get inside the spider container
 shell:
 	docker compose exec spider /bin/sh
