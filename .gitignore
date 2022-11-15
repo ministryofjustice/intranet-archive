@@ -7,3 +7,6 @@
 
 # Spider directory is ephemoral
 spider
+
+node_modules
+dist

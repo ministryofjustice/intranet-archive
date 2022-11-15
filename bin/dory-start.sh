@@ -38,3 +38,5 @@ if [[ -z "$DORY_RUNNING" ]]; then
     done
   fi
 fi
+
+echo "All good here!" | indent

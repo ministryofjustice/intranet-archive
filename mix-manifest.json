@@ -1,0 +1,23 @@
+{
+    "/dist/assets/js/app.js": "/dist/assets/js/app.js",
+    "/dist/assets/js/base.js": "/dist/assets/js/base.js",
+    "/dist/assets/css/app.css": "/dist/assets/css/app.css",
+    "/dist/404.html": "/dist/404.html",
+    "/dist/50x.html": "/dist/50x.html",
+    "/dist/index.html": "/dist/index.html",
+    "/dist/judiciary-icon.png": "/dist/judiciary-icon.png",
+    "/dist/assets/images/favicon.ico": "/dist/assets/images/favicon.ico",
+    "/dist/assets/images/govuk-apple-touch-icon-152x152.png": "/dist/assets/images/govuk-apple-touch-icon-152x152.png",
+    "/dist/assets/images/govuk-apple-touch-icon-167x167.png": "/dist/assets/images/govuk-apple-touch-icon-167x167.png",
+    "/dist/assets/images/govuk-apple-touch-icon-180x180.png": "/dist/assets/images/govuk-apple-touch-icon-180x180.png",
+    "/dist/assets/images/govuk-apple-touch-icon.png": "/dist/assets/images/govuk-apple-touch-icon.png",
+    "/dist/assets/images/govuk-crest-2x.png": "/dist/assets/images/govuk-crest-2x.png",
+    "/dist/assets/images/govuk-crest.png": "/dist/assets/images/govuk-crest.png",
+    "/dist/assets/images/govuk-logotype-crown.png": "/dist/assets/images/govuk-logotype-crown.png",
+    "/dist/assets/images/govuk-mask-icon.svg": "/dist/assets/images/govuk-mask-icon.svg",
+    "/dist/assets/images/govuk-opengraph-image.png": "/dist/assets/images/govuk-opengraph-image.png",
+    "/dist/assets/fonts/bold-affa96571d-v2.woff": "/dist/assets/fonts/bold-affa96571d-v2.woff",
+    "/dist/assets/fonts/bold-b542beb274-v2.woff2": "/dist/assets/fonts/bold-b542beb274-v2.woff2",
+    "/dist/assets/fonts/light-94a07e06a1-v2.woff2": "/dist/assets/fonts/light-94a07e06a1-v2.woff2",
+    "/dist/assets/fonts/light-f591b13f7d-v2.woff": "/dist/assets/fonts/light-f591b13f7d-v2.woff"
+}

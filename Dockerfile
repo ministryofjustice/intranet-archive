@@ -1,11 +1,18 @@
-FROM ministryofjustice/intranet-archive-base
+FROM nginxinc/nginx-unprivileged
 
-## Most of the setup heavy lifting and configuration is present in the image above.
-## Fine tune the application below.
+USER root
 
-ADD init /root
+RUN apt-get update && apt-get install -y s3fs httrack
 
-RUN mv root/s3fs-init.sh /usr/sbin/s3fs-init.sh && \
-    chmod +x /usr/sbin/s3fs-init.sh
+ARG user=archiver
+ARG uid=102
+RUN addgroup --system --gid ${uid} ${user} && \
+    adduser --system --disabled-login --ingroup ${user} --home /${user} --gecos "${user} user" --shell /bin/bash --uid ${uid} ${user} && \
+    usermod -a -G ${user} nginx && \
+    chmod -c g+w /archiver
 
+USER nginx
 
+COPY dist/ /usr/share/nginx/html
+COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
+COPY conf/s3fs-init.sh /docker-entrypoint.d/

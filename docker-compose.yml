@@ -13,9 +13,7 @@ services:
     devices:
       - /dev/fuse
     volumes:
-      - ./spider:/root/websites
-      - ~/.aws:/root/.aws
+      - ./dist/:/usr/share/nginx/html
+      - ./snapshots:/archiver/snapshots
     ports:
       - "8080:8080"
-    restart: unless-stopped
-

@@ -1,0 +1,40 @@
+$govuk-new-link-styles: true;
+$govuk-global-styles: true;
+
+@import "node_modules/govuk-frontend/govuk/all";
+
+.cjss {
+    &__logos {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding-bottom: 25px;
+
+        img {
+            max-height: 100px;
+            margin-right: 25px;
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            // bold logo 'appears' larger than others...
+            // offset height slightly, and centre with top margin
+            &.npcc {
+                max-height: 86px;
+                margin-top: 7px;
+            }
+        }
+    }
+
+    #cjsData {
+        iframe {
+            max-width:2250px;
+            overflow: hidden;
+        }
+    }
+}
+
+.govuk-width-container {
+    max-width: 1225px;
+}
