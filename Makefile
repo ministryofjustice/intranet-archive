@@ -34,7 +34,7 @@ launch: build
 	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
 	@docker compose logs -f spider
 
-image: Dockerfile Makefile
+image: Dockerfile Makefile build-prod
 	docker build -t $(IMAGE) .
 # Get inside the spider container
 shell:
