@@ -36,6 +36,7 @@ launch: build
 
 image: Dockerfile Makefile build-prod
 	docker build -t $(IMAGE) .
+
 # Get inside the spider container
 shell:
 	docker compose exec spider /bin/bash

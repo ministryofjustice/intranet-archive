@@ -11,7 +11,24 @@ const mix_ = require('laravel-mix');
  |
  */
 
-mix_.js('src/resources/app.js', 'dist/assets/js')
+mix_.webpackConfig({
+    resolve: {
+        fallback: {
+            "zlib": require.resolve("browserify-zlib"),
+            "path": require.resolve("path"),
+            "crypto": require.resolve("crypto-browserify"),
+            "stream": require.resolve("stream-browserify"),
+            "http": require.resolve("stream-http"),
+            "fs": false,
+            "net": false,
+            "async_hooks": false
+        }
+    },
+    externals: {
+        "express": "require('express')"
+    }
+})
+    .js('src/resources/app.js', 'dist/assets/js')
     .js('src/resources/base', 'dist/assets/js')
     .sass('src/resources/app.scss', 'dist/assets/css')
     .copy('src/*.html', 'dist')

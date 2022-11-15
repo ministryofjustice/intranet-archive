@@ -16,3 +16,4 @@ USER nginx
 COPY dist/ /usr/share/nginx/html
 COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
 COPY conf/s3fs-init.sh /docker-entrypoint.d/
+COPY conf/start-node.sh /docker-entrypoint.d/
