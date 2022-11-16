@@ -11,3 +11,4 @@ snapshots
 
 node_modules
 dist
+mix-manifest.json

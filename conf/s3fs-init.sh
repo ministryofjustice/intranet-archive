@@ -21,6 +21,7 @@ echo_c "$DIV\n" grey
 
 echo_c " Adding S3FS mount point...\n" yellow
 mkdir -p /archiver/snapshots
+chown archiver:archiver /archiver/snapshots
 echo_c " Done.\n\n" green
 
 echo_c " Granting S3FS access to S3 bucket '${S3_BUCKET_NAME}'...\n" yellow
@@ -34,3 +35,4 @@ s3fs "${S3_BUCKET_NAME}" /archiver/snapshots -o passwd_file=/archiver/.passwd-s3
 echo_c " Done.\n" green
 
 echo_c "$DIV" grey
+

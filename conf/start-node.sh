@@ -1,3 +1,4 @@
 #!/bin/bash
 
-node bin/process-request.js
+nohup node /usr/local/bin/process.js &
+

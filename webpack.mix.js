@@ -30,8 +30,6 @@ mix_.webpackConfig({
 })
     .js('src/resources/app.js', 'dist/assets/js')
     .js('src/resources/base', 'dist/assets/js')
-    .sass('src/resources/app.scss', 'dist/assets/css')
     .copy('src/*.html', 'dist')
-    .copy('src/resources/judiciary-icon.png', 'dist/judiciary-icon.png')
-    .copy('node_modules/govuk-frontend/govuk/assets/images', 'dist/assets/images')
-    .copy('node_modules/govuk-frontend/govuk/assets/fonts', 'dist/assets/fonts');
+    .copy('src/resources/working.png', 'dist/working.png')
+    .copy('src/resources/judiciary-icon.png', 'dist/judiciary-icon.png');

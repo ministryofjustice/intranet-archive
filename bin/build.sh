@@ -12,6 +12,13 @@ if [[ -d "./dist" ]]; then
   rm -r ./dist ./mix-manifest.json ./package-lock.json
 fi
 
+
 npm install
 npm run $MIX_RUNNER
+
+### Node server
+echo -e "${DOTS} ${DOTS} Grabbing dependencies for node... ${DOTS}\n"
+
+cd ./conf/node/
+npm install
 

@@ -1,0 +1,53 @@
+<! DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Intranet Archiver / Working - MoJ Digital</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+<style>
+    html {
+        height: 100%;
+    }
+
+    body {
+        height: 100%;
+    }
+
+    .global-container {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #9f9f9f;
+    }
+
+    .card-title {
+        font-weight: 300;
+    }
+
+    .snapshot-form {
+        width: 330px;
+        margin: 20px;
+    }
+</style>
+<body>
+<div class="global-container">
+    <div class="card snapshot-form">
+        <div class="card-body">
+            <h1 class="card-title text-center">
+                <img alt="MoJ logo" src="http://spider.intranet.docker/judiciary-icon.png" width="100">
+            </h1>
+            <h2 class="card-title text-center"> Intranet Archiver </h2>
+            <div class="card-text text-center mt-3">
+                <img alt="The operation was successful" src="http://spider.intranet.docker/working.png" width="90">
+                <br>
+                <br>
+                Your request was received successfully and the results of the scrape are being sent the configured S3
+                bucket.
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
