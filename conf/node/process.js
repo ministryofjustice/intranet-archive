@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/*********************************
- * Intranet Archive - processing
- */
+
+/*************************************
+ * Intranet Archive - post processing
+ *****/
 
 const express = require('express');
 const path = require('path');
@@ -42,7 +43,8 @@ async function launchScrape (body) {
         '+*.png', '+*.gif', '+*.jpg', '+*.jpeg', '+*.css', '+*.js', '-ad.doubleclick.net/*',
         '-*intranet.justice.gov.uk/agency-switcher/',
         '-*intranet.justice.gov.uk/?*agency=*',
-        '-*intranet.justice.gov.uk/?p=*'
+        '-*intranet.justice.gov.uk/?p=*',
+        '-*intranet.justice.gov.uk/wp-json/*/embed*'
     ];
 
     directory = directory + url.host;
@@ -62,9 +64,6 @@ async function launchScrape (body) {
         directory,
         '--verbose'
     ];
-
-    console.log(options.concat(settings));
-    console.log('--------------');
 
     const listener = spawn('httrack', options.concat(settings));
 
