@@ -8,12 +8,7 @@ services:
     environment:
       VIRTUAL_HOST: spider.intranet.docker
       VIRTUAL_PORT: "8080"
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
     volumes:
-      - ./dist/:/usr/share/nginx/html
       - ./snapshots:/archiver/snapshots
     ports:
       - "8080:8080"
