@@ -16,4 +16,8 @@ docker compose exec spider /usr/sbin/s3fs-init.sh
 # launch in browser
 echo -e "${DOTS} ${DOTS} Launching your default browser... ${DOTS}\n"
 sleep 2
-python -m webbrowser http://spider.intranet.docker
+
+if command -v python &> /dev/null
+then
+  python -m webbrowser http://spider.intranet.docker
+fi
