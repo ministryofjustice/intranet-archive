@@ -32,14 +32,29 @@ async function launchScrape (body) {
 
     const { spawn } = require('child_process');
 
-    let url = body.url || 'https://intranet.justice.gov.uk/';
-    let agency = body.agency || '';
+    let url = {
+        parts: new URL(body.url || 'https://intranet.justice.gov.uk/'),
+        httrack: ''
+    };
+
+    let agency = body.agency || false;
     let directory = '/archiver/snapshots/';
 
-    url = new URL(url);
+    directory = directory + url.parts.host;
+    mkDir(directory);
+
+    // assign default URL
+    url.httrack = url.parts.origin;
+    if (agency) {
+        directory = directory + '/' + agency + '/';
+        mkDir(directory);
+
+        // prepare intranet URL
+        url.httrack = url.httrack + '/?agency=' + agency
+    }
 
     let options = [
-        url.origin,
+        url.httrack,
         '+*.png', '+*.gif', '+*.jpg', '+*.jpeg', '+*.css', '+*.js', '-ad.doubleclick.net/*',
         '-*intranet.justice.gov.uk/agency-switcher/',
         '-*intranet.justice.gov.uk/?*agency=*',
@@ -47,16 +62,9 @@ async function launchScrape (body) {
         '-*intranet.justice.gov.uk/wp-json/*/embed*'
     ];
 
-    directory = directory + url.host;
-    mkDir(directory);
-
     if (agency) {
         options.push('+*intranet.justice.gov.uk/?*agency=' + agency);
-        directory = directory + '/' + agency + '/';
-        mkDir(directory);
     }
-
-    console.log(directory);
 
     let settings = [
         '-s0',
