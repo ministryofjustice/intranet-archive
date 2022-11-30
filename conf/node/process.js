@@ -59,7 +59,8 @@ async function launchScrape (body) {
         '-*intranet.justice.gov.uk/agency-switcher/',
         '-*intranet.justice.gov.uk/?*agency=*',
         '-*intranet.justice.gov.uk/?p=*',
-        '-*intranet.justice.gov.uk/wp-json/*/embed*'
+        '-*intranet.justice.gov.uk/wp-json/*/embed*',
+        '-*intranet.justice.gov.uk/wp/*'
     ];
 
     if (agency) {
@@ -68,9 +69,10 @@ async function launchScrape (body) {
 
     let settings = [
         '-s0',
+        '-V',
+        '"sed -i \'s/srcset="[^"]*"//g\' \$0"',
         '-O',
-        directory,
-        '--verbose'
+        directory
     ];
 
     const listener = spawn('httrack', options.concat(settings));
