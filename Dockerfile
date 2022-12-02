@@ -17,7 +17,7 @@ RUN addgroup --gid ${uid} ${user} && \
     echo "${user}" > /usr/lib/cron/cron.allow && \
     echo "${user}" > /etc/cron.allow
 
-COPY dist/ /usr/share/nginx/html
+COPY src/ /usr/share/nginx/html
 COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
 COPY conf/entrypoint/ /docker-entrypoint.d
 COPY conf/s3-sync.sh /usr/bin/s3sync

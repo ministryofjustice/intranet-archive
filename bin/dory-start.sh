@@ -19,7 +19,7 @@ if [[ -z "$DORY_RUNNING" ]]; then
   else
     printf "\nThe Dory Proxy is used in this project. You may install it using homebrew.\n\n"
     while true; do
-      read -r -p "$(echo -e "${GREEN}Would you like to install Dory using homebrew now? ${NC}" | indent)" yn
+      read -r -p "$(echo -e "${GREEN}Would you like me to install Dory using homebrew now? ${NC}" | indent)" yn
       case $yn in
       [Yy]*)
         echo -e "\nRunning ${YELLOW}brew install dory${NC}. This may take a few minutes...\n" | indent
@@ -30,7 +30,7 @@ if [[ -z "$DORY_RUNNING" ]]; then
         break
         ;;
       [Nn]*)
-        echo -e "\n${YELLOW}Shame${NC}. Continuing without Dory...\n\n"
+        echo -e "\n${YELLOW}No problem${NC}. Continuing without Dory...\n\n"
         break
         ;;
       *) echo "Please answer yes or no." | indent ;;
