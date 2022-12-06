@@ -19,7 +19,7 @@ jobs:
       - name: Build
         run: make image
 
-      - name: Push to ECR (CP)
+      - name: Push to ECR
         id: ecr
         uses: jwalton/gh-ecr-push@v1.3.3
         with:
@@ -28,17 +28,6 @@ jobs:
           region: eu-west-2
           local-image: ministryofjustice/intranet-archive
           image: ${{ secrets.ECR_NAME }}:${{ github.sha }}, ${{ secrets.ECR_NAME }}:dev.latest
-
-
-      - name: Push to ECR (TP)
-        id: ecr
-        uses: jwalton/gh-ecr-push@v1.3.3
-        with:
-          access-key-id: ${{ secrets.TP_ECR_AWS_ACCESS_KEY_ID }}
-          secret-access-key: ${{ secrets.TP_ECR_AWS_SECRET_ACCESS_KEY }}
-          region: eu-west-2
-          local-image: ministryofjustice/intranet-archive
-          image: ${{ secrets.TP_ECR_NAME }}:${{ github.sha }}, ${{ secrets.TP_ECR_NAME }}:latest
 
   deploy-dev:
     runs-on: ubuntu-latest
