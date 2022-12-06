@@ -55,6 +55,7 @@ async function spider (body) {
         '-*intranet.justice.gov.uk/agency-switcher/',
         '-*intranet.justice.gov.uk/?*agency=*',
         '-*intranet.justice.gov.uk/?p=*',
+        '-*intranet.justice.gov.uk/?page_id=*',
         '-*intranet.justice.gov.uk/wp-json/*/embed*',
         '-*intranet.justice.gov.uk/wp/*',
         '+*intranet.justice.gov.uk/?*agency=' + mirror.agency
