@@ -47,6 +47,8 @@ async function spider (body) {
     mkdir(directory);
 
     options = [
+        '-%W',
+        '/archiver/strip_x_amz_query_param.so',
         mirror.url.origin + '/?agency=' + mirror.agency
     ];
 
@@ -65,6 +67,7 @@ async function spider (body) {
         '-s0', // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
         '-V', // execute system command after each file: https://www.mankier.com/1/httrack#-V
         '"sed -i \'s/srcset="[^"]*"//g\' \$0"',
+        '-%k', // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
         '-O', // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
         directory
     ];

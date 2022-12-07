@@ -2,7 +2,7 @@ FROM nginxinc/nginx-unprivileged
 
 USER root
 
-RUN apt-get update && apt-get -y install -qq httrack nodejs npm pip cron
+RUN apt-get update && apt-get -y install -qq libhttrack-dev httrack nodejs npm pip cron
 RUN pip install awscli
 
 ## nginx user uid=101
@@ -21,10 +21,14 @@ COPY src/ /usr/share/nginx/html
 COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
 COPY conf/entrypoint/ /docker-entrypoint.d
 COPY conf/s3-sync.sh /usr/bin/s3sync
+COPY conf/httrack /usr/local/bin/httrack
 
 ## -> make init scripts executable
 RUN chmod -R +x /docker-entrypoint.d/ && \
     chmod +x /usr/bin/s3sync
+
+## -> load in httrack configuration
+RUN gcc -shared -o /archiver/strip_x_amz_query_param.so -fPIC -I/usr/include/httrack /usr/local/bin/httrack/strip_x_amz_query_param.c
 
 ## -> set up user to access the cron
 RUN echo "*/10 * * * * /usr/bin/s3-sync >> /archiver/cron.log 2>&1" >> /etc/cron.d/s3-sync-cron && \
