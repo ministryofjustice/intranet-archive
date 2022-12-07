@@ -22,10 +22,12 @@ static int my_link_detected(t_hts_callbackarg *carg, httrackp* opt, char* link, 
 		++query; // skip the separator
 		if (*query == '\0')
 			break;
-		if (strncmp(query, "X-Amz-Algorithm=", 16) == 0 || strncmp(query, "amp;X-Amz-Algorithm=", 20) == 0)
+
+		if (strncmp(query, "X-Amz-Algorithm=", 16) == 0 || strncmp(query, "amp;X-Amz-Algorithm=", 20) == 0 || strncmp(query, "#038;X-Amz-Algorithm=", 21) == 0)
 		{
 			char* tgt = query;
 			char* src = strchr(query, '&');
+
 			if (src != NULL)
 			{
 				++src; // skip the separator
