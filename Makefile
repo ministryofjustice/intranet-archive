@@ -24,17 +24,14 @@ s3sync:
 	@docker compose exec spider /usr/sbin/s3fs-init.sh
 
 build:
-	bin/build.sh development
-
-build-prod:
-	bin/build.sh production
+	bin/build.sh
 
 launch: build
 	@bin/launch.sh
 	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
 	@docker compose logs -f spider
 
-image: Dockerfile Makefile build-prod
+image: Dockerfile Makefile build
 	docker build -t $(IMAGE) .
 
 # Get inside the spider container

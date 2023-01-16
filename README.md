@@ -148,3 +148,22 @@ options used to set HTTrack up.
 
 To understand the build process further, please look at the Makefile.
 
+## Caveats
+
+The Archiver currently runs an unprivileged image on Cloud Platform that isn't yet confgiured to run CRON jobs. This has meant that an automated script to synchronise a snapshot with the configured S3 bucket fails to run. In order to get the content from our application to S3, the command `s3sync` needs to be executed on the pod that is running the snapshot process.
+
+It may be possible to 
+[interact with running pods with help from this cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods).
+Please be aware that with every call to the CP k8s cluster, you will need to provide the namespace, as shown below:
+
+```bash
+kubectl -n intranet-archive-dev
+```
+
+##Other useful commands
+
+```bash
+kubectl -n intranet-archive-dev get pods 
+kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snapshots/intranet.justice.gov.uk/<agency>/hts-log.txt ~/hts-log.txt
+
+```
