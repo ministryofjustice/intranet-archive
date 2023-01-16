@@ -160,7 +160,7 @@ Please be aware that with every call to the CP k8s cluster, you will need to pro
 kubectl -n intranet-archive-dev
 ```
 
-##Other useful commands
+## Other useful commands
 
 ```bash
 kubectl -n intranet-archive-dev get pods 
