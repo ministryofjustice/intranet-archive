@@ -40,7 +40,10 @@ async function spider (body) {
         url: new URL(body.url || 'https://intranet.justice.gov.uk/'),
         agency: body.agency || 'hq'
     }
-    const directory = '/archiver/snapshots/' + mirror.url.host + '/' + mirror.agency;
+    let directory = '/archiver/snapshots/' + mirror.url.host + '/' + mirror.agency;
+
+    // append date, like: 2023-01-17
+    directory +='/' + (new Date().toISOString().slice(0, 10));
 
     let options, rules, settings;
 
