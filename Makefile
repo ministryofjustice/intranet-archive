@@ -20,8 +20,8 @@ down:
 dory:
 	@chmod +x ./bin/dory-start.sh && ./bin/dory-start.sh
 
-s3sync:
-	@docker compose exec spider /usr/sbin/s3fs-init.sh
+sync:
+	@docker compose exec spider s3sync
 
 build:
 	bin/build.sh
