@@ -20,7 +20,7 @@ Access is granted to the snapshot if, you:
 2) Have your IP address validated and added to our allow-list, and
 3) Are in possession of our basic-auth credentials
 
-Access point: https://dni5o46b2208p.cloudfront.net/<intranet-address>/<agency>
+Access point: https://dni5o46b2208p.cloudfront.net/[intranet-address]/[agency]
 
 Please get in touch with the [Intranet team on Slack](https://mojdt.slack.com/archives/C03QE40GVA6) for further 
 information.
