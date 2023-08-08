@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'main'
+      - 'CDPT-768-temp-creds-aws'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
