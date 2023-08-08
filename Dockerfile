@@ -2,8 +2,8 @@ FROM nginxinc/nginx-unprivileged
 
 USER root
 
-RUN apt-get update && apt-get -y install -qq libhttrack-dev httrack nodejs npm pip cron
-RUN pip install awscli
+RUN apt-get update && apt-get -y install -qq libhttrack-dev httrack nodejs npm pipx cron
+RUN pipx install awscli
 
 ## nginx user uid=101
 COPY --chown=101:101 conf/node /usr/local/bin
