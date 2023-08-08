@@ -13,21 +13,33 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read  # This is required for actions/checkout
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      # Assume role in Cloud Platform
+      - name: Assume role in Cloud Platform
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.ECR_REGION }}
+      
+      # Login to container repository
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        id: login-ecr
+
       - name: Build
-        run: make image
+        run: docker build -t ${{ vars.ECR_URL }}:${{ github.sha }} -t ${{ vars.ECR_URL }}:dev.latest .
 
       - name: Push to ECR
         id: ecr
-        uses: jwalton/gh-ecr-push@v1.3.3
-        with:
-          access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-          secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-          region: eu-west-2
-          local-image: ministryofjustice/intranet-archive
-          image: ${{ secrets.ECR_NAME }}:${{ github.sha }}, ${{ secrets.ECR_NAME }}:dev.latest
+        run:  docker push ${{ vars.ECR_URL }} --all-tags
 
   deploy-dev:
     runs-on: ubuntu-latest
@@ -38,10 +50,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Update image tag
         env:
-          ECR_URL: ${{ secrets.ECR_URL }}
+          ECR_URL: ${{ vars.ECR_URL }}
         run: export IMAGE_TAG=${{ github.sha }} && cat kubectl_deploy/development/deployment.tpl | envsubst > kubectl_deploy/development/deployment.yaml
       - name: Authenticate to the cluster
         env:

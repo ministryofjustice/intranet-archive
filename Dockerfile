@@ -2,8 +2,32 @@ FROM nginxinc/nginx-unprivileged
 
 USER root
 
-RUN apt-get update && apt-get -y install -qq libhttrack-dev httrack nodejs npm pip cron
-RUN pip install awscli
+RUN apt-get update && apt-get -y install -qq libhttrack-dev httrack nodejs npm cron unzip curl
+
+# Get AWS CLI V2
+RUN set -eux; \
+    \
+	dpkgArch="$(dpkg --print-architecture)"; \
+	case "${dpkgArch##*-}" in \
+		amd64) arch='x86_64' ;; \
+		armhf) arch='aarch64' ;; \
+		arm64) arch='aarch64' ;; \
+		*) arch='unimplemented' ; \
+			echo >&2; echo >&2 "warning: current architecture ($dpkgArch) does not have a corresponding binary release."; echo >&2 ;; \
+	esac; \
+    \
+    if [ "$arch" = 'unimplemented' ]; then \
+        echo >&2; \
+        echo >&2 'error: UNIMPLEMENTED'; \
+        echo >&2 'TODO install awscli'; \
+        echo >&2; \
+        exit 1; \
+    fi; \
+    \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-${arch}.zip" -o "awscli.zip"; \
+    unzip awscli.zip; \
+    ./aws/install; \
+    rm awscli.zip;
 
 ## nginx user uid=101
 COPY --chown=101:101 conf/node /usr/local/bin
@@ -37,5 +61,7 @@ RUN echo "*/10 * * * * /usr/bin/s3-sync >> /archiver/cron.log 2>&1" >> /etc/cron
 
 RUN touch /${user}/cron.log && \
     chmod 644 /${user}/cron.log
+
+RUN apt remove -y unzip curl
 
 USER ${uid}
