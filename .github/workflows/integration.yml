@@ -1,0 +1,28 @@
+name: Deploy to MoJ Cloud Platform
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: "Image"
+    if: github.event.ref == 'refs/heads/main'
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+
+  deploy_dev:
+    name: "Development"
+    if: github.event.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    needs: [image]
+    with:
+      environment: development
+      registry: ${{ needs.image.outputs.registry }}
+    secrets: inherit
