@@ -21,6 +21,13 @@ spec:
       containers:
       - name: intranet-archive
         image: ${ECR_URL}:${IMAGE_TAG}
+        resources:
+          limits:
+            cpu: 500m
+            memory: 250Mi
+          requests:
+            cpu: 500m
+            memory: 250Mi
         ports:
         - containerPort: 8080
         env:

@@ -37,3 +37,20 @@ image: Dockerfile Makefile build
 # Get inside the spider container
 shell:
 	docker compose exec spider /bin/bash
+
+# The following key-gen-* commands are for CloudFront RSA key generation/management.
+key-gen-private:
+	@openssl genrsa -out /tmp/private_key.pem 2048 && pbcopy < /tmp/private_key.pem
+	@echo "Private key copied to clipboard - paste it into GitHub secrets"
+	@echo "Use the name AWS_CLOUDFRONT_PRIVATE_KEY_A or AWS_CLOUDFRONT_PRIVATE_KEY_B"
+	@echo "Then run 'make key-gen-public'"
+
+key-gen-public:
+	@openssl rsa -in /tmp/private_key.pem -pubout -out /tmp/public_key.pem && pbcopy < /tmp/public_key.pem
+	@echo "Public key copied to clipboard - paste it into GitHub secrets"
+	@echo "Use the name AWS_CLOUDFRONT_PUBLIC_KEY_A or AWS_CLOUDFRONT_PUBLIC_KEY_B"
+	@echo "Then run 'make key-gen-clean'"
+
+key-gen-clean:
+	@rm /tmp/private_key.pem /tmp/public_key.pem && echo "" | pbcopy
+	@echo "Keys removed from /tmp"
