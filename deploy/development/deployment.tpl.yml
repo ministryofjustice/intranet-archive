@@ -36,16 +36,6 @@ spec:
               secretKeyRef:
                 name: s3-bucket-output
                 key: bucket_name
-          - name: S3_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                name: s3-bucket-output
-                key: access_key_id
-          - name: S3_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                name: s3-bucket-output
-                key: secret_access_key
         envFrom:
           - secretRef:
               name: ${KUBE_NAMESPACE}-secrets
