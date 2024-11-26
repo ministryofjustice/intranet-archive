@@ -95,6 +95,10 @@ async function spider(body) {
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
     '"sed -i \'s/srcset="[^"]*"//g\' $0"',
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
+    "-F",
+    "intranet-archive",
+    "-%X",
+    `X-Access-Token: ${process.env.ACCESS_TOKEN}`,
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     directory,
   ];
