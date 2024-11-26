@@ -1,3 +1,4 @@
 *
 !conf
+conf/node/node_modules
 !src
