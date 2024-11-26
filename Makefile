@@ -23,10 +23,7 @@ dory:
 sync:
 	@docker compose exec spider s3sync
 
-build:
-	bin/build.sh
-
-launch: build
+launch:
 	@bin/launch.sh
 	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
 	@docker compose logs -f spider
