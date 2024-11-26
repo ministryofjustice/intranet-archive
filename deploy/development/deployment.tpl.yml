@@ -46,6 +46,9 @@ spec:
               secretKeyRef:
                 name: s3-bucket-output
                 key: secret_access_key
+        envFrom:
+          - secretRef:
+              name: ${KUBE_NAMESPACE}-secrets
         readinessProbe:
           httpGet:
             path: /health

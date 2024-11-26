@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: intranet-archive-dev-ingress
-  namespace: intranet-archive-dev
   annotations:
     external-dns.alpha.kubernetes.io/set-identifier: intranet-archive-dev-ingress-intranet-archive-dev-green
     external-dns.alpha.kubernetes.io/aws-weight: "100"
@@ -26,6 +25,7 @@ spec:
   tls:
   - hosts:
     - app.archive.dev.intranet.justice.gov.uk
+    secretName: intranet-archive-dev-cert-secret
   rules:
   - host: app.archive.dev.intranet.justice.gov.uk
     http:
