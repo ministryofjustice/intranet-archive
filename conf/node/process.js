@@ -16,6 +16,23 @@ const express = require("express");
 const app = express();
 const port = 2000;
 
+const defaultUrl = "https://intranet.justice.gov.uk/";
+const defaultAgency = "hq";
+
+const allowedTargetHosts = [
+  "intranet.docker",
+  "intranet.justice.gov.uk",
+  "dev.intranet.justice.gov.uk",
+  "staging.intranet.justice.gov.uk",
+  "demo.intranet.justice.gov.uk",
+];
+
+const allowedTargetAgencies = process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+
+/**
+ * Middleware
+ */
+
 app.use(express.static("/usr/share/nginx/html"));
 
 // Middleware to parse incoming POST requests
@@ -31,12 +48,101 @@ app.use(
   }),
 );
 
-app.post("/spider", async function (request, response, next) {
+// Middleware to validate the url and agency
+app.use((request, response, next) => {
+  // If get request, return next
+  if (request.method !== "POST") {
+    return next();
+  }
+
+  try {
+    request.mirror = {
+      url: new URL(request.body.url || defaultUrl),
+      agency: request.body.agency || defaultAgency,
+    };
+
+    if (!allowedTargetHosts.includes(request.mirror.url.host)) {
+      throw new Error("Host not allowed");
+    }
+
+    if (!allowedTargetAgencies.includes(request.mirror.agency)) {
+      throw new Error("Agency not allowed");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    response.status(400).send({ status: 400 });
+    return;
+  }
+
+  next();
+});
+
+/**
+ * Endpoints
+ */
+
+app.post("/fetch-test", async function (request, response) {
+  // Fetch the url and log the result.
+  const { status } = await fetch(request.mirror.url, {
+    redirect: "manual",
+    headers: {
+      Cookie: `jwt=${process.env.JWT}`,
+    },
+  }).catch((error) => console.error("Error:", error));
+
+  response.status(200).send({ status });
+});
+
+app.post("/bucket-test", async function (request, response) {
+  // Test the S3 bucket connection
+  const listener = spawn("aws", [
+    "s3",
+    "ls",
+    `s3://${process.env.S3_BUCKET_NAME}`,
+  ]);
+  listener.stdout.on("data", (data) => console.log(`stdout: ${data}`));
+  listener.stderr.on("data", (data) => console.log(`stderr: ${data}`));
+  listener.on("error", (error) => console.log(`error: ${error.message}`));
+
+  listener.on("close", (code) => {
+    console.log(`child process exited with code ${code}`);
+    response.status(200).send({ code });
+  });
+});
+
+app.post("/set-cf-cookie", async function (request, response) {
+  // Get the current domain from the request
+  const appHost = request.get("X-Forwarded-Host") || request.get("host");
+
+  if (!appHost.startsWith("app.")) {
+    console.error("Invalid host");
+    response.status(400).send({ status: 400 });
+    return;
+  }
+
+  // Use regex to replace the initial app. with an empty string.
+  // e.g. app.archive.intranet.docker -> archive.intranet.docker
+  const cdnHost = appHost.replace(/^app\./, "");
+
+  // TODO Generate CloudFront cookies.
+
+  // Set the cookie on the response
+  // response.cookie('jwt', process.env.JWT, {
+  //   domain: cdnHost,
+  //   secure: true,
+  //   sameSite: 'None',
+  //   httpOnly: true,
+  // });
+
+  response.status(200).send({ appHost, cdnHost });
+});
+
+app.post("/spider", async function (request, response) {
   // handle the response
   response
     .status(200)
     .sendFile(path.join("/usr/share/nginx/html/working.html"));
-  await spider(request.body);
+  await spider(request.mirror);
 });
 
 /**
@@ -45,13 +151,8 @@ app.post("/spider", async function (request, response, next) {
  *
  * @param body form payload
  **/
-async function spider(body) {
+async function spider(mirror) {
   await new Promise((resolve) => setTimeout(resolve, 1));
-
-  const mirror = {
-    url: new URL(body.url || "https://intranet.justice.gov.uk/"),
-    agency: body.agency || "hq",
-  };
 
   // Get date in format: 2023-01-17-18-00
   const dateString = new Date().toISOString().slice(0, 16).replace(/T|:/g, "-");
@@ -98,7 +199,7 @@ async function spider(body) {
     "-F",
     "intranet-archive",
     "-%X",
-    `X-Access-Token: ${process.env.ACCESS_TOKEN}`,
+    `Cookie: dw_agency=${mirror.agency}; jwt=${process.env.JWT}`,
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     directory,
   ];
@@ -110,7 +211,7 @@ async function spider(body) {
   // verify options array
   console.log(
     "Launching Intranet Spider with the following options: ",
-    options,
+    options.map((entry) => entry.replace(process.env.JWT, "***")),
   );
 
   // launch HTTrack with options
@@ -121,6 +222,16 @@ async function spider(body) {
   listener.on("close", (code) =>
     console.log(`child process exited with code ${code}`),
   );
+
+  // TODO get progress somehow.
+  // The only way to get progress is to read the 2 files:
+  // 1. hts-cache/new.txt
+  // 2. hts-cache/new.lst
+
+  // The /hts-in_progress.lock also shows some interesting information, like:
+  // PID and start time of the process.
+
+  // TODO upload to S3
 }
 
 app.listen(port);

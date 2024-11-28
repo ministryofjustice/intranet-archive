@@ -10,11 +10,11 @@ services:
       - .env
     container_name: intranet-archive
     environment:
-      VIRTUAL_HOST: spider.intranet.docker
+      VIRTUAL_HOST: app.archive.intranet.docker
       VIRTUAL_PORT: "8080"
     volumes:
       - node_modules:/usr/local/bin/node/node_modules
       - ./snapshots:/archiver/snapshots
       - ./conf/node:/usr/local/bin/node
     ports:
-      - "8080:8080"
+      - "8090:8080"
