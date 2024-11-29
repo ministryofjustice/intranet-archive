@@ -5,53 +5,107 @@
  *************************************************/
 
 // node packages
-const { exec, spawn } = require("node:child_process");
-const fs = require("node:fs/promises");
-const path = require("node:path");
+import { spawn } from "node:child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 // npm packages
-const cors = require("cors");
-const express = require("express");
+import cors from "cors";
+import express from "express";
 
-const app = express();
-const port = 2000;
+// Relative
+import { corsOptions, jwt, port } from "./constants.js";
+import { parseBody } from "./middleware.js";
+import { checkAccess as checkS3Access } from "./controllers/s3.js";
+
+const app = express(); 
+
+/**
+ * Middleware
+ */
 
 app.use(express.static("/usr/share/nginx/html"));
 
 // Middleware to parse incoming POST requests
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    methods: ["POST"],
-    origin: [
-      "http://spider.intranet.docker/",
-      "https://dev-intranet-archive.apps.live.cloud-platform.service.justice.gov.uk/",
-    ],
-  }),
-);
+// Middleware to enable CORS
+app.use(cors(corsOptions));
 
-app.post("/spider", async function (request, response, next) {
+// Middleware to parse the url and agency
+app.use(parseBody);
+
+/**
+ * Routes
+ */
+
+app.post("/fetch-test", async function (req, res, next) {
+  try {
+    const { status } = await fetch(req.mirror.url, {
+      redirect: "manual",
+      headers: { Cookie: `jwt=${jwt}` },
+    });
+    res.status(200).send({ status });
+  } catch (err) {
+    // Handling errors like this will send the error to the defaule Express error handler.
+    // It will log the error to the console, return a 500 error page, 
+    // and show the error message on dev environments, but hide it on production.
+    next(err);
+  }
+});
+
+app.post("/bucket-test", async function (_req, res, next) {
+  try {
+    const canAccess = await checkS3Access();
+    res.status(200).send({ canAccess });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/set-cf-cookie", async function (request, response) {
+  // Get the current domain from the request
+  const appHost = request.get("X-Forwarded-Host") || request.get("host");
+
+  if (!appHost.startsWith("app.")) {
+    console.error("Invalid host");
+    response.status(400).send({ status: 400 });
+    return;
+  }
+
+  // Use regex to replace the initial app. with an empty string.
+  // e.g. app.archive.intranet.docker -> archive.intranet.docker
+  const cdnHost = appHost.replace(/^app\./, "");
+
+  // TODO Generate CloudFront cookies.
+
+  // Set the cookie on the response
+  // response.cookie('jwt', jwt, {
+  //   domain: cdnHost,
+  //   secure: true,
+  //   sameSite: 'None',
+  //   httpOnly: true,
+  // });
+
+  response.status(200).send({ appHost, cdnHost });
+});
+
+app.post("/spider", async function (request, response) {
   // handle the response
   response
     .status(200)
     .sendFile(path.join("/usr/share/nginx/html/working.html"));
-  await spider(request.body);
+  await spider(request.mirror);
 });
 
 /**
  * Spider the intranet and take a snapshot of the given agency, if no agency is supplied in
  * body, the spider focuses on HQ only.
  *
- * @param body form payload
+ * @param mirror form payload
  **/
-async function spider(body) {
+async function spider(mirror) {
   await new Promise((resolve) => setTimeout(resolve, 1));
-
-  const mirror = {
-    url: new URL(body.url || "https://intranet.justice.gov.uk/"),
-    agency: body.agency || "hq",
-  };
 
   // Get date in format: 2023-01-17-18-00
   const dateString = new Date().toISOString().slice(0, 16).replace(/T|:/g, "-");
@@ -98,7 +152,7 @@ async function spider(body) {
     "-F",
     "intranet-archive",
     "-%X",
-    `X-Access-Token: ${process.env.ACCESS_TOKEN}`,
+    `Cookie: dw_agency=${mirror.agency}; jwt=${jwt}`,
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     directory,
   ];
@@ -110,7 +164,7 @@ async function spider(body) {
   // verify options array
   console.log(
     "Launching Intranet Spider with the following options: ",
-    options,
+    options.map((entry) => entry.replace(jwt, "***")),
   );
 
   // launch HTTrack with options
@@ -121,6 +175,16 @@ async function spider(body) {
   listener.on("close", (code) =>
     console.log(`child process exited with code ${code}`),
   );
+
+  // TODO get progress somehow.
+  // The only way to get progress is to read the 2 files:
+  // 1. hts-cache/new.txt
+  // 2. hts-cache/new.lst
+
+  // The /hts-in_progress.lock also shows some interesting information, like:
+  // PID and start time of the process.
+
+  // TODO upload to S3
 }
 
 app.listen(port);

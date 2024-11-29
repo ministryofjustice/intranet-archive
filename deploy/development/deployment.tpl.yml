@@ -18,6 +18,7 @@ spec:
       labels:
         app: intranet-archive-dev
     spec:
+      serviceAccountName: ${KUBE_NAMESPACE}-service
       containers:
       - name: intranet-archive
         image: ${ECR_URL}:${IMAGE_TAG}
@@ -36,9 +37,16 @@ spec:
               secretKeyRef:
                 name: s3-bucket-output
                 key: bucket_name
+          - name: AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT
+            valueFrom:
+              secretKeyRef:
+                name: cloudfront-output
+                key: cloudfront_public_keys
         envFrom:
           - secretRef:
               name: ${KUBE_NAMESPACE}-secrets
+          - secretRef:
+              name: ${KUBE_NAMESPACE}-base64-secrets
         readinessProbe:
           httpGet:
             path: /health
