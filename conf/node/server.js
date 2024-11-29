@@ -5,29 +5,20 @@
  *************************************************/
 
 // node packages
-const { exec, spawn } = require("node:child_process");
-const fs = require("node:fs/promises");
-const path = require("node:path");
+import { spawn } from "node:child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 // npm packages
-const cors = require("cors");
-const express = require("express");
+import cors from "cors";
+import express from "express";
 
-const app = express();
-const port = 2000;
+// Relative
+import { corsOptions, jwt, port } from "./constants.js";
+import { parseBody } from "./middleware.js";
+import { checkAccess as checkS3Access } from "./controllers/s3.js";
 
-const defaultUrl = "https://intranet.justice.gov.uk/";
-const defaultAgency = "hq";
-
-const allowedTargetHosts = [
-  "intranet.docker",
-  "intranet.justice.gov.uk",
-  "dev.intranet.justice.gov.uk",
-  "staging.intranet.justice.gov.uk",
-  "demo.intranet.justice.gov.uk",
-];
-
-const allowedTargetAgencies = process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+const app = express(); 
 
 /**
  * Middleware
@@ -38,76 +29,38 @@ app.use(express.static("/usr/share/nginx/html"));
 // Middleware to parse incoming POST requests
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    methods: ["POST"],
-    origin: [
-      "http://spider.intranet.docker/",
-      "https://dev-intranet-archive.apps.live.cloud-platform.service.justice.gov.uk/",
-    ],
-  }),
-);
+// Middleware to enable CORS
+app.use(cors(corsOptions));
 
-// Middleware to validate the url and agency
-app.use((request, response, next) => {
-  // If get request, return next
-  if (request.method !== "POST") {
-    return next();
-  }
-
-  try {
-    request.mirror = {
-      url: new URL(request.body.url || defaultUrl),
-      agency: request.body.agency || defaultAgency,
-    };
-
-    if (!allowedTargetHosts.includes(request.mirror.url.host)) {
-      throw new Error("Host not allowed");
-    }
-
-    if (!allowedTargetAgencies.includes(request.mirror.agency)) {
-      throw new Error("Agency not allowed");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    response.status(400).send({ status: 400 });
-    return;
-  }
-
-  next();
-});
+// Middleware to parse the url and agency
+app.use(parseBody);
 
 /**
- * Endpoints
+ * Routes
  */
 
-app.post("/fetch-test", async function (request, response) {
-  // Fetch the url and log the result.
-  const { status } = await fetch(request.mirror.url, {
-    redirect: "manual",
-    headers: {
-      Cookie: `jwt=${process.env.JWT}`,
-    },
-  }).catch((error) => console.error("Error:", error));
-
-  response.status(200).send({ status });
+app.post("/fetch-test", async function (req, res, next) {
+  try {
+    const { status } = await fetch(req.mirror.url, {
+      redirect: "manual",
+      headers: { Cookie: `jwt=${jwt}` },
+    });
+    res.status(200).send({ status });
+  } catch (err) {
+    // Handling errors like this will send the error to the defaule Express error handler.
+    // It will log the error to the console, return a 500 error page, 
+    // and show the error message on dev environments, but hide it on production.
+    next(err);
+  }
 });
 
-app.post("/bucket-test", async function (request, response) {
-  // Test the S3 bucket connection
-  const listener = spawn("aws", [
-    "s3",
-    "ls",
-    `s3://${process.env.S3_BUCKET_NAME}`,
-  ]);
-  listener.stdout.on("data", (data) => console.log(`stdout: ${data}`));
-  listener.stderr.on("data", (data) => console.log(`stderr: ${data}`));
-  listener.on("error", (error) => console.log(`error: ${error.message}`));
-
-  listener.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
-    response.status(200).send({ code });
-  });
+app.post("/bucket-test", async function (_req, res, next) {
+  try {
+    const canAccess = await checkS3Access();
+    res.status(200).send({ canAccess });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.post("/set-cf-cookie", async function (request, response) {
@@ -127,7 +80,7 @@ app.post("/set-cf-cookie", async function (request, response) {
   // TODO Generate CloudFront cookies.
 
   // Set the cookie on the response
-  // response.cookie('jwt', process.env.JWT, {
+  // response.cookie('jwt', jwt, {
   //   domain: cdnHost,
   //   secure: true,
   //   sameSite: 'None',
@@ -149,7 +102,7 @@ app.post("/spider", async function (request, response) {
  * Spider the intranet and take a snapshot of the given agency, if no agency is supplied in
  * body, the spider focuses on HQ only.
  *
- * @param body form payload
+ * @param mirror form payload
  **/
 async function spider(mirror) {
   await new Promise((resolve) => setTimeout(resolve, 1));
@@ -199,7 +152,7 @@ async function spider(mirror) {
     "-F",
     "intranet-archive",
     "-%X",
-    `Cookie: dw_agency=${mirror.agency}; jwt=${process.env.JWT}`,
+    `Cookie: dw_agency=${mirror.agency}; jwt=${jwt}`,
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     directory,
   ];
@@ -211,7 +164,7 @@ async function spider(mirror) {
   // verify options array
   console.log(
     "Launching Intranet Spider with the following options: ",
-    options.map((entry) => entry.replace(process.env.JWT, "***")),
+    options.map((entry) => entry.replace(jwt, "***")),
   );
 
   // launch HTTrack with options
