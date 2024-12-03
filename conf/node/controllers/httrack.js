@@ -211,6 +211,7 @@ export const waitForHttrackComplete = async (
 ) => {
   const intervalSeconds = 1;
   const maxIterations = timeOutSeconds / intervalSeconds;
+  const logFrequency = 5 * 60; // Log every 5 minutes
   let iterations = 0;
 
   // Wait for hts-cache/new.txt to exist.
@@ -227,9 +228,13 @@ export const waitForHttrackComplete = async (
     iterations++ < maxIterations &&
     fs.existsSync(`${dest}/hts-in_progress.lock`)
   ) {
-    console.log("Waiting for httrack to complete ... ");
+    if (iterations < 10 || iterations % logFrequency === 0) {
+      const elapsedTime = new Date(iterations * intervalSeconds * 1000).toISOString().substring(11, 19);
+      console.log(
+        `Waiting for httrack to complete ... ${elapsedTime} elapsed`,
+      );
+    }
     await new Promise((resolve) => setTimeout(resolve, intervalSeconds * 1000));
-    iterations++;
   }
 
   return {
