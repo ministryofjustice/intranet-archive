@@ -43,6 +43,8 @@ spec:
                 name: cloudfront-output
                 key: cloudfront_public_keys
         envFrom:
+          - configMapRef:
+              name: ${KUBE_NAMESPACE}-config
           - secretRef:
               name: ${KUBE_NAMESPACE}-secrets
           - secretRef:
