@@ -21,8 +21,8 @@ services:
       - "8090:8080"
     depends_on:
       minio-init:
-          # Exited with code 0
-          condition: service_completed_successfully
+        # Exited with code 0
+        condition: service_completed_successfully
 
   minio:
     image: minio/minio
