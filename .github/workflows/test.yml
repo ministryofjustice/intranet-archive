@@ -14,3 +14,5 @@ jobs:
       run: |
         cp .env.ci .env
         docker compose run --rm spider sh -c "npm ci && npm run test"
+      env:
+        JWT: ${{ secrets.JWT }}

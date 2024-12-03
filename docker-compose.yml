@@ -21,7 +21,7 @@ services:
       - "8090:8080"
     depends_on:
       minio-init:
-        # Exited with code 0
+        # Wait for minio-init to complete before starting.
         condition: service_completed_successfully
 
   minio:
