@@ -5,18 +5,19 @@ export const jwt = process.env.JWT;
  * S3
  */
 
-export const s3Region = 'eu-west-2';
+export const s3Region = "eu-west-2";
 export const s3BucketName = process.env.S3_BUCKET_NAME;
-export const s3Credentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && {
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-}
+export const s3Credentials = process.env.AWS_ACCESS_KEY_ID &&
+  process.env.AWS_SECRET_ACCESS_KEY && {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  };
 
 /**
  * Options
  */
 
-export const corsOptions ={
+export const corsOptions = {
   methods: ["POST"],
   origin: [
     "http://spider.intranet.docker/",
@@ -43,4 +44,16 @@ export const allowedTargetHosts = [
   "demo.intranet.justice.gov.uk",
 ];
 
-export const allowedTargetAgencies = process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+export const allowedTargetAgencies =
+  process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+
+/**
+ * Httrack
+ */
+
+export const sensitiveFiles = [
+  "cookies.txt", // Contains the JWT and CloudFront cookies.
+  "hts-log.txt", // Has the httrack command line arguments - this includes the JWT.
+  `hts-cache/doit.log`, // Has the httrack command line arguments - this includes the JWT.
+  `hts-cache/new.zip`,
+];

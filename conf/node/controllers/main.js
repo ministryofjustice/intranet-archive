@@ -1,6 +1,8 @@
-import { jwt, s3BucketName } from "../constants.js";
+import fs from "node:fs/promises";
+
+import { jwt, s3BucketName, sensitiveFiles } from "../constants.js";
 import {
-  getSnapshotDir,
+  getSnapshotPaths,
   getHttrackArgs,
   runHttrack,
   waitForHttrackComplete,
@@ -16,11 +18,11 @@ import { sync } from "./s3.js";
  */
 
 export const main = async ({ url, agency, depth }) => {
-  const directory = getSnapshotDir({ host: url.host, agency });
+  const paths = getSnapshotPaths({ host: url.host, agency });
 
   const httrackArgs = getHttrackArgs({
     url,
-    dest: directory,
+    dest: paths.fs,
     agency,
     jwt,
     depth,
@@ -28,10 +30,18 @@ export const main = async ({ url, agency, depth }) => {
 
   runHttrack(httrackArgs);
 
-  await waitForHttrackComplete(directory);
+  await waitForHttrackComplete(paths.fs);
 
-    // Delete any sensitive files before syncing to S3
+  // Remove sensitive files - before syncing to S3
+  await Promise.all(
+    sensitiveFiles.map(file => fs.rm(`${paths.fs}/${file}`, { force: true }))
+  );
 
   // Sync the snapshot to S3
-  await sync(directory, `s3://${s3BucketName}${directory}`);
+  await sync(paths.fs, `s3://${s3BucketName}/${paths.s3}`);
+
+  // Clean up the snapshot directory
+  await fs.rm(paths.fs, { recursive: true, force: true });
+
+  console.log("Snapshot complete", { url, agency, depth });
 };

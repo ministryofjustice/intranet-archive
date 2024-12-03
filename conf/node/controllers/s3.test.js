@@ -113,7 +113,7 @@ describe("S3EmptyDir", () => {
   });
 
   it("should empty the directory", async () => {
-    await s3EmptyDir("/test/s3-test");
+    await s3EmptyDir("test/s3-test");
 
     const objects = await client.send(
       new ListObjectsV2Command({

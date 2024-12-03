@@ -48,10 +48,10 @@ export { sync };
 /**
  * Empty an S3 folder by using sync and deleting all files
  * 
- * @param {string} folder - The folder to empty
+ * @param {string} path - The path to empty
  */
 
-export const s3EmptyDir = async (directory) => {
+export const s3EmptyDir = async (path) => {
   // Make a tmp empty directory
   const emptyDir = `/tmp/${Date.now()}`;
 
@@ -59,7 +59,7 @@ export const s3EmptyDir = async (directory) => {
   await fs.mkdir(emptyDir, { recursive: true });
 
   // Sync the empty directory to the folder
-  await sync(emptyDir, `s3://${s3BucketName}${directory}`, { del: true });
+  await sync(emptyDir, `s3://${s3BucketName}/${path}`, { del: true });
 
   // Remove the empty directory
   await fs.rm(emptyDir, { recursive: true });
