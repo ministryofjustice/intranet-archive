@@ -19,6 +19,9 @@ services:
       - ./conf/node:/usr/local/bin/node
     ports:
       - "8090:8080"
+    depends_on:
+      - minio
+      - minio-init
 
   minio:
     image: minio/minio

@@ -97,7 +97,7 @@ RUN chmod -R +x /docker-entrypoint.d/start-node-prod.sh
 ENV NODE_ENV=production
 
 # Install the node modules.
-RUN npm ci
+RUN npm ci --only=prod 
 
 # Remove the npm package manager.
 RUN apt remove -y curl npm unzip
