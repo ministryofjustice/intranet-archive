@@ -9,15 +9,21 @@ import { jwt } from "../constants.js";
  * @param {props} props
  * @param {string} props.host
  * @param {string} props.agency
- * @returns {string}
+ * @returns {Object} object
+ * @returns {string} object.s3 - the s3 path
+ * @returns {string} object.fs - the local filesystem path
  */
 
-export const getSnapshotDir = ({ host, agency }) => {
+export const getSnapshotPaths = ({ host, agency }) => {
   // Get date in format: 2023-01-17
   const dateString = new Date().toISOString().slice(0, 10);
 
+  const s3Path = `${host}/${agency}/${dateString}`;
+
+  const fsPath = `/tmp/snapshots/${s3Path}`;
+
   // Return directory for the snapshot
-  return `/tmp/snapshots/${host}/${agency}/${dateString}`;
+  return { s3: s3Path, fs: fsPath };
 };
 
 /**
