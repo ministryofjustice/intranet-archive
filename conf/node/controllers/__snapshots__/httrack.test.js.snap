@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getHttrackArgs should return an array of arguments 1`] = `
+[
+  "-%W",
+  "/archiver/strip_x_amz_query_param.so",
+  "https://intranet.justice.gov.uk/",
+  "+*.png",
+  "+*.gif",
+  "+*.jpg",
+  "+*.jpeg",
+  "+*.css",
+  "+*.js",
+  "-ad.doubleclick.net/*",
+  "-*intranet.justice.gov.uk/agency-switcher/",
+  "-*intranet.justice.gov.uk/?*agency=*",
+  "-*intranet.justice.gov.uk/?p=*",
+  "-*intranet.justice.gov.uk/?page_id=*",
+  "-*intranet.justice.gov.uk/wp-json/*/embed*",
+  "-*intranet.justice.gov.uk/wp/*",
+  "+*intranet.justice.gov.uk/?*agency=hq",
+  "-s0",
+  "-V",
+  ""sed -i 's/srcset="[^"]*"//g' $0"",
+  "-%k",
+  "-F",
+  "intranet-archive",
+  "-%X",
+  "Cookie: dw_agency=hq; jwt=***",
+  "-O",
+  "/tmp/test-snapshot",
+]
+`;

@@ -93,11 +93,11 @@ WORKDIR /usr/local/bin/node
 COPY conf/entrypoint/start-node-prod.sh /docker-entrypoint.d/
 RUN chmod -R +x /docker-entrypoint.d/start-node-prod.sh
 
-# Install the node modules.
-RUN npm ci
-
-# Change the environment to production for runtime.
+# Set the environment to production for install & runtime.
 ENV NODE_ENV=production
+
+# Install the node modules.
+RUN npm ci --only=prod 
 
 # Remove the npm package manager.
 RUN apt remove -y curl npm unzip
