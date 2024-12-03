@@ -43,5 +43,5 @@ export const main = async ({ url, agency, depth }) => {
   // Clean up the snapshot directory
   await fs.rm(paths.fs, { recursive: true, force: true });
 
-  console.log("Snapshot complete", { url, agency, depth });
+  console.log("Snapshot complete", { url: url.href, agency, depth });
 };
