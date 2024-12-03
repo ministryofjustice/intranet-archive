@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intranet-archive-dev-config
+  namespace: intranet-archive-dev
+data:
+  ALLOWED_AGENCIES: "hq,hmcts"
