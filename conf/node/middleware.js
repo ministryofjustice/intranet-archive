@@ -23,6 +23,8 @@ export const parseBody = (req, res, next) => {
     req.mirror = {
       url: new URL(req.body.url || defaultUrl),
       agency: req.body.agency || defaultAgency,
+      // Optionally add the depth parameter, if it can be parsed as an integer
+      depth: parseInt(req.body.depth, 10) || undefined,
     };
 
     if (!allowedTargetHosts.includes(req.mirror.url.host)) {

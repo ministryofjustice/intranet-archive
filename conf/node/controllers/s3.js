@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { S3SyncClient } from "s3-sync-client";
 
@@ -30,7 +31,7 @@ export const s3Options = {
  * @type {S3Client}
  */
 
-const client = new S3Client(s3Options);
+export const client = new S3Client(s3Options);
 
 /**
  * S3 sync client
@@ -43,6 +44,26 @@ const client = new S3Client(s3Options);
 const { sync } = new S3SyncClient({ client });
 
 export { sync };
+
+/**
+ * Empty an S3 folder by using sync and deleting all files
+ * 
+ * @param {string} folder - The folder to empty
+ */
+
+export const s3EmptyDir = async (directory) => {
+  // Make a tmp empty directory
+  const emptyDir = `/tmp/${Date.now()}`;
+
+  // Ensure the directory exists
+  await fs.mkdir(emptyDir, { recursive: true });
+
+  // Sync the empty directory to the folder
+  await sync(emptyDir, `s3://${s3BucketName}${directory}`, { del: true });
+
+  // Remove the empty directory
+  await fs.rm(emptyDir, { recursive: true });
+}
 
 /**
  * Check if the bucket is accessible by listing the root of the bucket

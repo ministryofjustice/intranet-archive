@@ -31,5 +31,3 @@ exports[`getHttrackArgs should return an array of arguments 1`] = `
   "/tmp/test-snapshot",
 ]
 `;
-
-exports[`getHttrackProgress should return progress 1`] = `undefined`;

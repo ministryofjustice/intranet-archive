@@ -3,9 +3,11 @@ import {
   S3Client,
   GetObjectCommand,
   DeleteObjectCommand,
+  PutObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
-import { s3Options, checkAccess, sync } from "./s3";
+import { s3Options, checkAccess, sync, s3EmptyDir } from "./s3";
 import { s3BucketName } from "../constants.js";
 
 describe("checkAccess", () => {
@@ -77,5 +79,49 @@ describe("sync", () => {
       sync("/tmp/invalid-directory", `s3://${s3BucketName}/test`),
     ).rejects.toThrow();
   });
+});
 
+describe("S3EmptyDir", () => {
+  let client;
+
+  const fileContent = "Hello, World!";
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Create a test file in /tmp/s3-test
+    await fs.promises.writeFile("/tmp/s3-test/test.txt", fileContent);
+
+    // Put the file in S3
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test/s3-test/test.txt",
+        Body: fs.createReadStream("/tmp/s3-test/test.txt"),
+      }),
+    );
+
+    // Verify file is in S3 with ListObjectsV2Command
+    const objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "test/s3-test",
+      }),
+    );
+
+    expect(objects.Contents.length).toBe(1);
+  });
+
+  it("should empty the directory", async () => {
+    await s3EmptyDir("/test/s3-test");
+
+    const objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "test/s3-test",
+      }),
+    );
+
+    expect(objects.Contents).toBeUndefined();
+  });
 });
