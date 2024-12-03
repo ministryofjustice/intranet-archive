@@ -19,6 +19,13 @@ spec:
         app: intranet-archive-dev
     spec:
       serviceAccountName: ${KUBE_NAMESPACE}-service
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: 
+          drop: ["ALL"]
+        runAsNonRoot: true
+        seccompProfile:
+          type: "RuntimeDefault"
       containers:
       - name: intranet-archive
         image: ${ECR_URL}:${IMAGE_TAG}
