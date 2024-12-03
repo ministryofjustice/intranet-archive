@@ -50,5 +50,7 @@ services:
         mc config host add intranet-archive http://minio:9000 ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY}
         mc mb --ignore-existing intranet-archive/${S3_BUCKET_NAME} --region eu-west-2
         mc anonymous set download intranet-archive/${S3_BUCKET_NAME};
-        exit 0
       "
+    healthcheck:
+      # Test that the bucket has been created
+      test: mc ls intranet-archive/${S3_BUCKET_NAME} || exit 1
