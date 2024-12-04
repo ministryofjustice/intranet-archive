@@ -1,7 +1,7 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: intranet-archive-dev
+  name: ${KUBE_NAMESPACE}
 spec:
   replicas: 1
   revisionHistoryLimit: 5
@@ -12,11 +12,12 @@ spec:
       maxSurge: 100%
   selector:
     matchLabels:
-      app: intranet-archive-dev
+      app: intranet-archive
+  serviceName: intranet-archive-service
   template:
     metadata:
       labels:
-        app: intranet-archive-dev
+        app: intranet-archive
     spec:
       serviceAccountName: ${KUBE_NAMESPACE}-service
       securityContext:
@@ -28,6 +29,9 @@ spec:
         image: ${ECR_URL}:${IMAGE_TAG}
         securityContext:
           allowPrivilegeEscalation: false
+          runAsUser: 1001
+          runAsGroup: 1001
+          fsGroup: 1001
           capabilities: 
             drop: ["ALL"]
         resources:
@@ -39,6 +43,9 @@ spec:
             memory: 250Mi
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - name: snapshots
+          mountPath: "/tmp/snapshots"
         env:
           - name: S3_BUCKET_NAME
             valueFrom:
@@ -69,3 +76,12 @@ spec:
             port: 8080
           initialDelaySeconds: 10
           periodSeconds: 15
+  volumeClaimTemplates:
+  - metadata:
+      name: snapshots
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gp2-expand" # StorageClass name used to create PV
+      resources:
+        requests:
+          storage: 100Gi # Storage resource request size
