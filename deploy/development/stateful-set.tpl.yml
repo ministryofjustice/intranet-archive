@@ -13,7 +13,7 @@ spec:
   selector:
     matchLabels:
       app: intranet-archive
-  serviceName: intranet-archive-service
+  serviceName: intranet-archive-headless-service
   template:
     metadata:
       labels:
