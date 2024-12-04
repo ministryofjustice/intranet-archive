@@ -96,8 +96,11 @@ RUN chmod -R +x /docker-entrypoint.d/start-node-prod.sh
 # Set the environment to production for install & runtime.
 ENV NODE_ENV=production
 
+# Install pm2 for better handling of uncaught runtime errors. 
+RUN npm install pm2 -g
+
 # Install the node modules.
-RUN npm ci --only=prod 
+RUN npm ci --only=prod
 
 # Remove the npm package manager.
 RUN apt remove -y curl npm unzip
