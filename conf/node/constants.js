@@ -53,6 +53,7 @@ export const allowedTargetAgencies =
 
 export const sensitiveFiles = [
   "cookies.txt", // Contains the JWT and CloudFront cookies.
+  "hts-in_progress.lock", // Contains the JWT.
   "hts-log.txt", // Has the httrack command line arguments - this includes the JWT.
   `hts-cache/doit.log`, // Has the httrack command line arguments - this includes the JWT.
   `hts-cache/new.zip`,

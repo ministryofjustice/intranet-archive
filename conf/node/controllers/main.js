@@ -30,11 +30,16 @@ export const main = async ({ url, agency, depth }) => {
 
   runHttrack(httrackArgs);
 
-  await waitForHttrackComplete(paths.fs);
+  const { timedOut } = await waitForHttrackComplete(paths.fs);
+
+  if (timedOut) {
+    console.error("Httrack timed out", { url: url.href, agency, depth });
+    return;
+  }
 
   // Remove sensitive files - before syncing to S3
   await Promise.all(
-    sensitiveFiles.map(file => fs.rm(`${paths.fs}/${file}`, { force: true }))
+    sensitiveFiles.map((file) => fs.rm(`${paths.fs}/${file}`, { force: true })),
   );
 
   // Sync the snapshot to S3
