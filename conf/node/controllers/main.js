@@ -5,6 +5,7 @@ import {
   getSnapshotPaths,
   getHttrackArgs,
   runHttrack,
+  getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
 import { sync } from "./s3.js";
@@ -20,21 +21,26 @@ import { sync } from "./s3.js";
 export const main = async ({ url, agency, depth }) => {
   const paths = getSnapshotPaths({ host: url.host, agency });
 
-  const httrackArgs = getHttrackArgs({
-    url,
-    dest: paths.fs,
-    agency,
-    jwt,
-    depth,
-  });
+  const { complete } = getHttrackProgress(paths.fs);
 
-  runHttrack(httrackArgs);
+  // If the snapshot is already complete, skip httrack
+  if (!complete) {
+    const httrackArgs = getHttrackArgs({
+      url,
+      dest: paths.fs,
+      agency,
+      jwt,
+      depth,
+    });
 
-  const { timedOut } = await waitForHttrackComplete(paths.fs);
+    runHttrack(httrackArgs);
 
-  if (timedOut) {
-    console.error("Httrack timed out", { url: url.href, agency, depth });
-    return;
+    const { timedOut } = await waitForHttrackComplete(paths.fs);
+
+    if (timedOut) {
+      console.error("Httrack timed out", { url: url.href, agency, depth });
+      return;
+    }
   }
 
   // Remove sensitive files - before syncing to S3

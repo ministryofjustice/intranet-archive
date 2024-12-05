@@ -141,6 +141,7 @@ export const getHttrackProgress = async (dest) => {
   }
 
   const files = {
+    index: `${dest}/index.html`,
     log: `${dest}/hts-cache/new.txt`,
     lock: `${dest}/hts-in_progress.lock`,
   };
@@ -148,7 +149,7 @@ export const getHttrackProgress = async (dest) => {
   const response = {
     requestCount: 0,
     rate: 0,
-    complete: !fs.existsSync(files.lock),
+    complete: fs.existsSync(files.index) && !fs.existsSync(files.lock),
   };
 
   if (!fs.existsSync(files.log)) {
@@ -167,7 +168,11 @@ export const getHttrackProgress = async (dest) => {
   // The first line is a header, so we subtract 1.
   response.requestCount = lineCount - 1;
 
-  // If the time is 23:59:55 - 00:00:05, await 5 seconds.
+  // If the current time is between 00:00:00 and 00:00:05, wait for 5 seconds to avoid spanning requests across two days.
+  // This prevents the recent requests in `/hts-cache/new.txt` from spanning 2 days.
+  if (new Date().toTimeString().split(" ")[0] < "00:00:05") {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 
   // Get the last 20 lines from the file. Or all of them if there are less than 20.
   const lastLines = execSync(
@@ -229,10 +234,10 @@ export const waitForHttrackComplete = async (
     fs.existsSync(`${dest}/hts-in_progress.lock`)
   ) {
     if (iterations < 10 || iterations % logFrequency === 0) {
-      const elapsedTime = new Date(iterations * intervalSeconds * 1000).toISOString().substring(11, 19);
-      console.log(
-        `Waiting for httrack to complete ... ${elapsedTime} elapsed`,
-      );
+      const elapsedTime = new Date(iterations * intervalSeconds * 1000)
+        .toISOString()
+        .substring(11, 19);
+      console.log(`Waiting for httrack to complete ... ${elapsedTime} elapsed`);
     }
     await new Promise((resolve) => setTimeout(resolve, intervalSeconds * 1000));
   }
