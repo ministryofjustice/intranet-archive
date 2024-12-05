@@ -11,6 +11,7 @@ services:
       - .env
     container_name: intranet-archive
     environment:
+      ORDINAL_NUMBER: 0
       VIRTUAL_HOST: app.archive.intranet.docker
       VIRTUAL_PORT: "8080"
     volumes:
