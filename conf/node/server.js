@@ -15,6 +15,12 @@ import express from "express";
 import { corsOptions, jwt, port } from "./constants.js";
 import { parseBody } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
+import {
+  getCdnUrl,
+  getKeyPairId,
+  getCookies,
+  getDateLessThan,
+} from "./controllers/cloudfront.js";
 import { main } from "./controllers/main.js";
 
 const app = express();
@@ -63,28 +69,29 @@ app.post("/bucket-test", async function (_req, res, next) {
 });
 
 app.post("/set-cf-cookie", async function (request, response) {
-  // Get the current domain from the request
-  const appHost = request.get("X-Forwarded-Host") || request.get("host");
+  try {
+    // Get the current domain from the request
+    const appHost = request.get("X-Forwarded-Host") || request.get("host");
 
-  if (!appHost.startsWith("app.")) {
-    console.error("Invalid host");
-    response.status(400).send({ status: 400 });
-    return;
+    const cdnUrl = getCdnUrl(appHost);
+
+    const cookies = getCookies({
+      resource: `${cdnUrl.origin}/*`,
+      dateLessThan: getDateLessThan(),
+    });
+
+    // Set the cookies on the response
+    Object.entries(cookies).forEach(([name, value]) => {
+      response.cookie(name, value, {
+        domain: cdnUrl.host,
+        secure: true,
+        sameSite: "None",
+        httpOnly: true,
+      });
+    });
+  } catch (err) {
+    next(err);
   }
-
-  // Use regex to replace the initial app. with an empty string.
-  // e.g. app.archive.intranet.docker -> archive.intranet.docker
-  const cdnHost = appHost.replace(/^app\./, "");
-
-  // TODO Generate CloudFront cookies.
-
-  // Set the cookie on the response
-  // response.cookie('jwt', jwt, {
-  //   domain: cdnHost,
-  //   secure: true,
-  //   sameSite: 'None',
-  //   httpOnly: true,
-  // });
 
   response.status(200).send({ appHost, cdnHost });
 });
