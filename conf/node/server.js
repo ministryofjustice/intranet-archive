@@ -76,6 +76,8 @@ app.post("/spider", function (req, res) {
 
 app.get("/access-archive", async function (req, res, next) {
   try {
+    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+
     // Get the current domain from the request
     const appUrl = new URL(
       `${req.headers["x-forwarded-proto"] || req.protocol}://${
@@ -90,6 +92,7 @@ app.get("/access-archive", async function (req, res, next) {
     const cookies = getCookies({
       resource: `${cdnUrl.origin}/*`,
       dateLessThan: getDateLessThan(),
+      clientIp,
     });
 
     // Set the cookies on the response

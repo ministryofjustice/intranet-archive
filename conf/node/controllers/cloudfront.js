@@ -105,7 +105,7 @@ export const getDateLessThan = () => {
  * @returns {import('@aws-sdk/cloudfront-signer').CloudfrontSignedCookiesOutput} cookies - The signed CloudFront cookies
  */
 
-export const getCookies = ({ resource, dateLessThan }) => {
+export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
   // Check if the cache has a value for the resource
   const cachedValue =
     cache.cookieSets?.[resource]?.dateLessThan === dateLessThan;
@@ -121,7 +121,10 @@ export const getCookies = ({ resource, dateLessThan }) => {
         Resource: resource,
         Condition: {
           DateLessThan: {
-            "AWS:EpochTime": new Date(dateLessThan).getTime() / 1000, // time in seconds
+            "AWS:EpochTime": dateLessThan, // time in seconds
+          },
+          IpAddress: {
+            "AWS:SourceIp": ipAddress,
           },
         },
       },
