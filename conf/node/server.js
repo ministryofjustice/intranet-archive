@@ -107,7 +107,7 @@ app.get("/access-archive", async function (req, res, next) {
 
     // http://app.archive.intranet.docker/access-archive
 
-    // Redirect to the CDN URL. 
+    // Redirect to the CDN URL.
     res.redirect(cdnUrl.origin);
   } catch (err) {
     next(err);
