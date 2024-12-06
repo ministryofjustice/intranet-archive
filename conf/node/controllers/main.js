@@ -21,7 +21,7 @@ import { sync } from "./s3.js";
 export const main = async ({ url, agency, depth }) => {
   const paths = getSnapshotPaths({ host: url.host, agency });
 
-  const { complete } = getHttrackProgress(paths.fs);
+  const { complete } = await getHttrackProgress(paths.fs);
 
   // If the snapshot is already complete, skip httrack
   if (!complete) {

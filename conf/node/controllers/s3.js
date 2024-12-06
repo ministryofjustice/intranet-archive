@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { S3SyncClient } from "s3-sync-client";
+import mime from "mime-types";
 
 import {
   s3BucketName,
@@ -36,18 +37,33 @@ export const client = new S3Client(s3Options);
 /**
  * S3 sync client
  *
- * @type {S3SyncClient}
- * 
  * @see https://github.com/jeanbmar/s3-sync-client
  */
 
-const { sync } = new S3SyncClient({ client });
+const { sync: originalSync } = new S3SyncClient({ client });
 
-export { sync };
+/**
+ * Sync a local directory to an S3 bucket
+ *
+ * @param {string} source - The source directory
+ * @param {string} destination - The destination directory
+ * @param {?import('s3-sync-client/dist/commands/SyncCommand').SyncOptions} options - The sync options
+ *
+ * @returns {Promise<import('s3-sync-client/dist/commands/SyncCommand').SyncCommandOutput>}
+ */
+
+export const sync = async (source, destination, options = {}) => {
+  // Set the content type for each file
+  options.commandInput = (input) => ({
+    ContentType: mime.lookup(input.Key) || "text/html",
+  });
+
+  return originalSync(source, destination, options);
+};
 
 /**
  * Empty an S3 folder by using sync and deleting all files
- * 
+ *
  * @param {string} path - The path to empty
  */
 
@@ -63,7 +79,7 @@ export const s3EmptyDir = async (path) => {
 
   // Remove the empty directory
   await fs.rm(emptyDir, { recursive: true });
-}
+};
 
 /**
  * Check if the bucket is accessible by listing the root of the bucket

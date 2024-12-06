@@ -7,8 +7,8 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
-import { s3Options, checkAccess, sync, s3EmptyDir } from "./s3";
 import { s3BucketName } from "../constants.js";
+import { s3Options, checkAccess, sync, s3EmptyDir } from "./s3";
 
 describe("checkAccess", () => {
   let client;
@@ -55,11 +55,17 @@ describe("sync", () => {
 
     // Create a test file in /tmp/s3-test
     await fs.promises.writeFile("/tmp/s3-test/test.txt", fileContent);
+
+    await fs.promises.writeFile(
+      "/tmp/s3-test/test.html",
+      "<html><body><h1>Hello, World!</h1></body></html>",
+    );
   });
 
   afterAll(async () => {
-    // Remove the test file
+    // Remove the test files
     await fs.promises.unlink("/tmp/s3-test/test.txt");
+    await fs.promises.unlink("/tmp/s3-test/test.html");
 
     await client.destroy();
   });
@@ -74,6 +80,28 @@ describe("sync", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
+  });
+
+  it("should add content type to the destination files", async () => {
+    await sync("/tmp/s3-test", `s3://${s3BucketName}/test-types`);
+
+    const object = await client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test-types/test.txt",
+      }),
+    );
+
+    expect(object.ContentType).toBe("text/plain");
+
+    const htmlObject = await client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test-types/test.html",
+      }),
+    );
+
+    expect(htmlObject.ContentType).toBe("text/html");
   });
 });
 
