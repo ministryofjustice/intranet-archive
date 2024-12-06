@@ -7,13 +7,15 @@ import {
 
 describe("getCdnUrl", () => {
   it("should return a cdn URL object", () => {
-    const result = getCdnUrl("app.archive.example.com");
+    const result = getCdnUrl(new URL("https://app.archive.example.com"));
     expect(result.host).toBe("archive.example.com");
     expect(result.origin).toBe("https://archive.example.com");
   });
 
   it("should throw an error for invalid host", () => {
-    expect(() => getCdnUrl("archive.example.com")).toThrow("Invalid host");
+    expect(() => getCdnUrl(new URL("https://archive.example.com"))).toThrow(
+      "Invalid host",
+    );
   });
 });
 

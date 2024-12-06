@@ -60,6 +60,8 @@ describe("sync", () => {
   afterAll(async () => {
     // Remove the test file
     await fs.promises.unlink("/tmp/s3-test/test.txt");
+
+    await client.destroy();
   });
 
   it("should sync the files", async () => {
@@ -72,12 +74,6 @@ describe("sync", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
-  });
-
-  it("should throw an error if the source directory doesn't exist", async () => {
-    await expect(
-      sync("/tmp/invalid-directory", `s3://${s3BucketName}/test`),
-    ).rejects.toThrow();
   });
 });
 

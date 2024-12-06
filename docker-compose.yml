@@ -35,6 +35,9 @@ services:
     environment:
       MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
       MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+      # Accessible at this domain, so we can manually check that CloudFront cookies have been set correctly.
+      VIRTUAL_HOST: archive.intranet.docker
+      VIRTUAL_PORT: "9001"
     command: server --console-address ":9001" /data
     healthcheck:
       test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1

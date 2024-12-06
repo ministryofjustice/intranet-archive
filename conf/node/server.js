@@ -67,7 +67,6 @@ app.post("/bucket-test", async function (_req, res, next) {
   }
 });
 
-
 app.post("/spider", function (req, res) {
   // Start the main function - without awiting for the result.
   main(req.mirror);
@@ -78,10 +77,14 @@ app.post("/spider", function (req, res) {
 app.get("/access-archive", async function (req, res, next) {
   try {
     // Get the current domain from the request
-    const appHost = req.headers["x-forwarded-host"] || req.headers["host"];
-    
+    const appUrl = new URL(
+      `${req.headers["x-forwarded-proto"] || req.protocol}://${
+        req.headers["x-forwarded-host"] || req.headers["host"]
+      }`,
+    );
+
     // Get the CloudFront CDN URL
-    const cdnUrl = getCdnUrl(appHost);
+    const cdnUrl = getCdnUrl(appUrl);
 
     // Get the CloudFront cookies
     const cookies = getCookies({
@@ -92,9 +95,8 @@ app.get("/access-archive", async function (req, res, next) {
     // Set the cookies on the response
     Object.entries(cookies).forEach(([name, value]) => {
       res.cookie(name, value, {
-        path: "/",
         domain: cdnUrl.host,
-        secure: true,
+        secure: cdnUrl.protocol === "https:",
         sameSite: "Lax",
         httpOnly: true,
       });
