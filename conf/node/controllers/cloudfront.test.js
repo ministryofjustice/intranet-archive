@@ -37,15 +37,30 @@ describe("getCookies", () => {
   it("should return cookies for CloudFront", () => {
     const dateLessThan = getDateLessThan();
     const resource = "https://archive.example.com/*";
+    const ipAddress = "127.0.0.1";
 
     const result = getCookies({
       resource,
       dateLessThan,
+      ipAddress,
     });
 
     expect(result).toBeDefined();
     expect(result["CloudFront-Key-Pair-Id"]).toBeDefined();
     expect(result["CloudFront-Policy"]).toBeDefined();
     expect(result["CloudFront-Signature"]).toBeDefined();
+
+    // Trim trailing underscores from result["CloudFront-Policy"]
+    const policyBase64 = result["CloudFront-Policy"].replace(/_*$/g, "");
+
+    const policy = JSON.parse(Buffer.from(policyBase64, "base64").toString());
+
+    const statement = policy.Statement[0];
+
+    expect(statement.Resource).toBe(resource);
+    expect(statement.Condition.DateLessThan["AWS:EpochTime"]).toBe(
+      dateLessThan,
+    );
+    expect(statement.Condition.IpAddress["AWS:SourceIp"]).toBe(ipAddress);
   });
 });
