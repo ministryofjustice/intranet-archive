@@ -6,9 +6,13 @@ import {
 } from "./constants.js";
 
 /**
+ * @typedef {import('express').Request & { mirror: { url: URL, agency: string, depth: number }}} Request
+ */
+
+/**
  * Middleware to parse the url and agency from the incoming request body
  *
- * @param {import('express').Request} req
+ * @param {Request} req
  * @param {import('express').Response} res
  * @param {import('express').NextFunction} next
  * @returns  {void}

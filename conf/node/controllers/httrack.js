@@ -125,13 +125,17 @@ export const runHttrack = (cliArgs) => {
 };
 
 /**
+ * @typedef {Object} HttrackProgress
+ * @property {number} requestCount - the number of requests made
+ * @property {number} rate - the requests per second over the last 10 seconds
+ * @property {boolean} complete - true if the mirror is complete
+ */
+
+/**
  * Get httrack progress from destination folder
  *
  * @param {string} dest
- * @returns {Object} object
- * @returns {number} object.requestCount - the number of requests made
- * @returns {number} object.rate - the requests per second over the last 10 seconds
- * @returns {bool} object.complete - true if the mirror is complete
+ * @returns {Promise<HttrackProgress>}
  */
 
 export const getHttrackProgress = async (dest) => {
@@ -206,8 +210,8 @@ export const getHttrackProgress = async (dest) => {
  * Wait for httrack to complete
  *
  * @param {string} dest
- * @param {number} timeOut
- * @returns {Promise<boolean>}
+ * @param {number} timeOutSeconds
+ * @returns {Promise<{timedOut: boolean}>}
  */
 
 export const waitForHttrackComplete = async (
