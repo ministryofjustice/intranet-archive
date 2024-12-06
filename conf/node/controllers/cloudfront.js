@@ -28,21 +28,21 @@ const cache = {
 /**
  * Infer the CloudFront CDN URL from the app host
  *
- * @param {string} appHost
+ * @param {URL} appUrl - The app URL
  * @returns {URL} cdnURL - The CloudFront CDN URL
  * @throws {Error} If the host is invalid
  */
 
-export const getCdnUrl = (appHost) => {
+export const getCdnUrl = (appUrl) => {
   // Check appHost starts with `app.`
-  if (!appHost.startsWith("app.")) {
+  if (!appUrl.host.startsWith("app.")) {
     throw new Error("Invalid host");
   }
 
-  const cdnHost = appHost.replace(/^app\./, "");
+  const cdnHost = appUrl.host.replace(/^app\./, "");
 
   // Use regex to replace the initial app. with an empty string.
-  return new URL(`https://${cdnHost}`);
+  return new URL(`${appUrl.protocol}//${cdnHost}`);
 };
 
 /**
