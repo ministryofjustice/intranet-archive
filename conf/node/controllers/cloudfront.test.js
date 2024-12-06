@@ -37,12 +37,12 @@ describe("getCookies", () => {
   it("should return cookies for CloudFront", () => {
     const dateLessThan = getDateLessThan();
     const resource = "https://archive.example.com/*";
-    const ipAddress = "127.0.0.1";
+    const clientIp = "127.0.0.1";
 
     const result = getCookies({
       resource,
       dateLessThan,
-      ipAddress,
+      clientIp,
     });
 
     expect(result).toBeDefined();
@@ -61,6 +61,6 @@ describe("getCookies", () => {
     expect(statement.Condition.DateLessThan["AWS:EpochTime"]).toBe(
       dateLessThan,
     );
-    expect(statement.Condition.IpAddress["AWS:SourceIp"]).toBe(ipAddress);
+    expect(statement.Condition.IpAddress["AWS:SourceIp"]).toBe(`${clientIp}/32`);
   });
 });

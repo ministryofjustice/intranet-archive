@@ -73,12 +73,12 @@ export const getDateLessThan = () => {
   const hours = date.getHours();
 
   if (hours >= 12) {
-    return parseInt(new Date(date.setHours(24, 0, 0, 0)).getTime() / 1000);
+    return new Date(date.setHours(24, 0, 0, 0)).getTime() / 1000;
   }
 
   // This should be midnight tomorrow.
   date.setDate(date.getDate() + 1);
-  return parseInt(new Date(date.setHours(0, 0, 0, 0)).getTime() / 1000);
+  return new Date(date.setHours(0, 0, 0, 0)).getTime() / 1000;
 };
 
 /**
@@ -87,11 +87,11 @@ export const getDateLessThan = () => {
  * @param {Object} props
  * @param {string} props.resource
  * @param {number} props.dateLessThan
- * @param {string} props.ipAddress
+ * @param {string} props.clientIp
  * @returns {import('@aws-sdk/cloudfront-signer').CloudfrontSignedCookiesOutput} cookies - The signed CloudFront cookies
  */
 
-export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
+export const getCookies = ({ resource, dateLessThan, clientIp }) => {
   const policy = {
     Statement: [
       {
@@ -100,10 +100,10 @@ export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
           DateLessThan: {
             "AWS:EpochTime": dateLessThan, // time in seconds
           },
-          ...(ipAddress?.length && {
+          ...(clientIp?.length && {
             // Optional, only if the IP address is provided
             IpAddress: {
-              "AWS:SourceIp": `${ipAddress}/32`,
+              "AWS:SourceIp": `${clientIp}/32`,
             },
           }),
         },

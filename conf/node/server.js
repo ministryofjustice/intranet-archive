@@ -51,7 +51,7 @@ app.post("/fetch-test", async function (req, res, next) {
     });
     res.status(200).send({ status });
   } catch (err) {
-    // Handling errors like this will send the error to the defaule Express error handler.
+    // Handling errors like this will send the error to the default Express error handler.
     // It will log the error to the console, return a 500 error page,
     // and show the error message on dev environments, but hide it on production.
     next(err);
@@ -76,12 +76,6 @@ app.post("/spider", function (req, res) {
 
 app.get("/access-archive", async function (req, res, next) {
   try {
-    const clientIp = req.headers["x-forwarded-for"]?.split(',')[0].trim();
-
-    console.log('headers', req.headers);
-
-    console.log('clientIp', clientIp);
-
     // Get the current domain from the request
     const appUrl = new URL(
       `${req.headers["x-forwarded-proto"] || req.protocol}://${
@@ -96,7 +90,7 @@ app.get("/access-archive", async function (req, res, next) {
     const cookies = getCookies({
       resource: `${cdnUrl.origin}/*`,
       dateLessThan: getDateLessThan(),
-      clientIp,
+      clientIp: Array.isArray(req.headers["x-real-ip"]) ? req.headers["x-real-ip"][0] : req.headers["x-real-ip"],
     });
 
     // Set the cookies on the response
@@ -104,7 +98,7 @@ app.get("/access-archive", async function (req, res, next) {
       res.cookie(name, value, {
         domain: cdnUrl.host,
         secure: cdnUrl.protocol === "https:",
-        sameSite: "Lax",
+        sameSite: "lax",
         httpOnly: true,
       });
     });
