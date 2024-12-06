@@ -105,10 +105,10 @@ app.get("/access-archive", async function (req, res, next) {
       });
     });
 
-    // Send a metadata html tag to redirect to the cdnUrl
-    const html = `<html><head><meta http-equiv="refresh" content="0; url=${cdnUrl.origin}" /></head></html>`;
+    // http://app.archive.intranet.docker/access-archive
 
-    res.status(200).send(html);
+    // Redirect to the CDN URL.
+    res.redirect(cdnUrl.origin);
   } catch (err) {
     next(err);
   }
