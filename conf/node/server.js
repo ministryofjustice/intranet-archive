@@ -17,7 +17,6 @@ import { parseBody } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
   getCdnUrl,
-  getKeyPairId,
   getCookies,
   getDateLessThan,
 } from "./controllers/cloudfront.js";
@@ -68,13 +67,23 @@ app.post("/bucket-test", async function (_req, res, next) {
   }
 });
 
-app.post("/set-cf-cookie", async function (request, response) {
+
+app.post("/spider", function (req, res) {
+  // Start the main function - without awiting for the result.
+  main(req.mirror);
+  // Handle the response
+  res.status(200).sendFile(path.join("/usr/share/nginx/html/working.html"));
+});
+
+app.get("/access-archive", async function (req, res, next) {
   try {
     // Get the current domain from the request
-    const appHost = request.get("X-Forwarded-Host") || request.get("host");
-
+    const appHost = req.headers["x-forwarded-host"] || req.headers["host"];
+    
+    // Get the CloudFront CDN URL
     const cdnUrl = getCdnUrl(appHost);
 
+    // Get the CloudFront cookies
     const cookies = getCookies({
       resource: `${cdnUrl.origin}/*`,
       dateLessThan: getDateLessThan(),
@@ -82,27 +91,22 @@ app.post("/set-cf-cookie", async function (request, response) {
 
     // Set the cookies on the response
     Object.entries(cookies).forEach(([name, value]) => {
-      response.cookie(name, value, {
+      res.cookie(name, value, {
+        path: "/",
         domain: cdnUrl.host,
         secure: true,
-        sameSite: "None",
+        sameSite: "Lax",
         httpOnly: true,
       });
     });
+
+    // Send a metadata html tag to redirect to the cdnUrl
+    const html = `<html><head><meta http-equiv="refresh" content="0; url=${cdnUrl.origin}" /></head></html>`;
+
+    res.status(200).send(html);
   } catch (err) {
     next(err);
   }
-
-  response.status(200).send({ appHost, cdnHost });
-});
-
-app.post("/spider", function (request, response) {
-  // Start the main function - without awiting for the result.
-  main(request.mirror);
-  // Handle the response
-  response
-    .status(200)
-    .sendFile(path.join("/usr/share/nginx/html/working.html"));
 });
 
 app.listen(port);
