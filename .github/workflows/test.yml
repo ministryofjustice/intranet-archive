@@ -21,7 +21,7 @@ jobs:
 
         docker compose run --rm \
         -e JWT=${{ secrets.JWT }} \
-        -e AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT=${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }} \
+        -e "AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT=${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }}" \
         spider sh -c "npm ci && npm run test"
       env:
         # AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT: ${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }}
