@@ -7,23 +7,8 @@ import {
   cloudFrontPrivateKey as privateKey,
 } from "../constants.js";
 
-/**
- * @typedef {Object} CookieSet
- * @property {import('@aws-sdk/cloudfront-signer').CloudfrontSignedCookiesOutput} value
- * @property {number} dateLessThan - epoch in milliseconds
- */
-
-/**
- * @typedef {Object} Cache
- * @property {string|null} keyPairId - will only change on server restart
- * @property {[key: string]: CookieSet} cookieSets
- */
-
-/** @type {Cache} */
-const cache = {
-  keyPairId: null,
-  cookieSets: {},
-};
+/** @type {string} */
+let cachedKeyPairId = null;
 
 /**
  * Infer the CloudFront CDN URL from the app host
@@ -53,8 +38,8 @@ export const getCdnUrl = (appUrl) => {
 
 export const getKeyPairId = () => {
   // Return the cached value if it exists
-  if (cache.keyPairId) {
-    return cache.keyPairId;
+  if (cachedKeyPairId) {
+    return cachedKeyPairId;
   }
 
   // Get sha256 hash of the public key, and get the first 8 characters.
@@ -72,7 +57,7 @@ export const getKeyPairId = () => {
     throw new Error("Key pair ID not found");
   }
 
-  cache.keyPairId = keyPairId;
+  cachedKeyPairId = keyPairId;
 
   return keyPairId;
 };
@@ -102,19 +87,11 @@ export const getDateLessThan = () => {
  * @param {Object} props
  * @param {string} props.resource
  * @param {number} props.dateLessThan
+ * @param {string} props.ipAddress
  * @returns {import('@aws-sdk/cloudfront-signer').CloudfrontSignedCookiesOutput} cookies - The signed CloudFront cookies
  */
 
 export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
-  // Check if the cache has a value for the resource
-  const cachedValue =
-    cache.cookieSets?.[resource]?.dateLessThan === dateLessThan;
-
-  // Return the cached value if it exists
-  if (cachedValue) {
-    return cachedValue;
-  }
-
   const policy = {
     Statement: [
       {
@@ -138,12 +115,6 @@ export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
     privateKey,
     policy: policyString,
   });
-
-  // Set the cache
-  cache.cookieSets[resource] = {
-    dateLessThan,
-    value: signedCookies,
-  };
 
   return signedCookies;
 };
