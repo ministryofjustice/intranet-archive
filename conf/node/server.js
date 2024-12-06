@@ -76,7 +76,7 @@ app.post("/spider", function (req, res) {
 
 app.get("/access-archive", async function (req, res, next) {
   try {
-    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+    const clientIp = req.headers["x-forwarded-for"]?.split(',')[0];
 
     // Get the current domain from the request
     const appUrl = new URL(
@@ -104,8 +104,6 @@ app.get("/access-archive", async function (req, res, next) {
         httpOnly: true,
       });
     });
-
-    // http://app.archive.intranet.docker/access-archive
 
     // Redirect to the CDN URL.
     res.redirect(cdnUrl.origin);
