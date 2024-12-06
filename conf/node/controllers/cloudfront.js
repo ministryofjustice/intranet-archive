@@ -100,9 +100,12 @@ export const getCookies = ({ resource, dateLessThan, ipAddress }) => {
           DateLessThan: {
             "AWS:EpochTime": dateLessThan, // time in seconds
           },
-          IpAddress: {
-            "AWS:SourceIp": ipAddress,
-          },
+          ...(ipAddress?.length && {
+            // Optional, only if the IP address is provided
+            IpAddress: {
+              "AWS:SourceIp": `${ipAddress}/32`,
+            },
+          }),
         },
       },
     ],

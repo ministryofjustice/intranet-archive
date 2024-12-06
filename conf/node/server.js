@@ -78,6 +78,10 @@ app.get("/access-archive", async function (req, res, next) {
   try {
     const clientIp = req.headers["x-forwarded-for"]?.split(',')[0].trim();
 
+    console.log('headers', req.headers);
+
+    console.log('clientIp', clientIp);
+
     // Get the current domain from the request
     const appUrl = new URL(
       `${req.headers["x-forwarded-proto"] || req.protocol}://${
