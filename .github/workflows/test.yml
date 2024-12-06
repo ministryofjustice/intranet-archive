@@ -14,14 +14,8 @@ jobs:
       run: |
         cp .env.ci .env
         docker compose run --rm \
-        -e JWT=${JWT} \
-        -e AWS_CLOUDFRONT_PRIVATE_KEY=${AWS_CLOUDFRONT_PRIVATE_KEY} \
-        -e AWS_CLOUDFRONT_PUBLIC_KEY=${AWS_CLOUDFRONT_PUBLIC_KEY} \
-        -e AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT=${AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT} \
+        -e JWT=${{ secrets.JWT }} \
+        -e AWS_CLOUDFRONT_PRIVATE_KEY="${{ secrets.TEST_AWS_CLOUDFRONT_PRIVATE_KEY }}" \
+        -e AWS_CLOUDFRONT_PUBLIC_KEY="${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEY }}" \
+        -e AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT="${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }}" \
         spider sh -c "npm ci && npm run test"
-      env:
-        JWT: ${{ secrets.JWT }}
-        # Use mock AWS CloudFront keys, these do not grant permission to anything.
-        AWS_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.TEST_AWS_CLOUDFRONT_PRIVATE_KEY }}
-        AWS_CLOUDFRONT_PUBLIC_KEY: ${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEY }}
-        AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT: ${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }}
