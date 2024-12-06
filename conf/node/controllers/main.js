@@ -12,7 +12,7 @@ import { sync } from "./s3.js";
 
 /**
  *
- * @param {props} props
+ * @param {Object} props
  * @param {URL} props.url
  * @param {string} props.agency
  * @param {?number} props.depth

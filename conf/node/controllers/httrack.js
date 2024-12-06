@@ -6,7 +6,7 @@ import { jwt } from "../constants.js";
 /**
  * A helper function to get the directory for the snapshot.
  *
- * @param {props} props
+ * @param {Object} props
  * @param {string} props.host
  * @param {string} props.agency
  * @returns {Object} object
