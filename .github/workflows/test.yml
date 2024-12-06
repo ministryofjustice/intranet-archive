@@ -14,17 +14,15 @@ jobs:
       run: |
         cp .env.ci .env
 
-        # Add secrets to .env
-        echo "JWT=$JWT" >> .env
-
         # These secrets are used for testing, and are not used in production
         echo "AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT=$AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT" >> .env
         echo "AWS_CLOUDFRONT_PRIVATE_KEY=\"$AWS_CLOUDFRONT_PRIVATE_KEY\"" >> .env
         echo "AWS_CLOUDFRONT_PUBLIC_KEY=\"$AWS_CLOUDFRONT_PUBLIC_KEY\"" >> .env
 
-        docker compose run --rm spider sh -c "npm ci && npm run test"
+        docker compose run --rm \
+        -e JWT=${{ secrets.JWT }} \
+        spider sh -c "npm ci && npm run test"
       env:
         AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT: ${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT }}
         AWS_CLOUDFRONT_PRIVATE_KEY: ${{ secrets.TEST_AWS_CLOUDFRONT_PRIVATE_KEY }}
         AWS_CLOUDFRONT_PUBLIC_KEY: ${{ secrets.TEST_AWS_CLOUDFRONT_PUBLIC_KEY }}
-        JWT: ${{ secrets.JWT }}
