@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { s3BucketName } from "../constants.js";
-import { s3Options, checkAccess, sync, s3EmptyDir } from "./s3";
+import { s3Options, checkAccess, createHeartbeat, sync, s3EmptyDir } from "./s3";
 
 describe("checkAccess", () => {
   let client;
@@ -24,6 +24,29 @@ describe("checkAccess", () => {
 
   it("should throw an error if the bucket is not accessible", async () => {
     await expect(checkAccess("invalid-bucket-name")).rejects.toThrow();
+  });
+});
+
+describe("createHeartbeat", () => {
+  let client;
+
+  beforeAll(() => {
+    client = new S3Client(s3Options);
+  });
+
+  it("should create /auth/heartbeat if it doesn't exist", async () => {
+    await s3EmptyDir("test/auth");
+
+    await createHeartbeat(undefined, "test/auth/heartbeat");
+
+    const objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "test/auth/heartbeat",
+      }),
+    );
+
+    expect(objects.Contents.length).toBe(1);
   });
 });
 

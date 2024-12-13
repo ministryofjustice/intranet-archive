@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
 import { S3SyncClient } from "s3-sync-client";
 import mime from "mime-types";
 
@@ -7,6 +7,7 @@ import {
   s3BucketName,
   s3Credentials as credentials,
   s3Region,
+  heartbeatEndpoint
 } from "../constants.js";
 
 /**
@@ -33,6 +34,36 @@ export const s3Options = {
  */
 
 export const client = new S3Client(s3Options);
+
+/**
+ * Create dummy /auth/heartbeat at bucket root, if it doesn't exist.
+ * 
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @returns {Promise<void>}
+ * 
+ * @throws {Error}
+ */
+
+export const createHeartbeat = async (bucket = s3BucketName, file = heartbeatEndpoint) => {
+  const objects = await client.send(
+    new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: file,
+    }),
+  )
+
+  if (!objects.Contents?.length) {
+    const response = await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: file,
+        Body: "OK",
+      })
+    )
+  }
+
+  return;
+};
 
 /**
  * S3 sync client

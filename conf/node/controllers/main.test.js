@@ -92,6 +92,24 @@ describe("main", () => {
     expect(pathExists).toBe(false);
   }, 10_000);
 
+  it("should create an auth/heartbeat file", async () => {
+    await main({ url, agency, depth: 1 });
+
+    // The snapshot should be on s3
+    const objects = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: 'auth/heartbeat',
+      }),
+    );
+
+    const heartbeat = objects.Contents.find(
+      (object) => object.Key === 'auth/heartbeat',
+    );
+
+    expect(heartbeat).toBeDefined();
+  }, 10_000);
+
   /**
    * Long running tests...
    */

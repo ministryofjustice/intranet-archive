@@ -66,3 +66,9 @@ export const sensitiveFiles = [
   `hts-cache/doit.log`, // Has the httrack command line arguments - this includes the JWT.
   `hts-cache/new.zip`,
 ];
+
+/**
+ * Intranet application
+ */
+
+export const heartbeatEndpoint = "auth/heartbeat";
