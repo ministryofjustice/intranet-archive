@@ -9,9 +9,7 @@ import { jwt } from "../constants.js";
  * @param {Object} props
  * @param {string} props.host
  * @param {string} props.agency
- * @returns {Object} object
- * @returns {string} object.s3 - the s3 path
- * @returns {string} object.fs - the local filesystem path
+ * @returns {{s3: string, fs: string}} the s3 and fs paths
  */
 
 export const getSnapshotPaths = ({ host, agency }) => {
@@ -34,14 +32,14 @@ export const getSnapshotPaths = ({ host, agency }) => {
  * @param {string} props.dest
  * @param {string} props.agency
  * @param {string} props.jwt
- * @param {number} props.depth
+ * @param {number} [props.depth] - Optional depth parameter
  *
  * @returns {string[]}
  */
 
 export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
   /** @type {string[]} */
-  let options = ["-%W", "/archiver/strip_x_amz_query_param.so", url.href];
+  let options = [url.href];
 
   /** @type {string[]} */
   const rules = [

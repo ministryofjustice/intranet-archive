@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
 import { S3SyncClient } from "s3-sync-client";
 import mime from "mime-types";
 
@@ -99,3 +99,91 @@ export const checkAccess = async (bucket = s3BucketName) => {
 
   return true;
 };
+
+/**
+ * Returns an array of all the agencies in the bucket's host folder.
+ *
+ * This function looks in the bucket in the host folder and returns an array of all the agencies.
+ * e.g looks in s3://s3BucketName/intranet.justice.gov.uk/ and returns an array of hq,hmcts etc.
+ *
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @param {string} host - The host to the intranet e.g. intranet.justice.gov.uk or dev.intranet.justice.gov.uk
+ * @returns {Promise<string[]>}
+ * 
+ * @throws {Error}
+ */
+
+export const getAgenciesFromS3 = async (bucket = s3BucketName, host) => {
+  if (!host) {
+    throw new Error("Host is required");
+  }
+
+  const command = new ListObjectsV2Command({
+    Bucket: bucket,
+    Prefix: `${host}/`,
+    Delimiter: "/",
+  });
+
+  const { CommonPrefixes } = await client.send(command);
+
+  return CommonPrefixes.map((folder) =>
+    folder.Prefix.replace(`${host}/`, "").replace("/", ""),
+  );
+};
+
+/**
+ * Get an agencies snapshots from S3
+ * 
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @param {string} host - The host to the intranet e.g. intranet.justice.gov.uk or dev.intranet.justice.gov.uk
+ * @param {string} agency - The agency to get snapshots for e.g. hq, hmcts etc.
+ * @returns {Promise<string[]>}
+ * 
+ * @throws {Error}
+ */
+
+export const getSnapshotsFromS3 = async (
+  bucket = s3BucketName,
+  host,
+  agency,
+) => {
+  if (!host) {
+    throw new Error("Host is required");
+  }
+
+  if (!agency) {
+    throw new Error("Agency is required");
+  }
+
+  const command = new ListObjectsV2Command({
+    Bucket: bucket,
+    Prefix: `${host}/${agency}/`,
+    Delimiter: "/",
+  });
+
+  const { CommonPrefixes } = await client.send(command);
+
+  return CommonPrefixes.map((folder) =>
+    folder.Prefix.replace(`${host}/${agency}/`, "").replace("/", ""),
+  );
+};
+
+/**
+ * Write string to an S3 file.
+ * 
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @param {string} path - The path to write to
+ * @param {string} content - The content to write
+ * 
+ * @returns {Promise<void>}
+ */
+
+export const writeToS3 = async (bucket = s3BucketName, path, content) => {
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: path,
+    Body: content,
+  });
+
+  await client.send(command);
+}

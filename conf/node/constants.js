@@ -66,3 +66,28 @@ export const sensitiveFiles = [
   `hts-cache/doit.log`, // Has the httrack command line arguments - this includes the JWT.
   `hts-cache/new.zip`,
 ];
+
+/**
+ * Index pages
+ */
+
+export const indexCss = `
+  main{display:block}a{background-color:transparent;color:#337ab7;text-decoration:none;text-shadow:#fff 1px 0 10px;}
+  .list-group-item,body{background-color:#fff}a:active,a:hover{outline:0}h1{font-size:2em;margin:.67em 0}
+  *,:after,:before{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}
+  html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;font-size:10px;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.42857143;color:#333}
+  a:focus,a:hover{color:#23527c;text-decoration:underline}
+  a:focus{outline:-webkit-focus-ring-color auto 5px;outline-offset:-2px}
+  .container{padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}
+  @media (min-width:768px){.container{width:750px}}@media (min-width:992px){.container{width:970px}}
+  @media (min-width:1200px){.container{width:1170px}}
+  .list-group{padding-left:0;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .list-group-item{position:relative;display:block;padding:14px 18px;margin:0 20px 25px 0;background: #fff;
+    -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+    -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.1) inset;
+  }
+  .container:after,.container:before{display:table;content:" "}
+  .container:after{clear:both}.list-group{-webkit-box-shadow:0 1px 2px rgba(0,0,0,.075);box-shadow:0 1px 2px rgba(0,0,0,.075)}
+`;
