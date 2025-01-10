@@ -230,7 +230,9 @@ describe("writeToS3", () => {
 
     await writeToS3(undefined, keyPlain, fileContent);
 
-    const resPlain = await client.send(new GetObjectCommand({...commandArgs, Key: keyPlain}));
+    const resPlain = await client.send(
+      new GetObjectCommand({ ...commandArgs, Key: keyPlain }),
+    );
 
     expect(resPlain.ContentType).toBe("text/plain");
 
@@ -239,10 +241,21 @@ describe("writeToS3", () => {
 
     await writeToS3(undefined, keyHtml, fileContent);
 
-    const resHtml = await client.send(new GetObjectCommand({...commandArgs, Key: keyHtml}));
+    const resHtml = await client.send(
+      new GetObjectCommand({ ...commandArgs, Key: keyHtml }),
+    );
 
     expect(resHtml.ContentType).toBe("text/html");
+  });
 
+  it("should write the correct cache control", async () => {
+    await writeToS3(undefined, commandArgs.Key, fileContent, {
+      cacheMaxAge: 60,
+    });
+
+    const res = await client.send(new GetObjectCommand(commandArgs));
+
+    expect(res.CacheControl).toBe("max-age=60");
   });
 });
 
@@ -309,6 +322,14 @@ describe("getSnapshotsFromS3", () => {
       new PutObjectCommand({
         Bucket: s3BucketName,
         Key: "test.get.snapshots/hq/2024-01-02/index.html",
+        Body: "test",
+      }),
+    );
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.snapshots/hq/non-date-folder/index.html",
         Body: "test",
       }),
     );

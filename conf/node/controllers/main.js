@@ -59,12 +59,23 @@ export const main = async ({ url, agency, depth }) => {
   await fs.rm(paths.fs, { recursive: true, force: true });
 
   // Generate and write content for the agency index file.
-  const agencyIndexHtml = await generateAgencyIndex(s3BucketName, url.host, agency);
-  await writeToS3(s3BucketName, `${url.host}/${agency}/index.html`, agencyIndexHtml);
+  const agencyIndexHtml = await generateAgencyIndex(
+    s3BucketName,
+    url.host,
+    agency,
+  );
+  await writeToS3(
+    s3BucketName,
+    `${url.host}/${agency}/index.html`,
+    agencyIndexHtml,
+    { cacheMaxAge: 600 },
+  );
 
   // Generate and write content for the root index file.
   const rootIndexHtml = await generateRootIndex(s3BucketName, url.host);
-  await writeToS3(s3BucketName, `index.html`, rootIndexHtml);
+  await writeToS3(s3BucketName, `index.html`, rootIndexHtml, {
+    cacheMaxAge: 600,
+  });
 
   console.log("Snapshot complete", { url: url.href, agency, depth });
 };

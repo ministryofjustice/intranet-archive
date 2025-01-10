@@ -1,5 +1,12 @@
 {
     "dockerComposeFile": "../docker-compose.yml",
     "service": "spider",
-    "workspaceFolder": "/usr/local/bin/node"
+    "workspaceFolder": "/usr/local/bin/node",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "esbenp.prettier-vscode"
+            ]
+        }
+    }
 }

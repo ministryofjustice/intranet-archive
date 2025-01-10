@@ -26,11 +26,14 @@ export const generateRootIndex = async (bucket = s3BucketName, host) => {
           <h1>Ministry of Justice Intranet Archive</h1>
           <h2 class="pb-2 border-bottom">${host}</h2>
           <ul class="list-group">
-            ${agencies.map(
-              (agency) => `<li class="list-group-item">
+            ${agencies
+              .map(
+                (agency) => `
+                <li class="list-group-item">
                   <a href="/${host}/${agency}/index.html" target="_blank">${agency}</a>
                 </li>`,
-            )}
+              )
+              .join("\n")}
           </ul>
         </div>
       </main>
@@ -74,11 +77,14 @@ export const generateAgencyIndex = async (
           <h1>Ministry of Justice Intranet Archive</h1>
           <h2 class="pb-2 border-bottom">${host} - ${agency}</h2>
           <ul class="list-group">
-            ${snapshots.map(
-              (snapshot) => `<li class="list-group-item">
+            ${snapshots
+              .map(
+                (snapshot) => `
+                <li class="list-group-item">
                   <a href="/${host}/${agency}/${snapshot}/${host}/index.html" target="_blank">${snapshot}</a>
                 </li>`,
-            )}
+              )
+              .join("\n")}
           </ul>
         </div>
       </main>
