@@ -78,10 +78,10 @@ describe("main", () => {
       `${paths.s3}/hts-log.txt`,
       `${paths.s3}/hts-cache/doit.log`,
       `${paths.s3}/hts-cache/new.zip`,
-    ]
+    ];
 
-    const foundSensitiveFiles = objects.Contents.find(
-      (object) => sensitiveFiles.includes(object.Key),
+    const foundSensitiveFiles = objects.Contents.find((object) =>
+      sensitiveFiles.includes(object.Key),
     );
 
     expect(foundSensitiveFiles).toBeUndefined();
@@ -109,6 +109,28 @@ describe("main", () => {
 
     expect(heartbeat).toBeDefined();
   }, 10_000);
+
+  it("should create root and agency index files", async () => {
+    await main({ url, agency, depth: 1 });
+
+    const rootIndexHtml = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: `${url.host}/index.html`,
+      }),
+    );
+    
+    expect(rootIndexHtml).toBeDefined();
+
+    const agencyIndexHtml = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: `${url.host}/${agency}/index.html`,
+      }),
+    );
+
+    expect(agencyIndexHtml).toBeDefined();
+  });
 
   /**
    * Long running tests...

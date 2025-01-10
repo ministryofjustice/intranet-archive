@@ -8,7 +8,16 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { s3BucketName } from "../constants.js";
-import { s3Options, checkAccess, createHeartbeat, sync, s3EmptyDir } from "./s3";
+import {
+  s3Options,
+  checkAccess,
+  createHeartbeat,
+  sync,
+  s3EmptyDir,
+  writeToS3,
+  getAgenciesFromS3,
+  getSnapshotsFromS3,
+} from "./s3";
 
 describe("checkAccess", () => {
   let client;
@@ -170,5 +179,139 @@ describe("S3EmptyDir", () => {
     );
 
     expect(objects.Contents).toBeUndefined();
+  });
+});
+
+describe("writeToS3", () => {
+  let client;
+
+  const fileContent = "Hello, World!";
+
+  const commandArgs = {
+    Bucket: s3BucketName,
+    Key: "test/writeToS3.txt",
+  };
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Delete the test file from S3 if it exists.
+    try {
+      await client.send(new DeleteObjectCommand(commandArgs));
+    } catch (e) {
+      // Ignore the error if the file doesn't exist
+      if (e.name !== "NoSuchKey") {
+        throw e;
+      }
+    }
+  });
+
+  afterAll(async () => {
+    // Remove the test file
+    await client.send(new DeleteObjectCommand(commandArgs));
+
+    client.destroy();
+  });
+
+  it("should write the file to S3", async () => {
+    await writeToS3(undefined, "test/writeToS3.txt", fileContent);
+
+    const res = await client.send(new GetObjectCommand(commandArgs));
+
+    const bodyString = await res.Body.transformToString();
+
+    expect(bodyString).toBe(fileContent);
+  });
+});
+
+describe("getAgenciesFromS3", () => {
+  let client;
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Make a folder on s3 for the test
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.agencies/hmcts/2024-01-01/index.html",
+        Body: "test",
+      }),
+    );
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.agencies/hq/2024-01-01/index.html",
+        Body: "test",
+      }),
+    );
+  });
+
+  afterAll(() => {
+    // Remove the test folder
+    client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.agencies/",
+      }),
+    );
+
+    client.destroy();
+  });
+
+  it("should return an array of agencies", async () => {
+    const agencies = await getAgenciesFromS3(undefined, "test.get.agencies");
+
+    expect(agencies).toBeInstanceOf(Array);
+    expect(agencies).toStrictEqual(["hmcts", "hq"]);
+  });
+});
+
+describe("getSnapshotsFromS3", () => {
+  let client;
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Make a folder on s3 for the test
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.snapshots/hq/2024-01-01/index.html",
+        Body: "test",
+      }),
+    );
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.snapshots/hq/2024-01-02/index.html",
+        Body: "test",
+      }),
+    );
+  });
+
+  afterAll(() => {
+    // Remove the test folder
+    client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "test.get.snapshots/",
+      }),
+    );
+
+    client.destroy();
+  });
+
+  it("should return an array of snapshots", async () => {
+    const snapshots = await getSnapshotsFromS3(
+      undefined,
+      "test.get.snapshots",
+      "hq",
+    );
+
+    expect(snapshots).toBeInstanceOf(Array);
+    expect(snapshots).toStrictEqual(["2024-01-01", "2024-01-02"]);
   });
 });

@@ -8,7 +8,8 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
-import { createHeartbeat, sync } from "./s3.js";
+import { createHeartbeat, sync, writeToS3 } from "./s3.js";
+import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
 
 /**
  *
@@ -56,6 +57,14 @@ export const main = async ({ url, agency, depth }) => {
 
   // Clean up the snapshot directory
   await fs.rm(paths.fs, { recursive: true, force: true });
+
+  // Generate and write content for the agency index file.
+  const agencyIndexHtml = await generateAgencyIndex(s3BucketName, url.host, agency);
+  await writeToS3(s3BucketName, `${url.host}/${agency}/index.html`, agencyIndexHtml);
+
+  // Generate and write content for the root index file.
+  const rootIndexHtml = await generateRootIndex(s3BucketName, url.host);
+  await writeToS3(s3BucketName, `${url.host}/index.html`, rootIndexHtml);
 
   console.log("Snapshot complete", { url: url.href, agency, depth });
 };
