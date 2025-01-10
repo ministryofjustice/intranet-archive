@@ -192,3 +192,62 @@ kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snaps
 | `make down`         | Alias of `docker compose down`.                                                                                                                       |
 | `make shell`        | Open a bash shell on the spider container. The application must already be running (e.g. via `make run`) before this can be used.                     |
 | `make sync` <img width="145" /> | Open a bash shell and execute `s3sync`. Uploads all assets to AWS S3                                                                      |
+
+
+## Azure Setup
+
+### Useful links
+
+- [Ministry of Justice | Overview](https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview)
+- App [justicedigital-centraldigital-intranet-archive-preprod](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/quickStartType~/null/sourceType/Microsoft_AAD_IAM/appId/****)
+- App [justicedigital-centraldigital-intranet-archive](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/quickStartType~/null/sourceType/Microsoft_AAD_IAM/appId/****)
+
+### Register an application
+
+1. Go to the Azure portal and sign in with your account.
+2. Click on the `Microsoft Entra ID` service.
+3. Click on `App registrations`.
+4. Click on `New registration`.
+5. Fill in the form (adjust to the environment):
+   - Name: `justicedigital-centraldigital-intranet-archive-preprod`
+   - Supported account types: `Accounts in this organizational directory only`
+   - Redirect URI: `Web` and `https://app.archive.dev.intranet.justice.gov.uk/oauth/redirect`
+     or `TBC` etc.
+6. Copy the `Application (client) ID` and `Directory (tenant) ID` values,
+  make them available as environment variables `OAUTH_CLIENT_ID`, `OAUTH_TENANT_ID`.
+7. Click on `Certificates & secrets` > `New client secret`.
+8. Fill in the form:
+   - Description: `Staging`
+   - Expires: `18 months`
+9. Set a reminder to update the client secret before it expires.
+10. Copy the `Value` value, make it available as environment variable `OAUTH_CLIENT_SECRET`.
+11. Make a request the Identity Team, that `User.Read` API permissions be added to the app.
+
+The oauth2 flow should now work with the Azure AD/Entra ID application.
+You can get an Access Token, Refresh Token and an expiry of the token.
+
+### Auth in this codebase
+
+The implementation of Entra ID in this codebase is based on the tutorial 
+[Sign in users and acquire a token for Microsoft Graph in a Node.js & Express web app](https://learn.microsoft.com/en-us/entra/identity-platform/tutorial-v2-nodejs-webapp-msal).
+
+Having followed the tutorial, some changes were made to the file names to match the project structure.
+
+In this project, auth is limited to the following files:
+
+- `.env` - where the environment variables are defined.
+- `conf/node/server.js` - where auth middleware is applied and routes are mounted.
+- `conf/node/auth/middleware` - where the auth middleware is defined.
+- `conf/node/auth/provider.js` - where the auth provider is defined.
+- `conf/node/auth/routes.js` - where the auth routes are defined.
+<!-- - `app/views/login-screen.html` - where the login screen is defined. -->
+<!-- - `app/views/layouts/main--logged-out.html` - where the layout for the logged out state is defined. -->
+<!-- - `app/views/layouts/_header--logged-out.html` - where a stripped down header for the logged out state is defined. -->
+<!-- - `app/views/layouts/_footer--logged-out.html` - where a stripped down footer for the logged out state is defined. -->
+
+The auth middleware is applied to all routes except the auth routes.
+
+For the time being, express-session is used to store the user's session.
+If the production environment is to be scaled horizontally, the session store should be changed to a shared store like Redis.
+
+To turn off auth for an environment, set `OAUTH_SKIP_AUTH` to `true` in the environment variables.

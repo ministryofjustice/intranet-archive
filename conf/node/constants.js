@@ -1,5 +1,18 @@
 export const port = 2000;
+export const baseUrl = process.env.BASE_URL;
 export const jwt = process.env.JWT;
+
+/**
+ * Auth
+ */
+
+export const skipAuth = process.env.OAUTH_SKIP_AUTH === 'true';
+export const oauthClientId = process.env.OAUTH_CLIENT_ID;
+export const oauthTenantId = process.env.OAUTH_TENANT_ID;
+export const oauthClientSecret = process.env.OAUTH_CLIENT_SECRET;
+export const oauthRedirectUri = `${process.env.BASE_URL}/auth/redirect`;
+export const oauthLogoutRedirectUri = `${process.env.BASE_URL}/auth/login-screen?logged-out=true`;
+export const expressSessionSectet = process.env.EXPRESS_SESSION_SECRET;
 
 /**
  * S3

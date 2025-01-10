@@ -12,8 +12,12 @@ import cors from "cors";
 import express from "express";
 
 // Relative
-import { corsOptions, jwt, port } from "./constants.js";
+import { corsOptions, jwt, port, skipAuth } from "./constants.js";
 import { parseBody } from "./middleware.js";
+// Auth
+import { session, isAuthenticated } from "./auth/middleware.js";
+import authRouter from "./auth/routes.js";
+// Controllers
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
   getCdnUrl,
@@ -28,6 +32,9 @@ const app = express();
  * Middleware
  */
 
+// Use express-session to manage user sessions - i.e. login via Entra.
+skipAuth || app.use(session);
+
 app.use(express.static("/usr/share/nginx/html"));
 
 // Middleware to parse incoming POST requests
@@ -39,9 +46,15 @@ app.use(cors(corsOptions));
 // Middleware to parse the url and agency
 app.use(parseBody);
 
+// Add auth middleware
+skipAuth || app.use(isAuthenticated);
+
 /**
  * Routes
  */
+
+// Define routes for auth
+skipAuth || app.use("/auth", authRouter);
 
 app.post("/fetch-test", async function (req, res, next) {
   try {
@@ -76,12 +89,10 @@ app.post("/spider", function (req, res) {
 
 app.get("/access-archive", async function (req, res, next) {
   try {
-    // Get the current domain from the request
-    const appUrl = new URL(
-      `${req.headers["x-forwarded-proto"] || req.protocol}://${
-        req.headers["x-forwarded-host"] || req.headers["host"]
-      }`,
-    );
+    // Get the current domain from the request headers
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const host = req.headers["x-forwarded-host"] || req.headers["host"];
+    const appUrl = new URL(`${protocol}://${host}`);
 
     // Get the CloudFront CDN URL
     const cdnUrl = getCdnUrl(appUrl);
@@ -90,7 +101,9 @@ app.get("/access-archive", async function (req, res, next) {
     const cookies = getCookies({
       resource: `${cdnUrl.origin}/*`,
       dateLessThan: getDateLessThan(),
-      clientIp: Array.isArray(req.headers["x-real-ip"]) ? req.headers["x-real-ip"][0] : req.headers["x-real-ip"],
+      clientIp: Array.isArray(req.headers["x-real-ip"])
+        ? req.headers["x-real-ip"][0]
+        : req.headers["x-real-ip"],
     });
 
     // Set the cookies on the response
