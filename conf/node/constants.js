@@ -68,6 +68,12 @@ export const sensitiveFiles = [
 ];
 
 /**
+ * Intranet application
+ */
+
+export const heartbeatEndpoint = "auth/heartbeat";
+
+/**
  * Index pages
  */
 

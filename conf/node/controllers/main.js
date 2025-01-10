@@ -8,8 +8,8 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
+import { createHeartbeat, sync, writeToS3 } from "./s3.js";
 import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
-import { sync, writeToS3 } from "./s3.js";
 
 /**
  *
@@ -48,6 +48,9 @@ export const main = async ({ url, agency, depth }) => {
   await Promise.all(
     sensitiveFiles.map((file) => fs.rm(`${paths.fs}/${file}`, { force: true })),
   );
+
+  // Add a file at /auth/heartbeat for the intranet's heartbeat script.
+  await createHeartbeat();
 
   // Sync the snapshot to S3
   await sync(paths.fs, `s3://${s3BucketName}/${paths.s3}`);
