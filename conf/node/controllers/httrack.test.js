@@ -1,5 +1,6 @@
 import fs from "node:fs";
-import { afterAll, beforeEach, it, jest } from "@jest/globals";
+import http from "node:http";
+import { afterAll, it, jest } from "@jest/globals";
 
 import {
   getHttrackArgs,
@@ -157,7 +158,7 @@ describe("waitForHttrackComplete", () => {
 
     const httrackComplete = await waitForHttrackComplete("/tmp/www.all.net");
 
-    expect(httrackComplete).toStrictEqual({"timedOut": false});
+    expect(httrackComplete).toStrictEqual({ timedOut: false });
 
     // Wait for the process to finish logging.
     await promise;
@@ -176,10 +177,103 @@ describe("waitForHttrackComplete", () => {
 
     const httrackComplete = await waitForHttrackComplete("/tmp/www.all.net", 2);
 
-    expect(httrackComplete).toStrictEqual({"timedOut": true});
+    expect(httrackComplete).toStrictEqual({ timedOut: true });
 
     // Wait for the process to finish logging.
     await promise;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }, 10_000);
+
+});
+
+/**
+ * Test the way httrack sends cookies.
+ * 
+ * This experiment shows that:
+ * - we can set a cookie in the cookies.txt file before the crawl starts
+ *   it will persist throughout the crawl, even if the server responds 
+ *   with an update for the cookie.
+ * - any updates to the cookies.txt file during the crawl will not be
+ *   picked up by httrack.
+ */
+
+describe.only("httrack cookie playground", () => {
+  let server;
+  let counter = 0;
+
+  beforeAll(() => {
+    // Create a http server
+    server = http.createServer((_req, res) => {
+      // Log the request cookies.
+      console.log(_req.headers.cookie);
+      res.setHeader("Set-Cookie", "dw_agency=updated-by-server");
+      res.setHeader("Set-Cookie", `counter=${counter++}`);
+
+      // Respond with 5 links to /1, /2 etc.
+      res.end(`
+        <html>
+          <body>
+        ${Array.from({ length: 5 })
+          .map((_, i) => `<a href="/${i}">${i}</a>`)
+          .join("")}
+          </body>
+        </html>
+        `);
+    });
+
+    server.listen(4000);
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
+  it("should send cookies from cookies.txt", async () => {
+    // Clean out the directory
+    fs.rmSync("/tmp/localhost", { recursive: true, force: true });
+
+    // Make the folder for the snapshot
+    fs.mkdirSync("/tmp/localhost");
+
+    // Add a cookies.txt file
+    fs.writeFileSync(
+      "/tmp/localhost/cookies.txt",
+      "localhost:4000\tTRUE\t/\tFALSE\t1999999999\tdw_agency\thq",
+    );
+
+    // Run a basic httrack command
+    const { promise } = runHttrack([
+      "http://localhost:4000",
+      "-O",
+      "/tmp/localhost",
+      "+localhost/*",
+      "-v",
+      // "-b1", // This option does nothing here.
+    ]);
+
+    // Wait for 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Writing to the cookies.txt mid-crawl does noting.
+    fs.writeFileSync(
+      "/tmp/localhost/cookies.txt",
+      "localhost:4000\tTRUE\t/\tFALSE\t1999999999\tfile\ttest",
+    );
+
+    console.log("Cookies file updated");
+
+    await promise;
+
+    // Wait for the process to finish logging.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    await waitForHttrackComplete("/tmp/localhost");
+
+    // Read the cookies file after the process has finished.
+    const cookies = fs.readFileSync("/tmp/localhost/cookies.txt", "utf-8");
+
+    expect(cookies).toContain("dw_agency\thq");
+    expect(cookies).not.toContain("dw_agency\tupdated-by-server");
+    expect(cookies).toContain("counter\t6");
+  }, 15_000);
 });
