@@ -214,6 +214,7 @@ export const writeToS3 = async (bucket = s3BucketName, path, content) => {
     Bucket: bucket,
     Key: path,
     Body: content,
+    ContentType: mime.lookup(path) || "text/html",
   });
 
   await client.send(command);
