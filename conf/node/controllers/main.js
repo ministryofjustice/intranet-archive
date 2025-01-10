@@ -64,7 +64,7 @@ export const main = async ({ url, agency, depth }) => {
 
   // Generate and write content for the root index file.
   const rootIndexHtml = await generateRootIndex(s3BucketName, url.host);
-  await writeToS3(s3BucketName, `${url.host}/index.html`, rootIndexHtml);
+  await writeToS3(s3BucketName, `index.html`, rootIndexHtml);
 
   console.log("Snapshot complete", { url: url.href, agency, depth });
 };

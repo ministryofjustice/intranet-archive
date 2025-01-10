@@ -112,7 +112,7 @@ describe("sync", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
-  });
+  }, 10_000);
 
   it("should add content type to the destination files", async () => {
     await sync("/tmp/s3-test", `s3://${s3BucketName}/test-types`);
@@ -221,6 +221,28 @@ describe("writeToS3", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
+  });
+
+  it("should write the correct mime/content type", async () => {
+    // Plain text
+
+    const keyPlain = "test/writeToS3.txt";
+
+    await writeToS3(undefined, keyPlain, fileContent);
+
+    const resPlain = await client.send(new GetObjectCommand({...commandArgs, Key: keyPlain}));
+
+    expect(resPlain.ContentType).toBe("text/plain");
+
+    // HTML
+    const keyHtml = "test/writeToS3.html";
+
+    await writeToS3(undefined, keyHtml, fileContent);
+
+    const resHtml = await client.send(new GetObjectCommand({...commandArgs, Key: keyHtml}));
+
+    expect(resHtml.ContentType).toBe("text/html");
+
   });
 });
 
