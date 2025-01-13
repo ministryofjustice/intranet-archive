@@ -3,6 +3,7 @@ import {
   getKeyPairId,
   getCookies,
   getDateLessThan,
+  getCookiesToClear,
 } from "./cloudfront.js";
 
 describe("getCdnUrl", () => {
@@ -61,6 +62,23 @@ describe("getCookies", () => {
     expect(statement.Condition.DateLessThan["AWS:EpochTime"]).toBe(
       dateLessThan,
     );
-    expect(statement.Condition.IpAddress["AWS:SourceIp"]).toBe(`${clientIp}/32`);
+    expect(statement.Condition.IpAddress["AWS:SourceIp"]).toBe(
+      `${clientIp}/32`,
+    );
+  });
+});
+
+describe("getCookiesToClear", () => {
+  it("should return cookies", () => {
+    const cookies = getCookiesToClear("archive.dev.intranet.docker");
+
+    expect(cookies).toStrictEqual([
+      { domain: "dev.intranet.docker", name: "CloudFront-Key-Pair-Id" },
+      { domain: "dev.intranet.docker", name: "CloudFront-Policy" },
+      { domain: "dev.intranet.docker", name: "CloudFront-Signature" },
+      { domain: "intranet.docker", name: "CloudFront-Key-Pair-Id" },
+      { domain: "intranet.docker", name: "CloudFront-Policy" },
+      { domain: "intranet.docker", name: "CloudFront-Signature" },
+    ]);
   });
 });

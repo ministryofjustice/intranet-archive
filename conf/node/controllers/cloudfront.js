@@ -121,3 +121,34 @@ export const getCookies = ({ resource, dateLessThan, clientIp }) => {
 
   return signedCookies;
 };
+
+/**
+ * Get a list of CloudFront cookies on parent domains.
+ *
+ * @param {string} cdnHostname - The hostname of the CDN
+ * @returns {{domain: string, name: string}[]} - The cookies to clear
+ */
+
+export const getCookiesToClear = (cdnHostname) => {
+  // Split the hostname into parts
+  const parts = cdnHostname.split(".");
+
+  /** @type {{domain: string, name: string}[]} */
+  const cookies = [];
+
+  // Clear cookies on parent domains
+  for (let i = 1; i < parts.length; i++) {
+    // Stop at docker or gov
+    if (["docker", "gov"].includes(parts[i])) {
+      break;
+    }
+
+    const domain = parts.slice(i).join(".");
+
+    cookies.push({ domain, name: "CloudFront-Key-Pair-Id" });
+    cookies.push({ domain, name: "CloudFront-Policy" });
+    cookies.push({ domain, name: "CloudFront-Signature" });
+  }
+
+  return cookies;
+};

@@ -19,6 +19,7 @@ import {
   getCdnUrl,
   getCookies,
   getDateLessThan,
+  getCookiesToClear,
 } from "./controllers/cloudfront.js";
 import { main } from "./controllers/main.js";
 
@@ -90,7 +91,9 @@ app.get("/access-archive", async function (req, res, next) {
     const cookies = getCookies({
       resource: `${cdnUrl.origin}/*`,
       dateLessThan: getDateLessThan(),
-      clientIp: Array.isArray(req.headers["x-real-ip"]) ? req.headers["x-real-ip"][0] : req.headers["x-real-ip"],
+      clientIp: Array.isArray(req.headers["x-real-ip"])
+        ? req.headers["x-real-ip"][0]
+        : req.headers["x-real-ip"],
     });
 
     // Set the cookies on the response
@@ -101,6 +104,11 @@ app.get("/access-archive", async function (req, res, next) {
         sameSite: "lax",
         httpOnly: true,
       });
+    });
+
+    // Clear CloudFront cookies from parent domains
+    getCookiesToClear(cdnUrl.host).forEach(({ domain, name }) => {
+      res.clearCookie(name, { domain });
     });
 
     // Redirect to the CDN URL.
