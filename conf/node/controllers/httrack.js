@@ -50,6 +50,7 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "+*.css",
     "+*.js",
     "-ad.doubleclick.net/*",
+    "-justiceuk.sharepoint.com/*",
     "-*intranet.justice.gov.uk/agency-switcher/",
     "-*intranet.justice.gov.uk/?*agency=*",
     "-*intranet.justice.gov.uk/?p=*",
