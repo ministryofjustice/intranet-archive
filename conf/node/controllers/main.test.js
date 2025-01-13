@@ -1,11 +1,11 @@
 import fs from "fs/promises";
 import { afterAll, beforeEach, expect, it, jest } from "@jest/globals";
 
-import { ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 
 import { main } from "./main.js";
 import { getSnapshotPaths } from "./httrack.js";
-import { client as s3Client, s3EmptyDir } from "./s3.js";
+import { s3Options, s3EmptyDir } from "./s3.js";
 import { s3BucketName } from "../constants.js";
 
 // Skip long tests when running in watch mode.
@@ -15,6 +15,7 @@ describe("main", () => {
   const url = new URL("https://intranet.justice.gov.uk/");
   const agency = "hq";
   const paths = getSnapshotPaths({ host: url.host, agency });
+  const s3Client = new S3Client(s3Options);
 
   beforeAll(async () => {
     // Mock console.log so the tests are quiet.

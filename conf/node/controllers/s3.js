@@ -37,7 +37,7 @@ export const s3Options = {
  * @type {S3Client}
  */
 
-export const client = new S3Client(s3Options);
+const client = new S3Client(s3Options);
 
 /**
  * Create dummy /auth/heartbeat at bucket root, if it doesn't exist.
@@ -73,14 +73,6 @@ export const createHeartbeat = async (
 };
 
 /**
- * S3 sync client
- *
- * @see https://github.com/jeanbmar/s3-sync-client
- */
-
-const { sync: originalSync } = new S3SyncClient({ client });
-
-/**
  * Sync a local directory to an S3 bucket
  *
  * @param {string} source - The source directory
@@ -96,8 +88,51 @@ export const sync = async (source, destination, options = {}) => {
     ContentType: mime.lookup(input.Key) || "text/html",
   });
 
-  return originalSync(source, destination, options);
+  // Use freshly created S3 client here to minimise the risk of connnection issues
+  const client = new S3Client(s3Options);
+
+  // Create a new S3 sync client
+  const { sync: syncClient } = new S3SyncClient({ client });
+
+  return new Promise((resolve, reject) => {
+    syncClient(source, destination, options)
+      .then((output) => {
+        // Destroy the dedicated (non-global) client
+        client.destroy();
+        // Resolve the output
+        resolve(output);
+      })
+      .catch(reject);
+  });
 };
+
+/**
+ * Sync a local directory to an S3 bucket - with retries
+ *
+ * @param {string} source - The source directory
+ * @param {string} destination - The destination directory
+ * @param {?import('s3-sync-client/dist/commands/SyncCommand').SyncOptions} options - The sync options
+ *
+ * @returns {Promise<import('s3-sync-client/dist/commands/SyncCommand').SyncCommandOutput>}
+ */
+
+export const syncWithRetries = async (source, destination, options = {}) => {
+  let retries = 0;
+  let output;
+
+  return new Promise(async (resolve, reject) => {
+    while (retries < 3) {
+      try {
+        output = await sync(source, destination, options);
+        return resolve(output);
+      } catch (error) {
+        console.error("Sync failed, retrying", { source, destination, retries });
+        retries++;
+      }
+    }
+    reject(new Error("Sync failed after 3 retries"));
+  });
+}
 
 /**
  * Empty an S3 folder by using sync and deleting all files

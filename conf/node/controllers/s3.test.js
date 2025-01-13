@@ -13,6 +13,7 @@ import {
   checkAccess,
   createHeartbeat,
   sync,
+  syncWithRetries,
   s3EmptyDir,
   writeToS3,
   getAgenciesFromS3,
@@ -135,6 +136,61 @@ describe("sync", () => {
 
     expect(htmlObject.ContentType).toBe("text/html");
   });
+});
+
+describe("syncWithRetries", () => {
+  let client;
+
+  const fileContent = "Hello, World!";
+
+  const commandArgs = {
+    Bucket: s3BucketName,
+    Key: "test/test.txt",
+  };
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Delete the test file from S3 if it exists.
+    try {
+      await client.send(new DeleteObjectCommand(commandArgs));
+    } catch (e) {
+      // Ignore the error if the file doesn't exist
+      if (e.name !== "NoSuchKey") {
+        throw e;
+      }
+    }
+
+    // Ensure the directory exists
+    await fs.promises.mkdir("/tmp/s3-test", { recursive: true });
+
+    // Create a test file in /tmp/s3-test
+    await fs.promises.writeFile("/tmp/s3-test/test.txt", fileContent);
+
+    await fs.promises.writeFile(
+      "/tmp/s3-test/test.html",
+      "<html><body><h1>Hello, World!</h1></body></html>",
+    );
+  });
+
+  afterAll(async () => {
+    // Remove the test files
+    await fs.promises.unlink("/tmp/s3-test/test.txt");
+
+    await client.destroy();
+  });
+
+  it("should sync the files", async () => {
+    // Add your test here
+    await syncWithRetries("/tmp/s3-test", `s3://${s3BucketName}/test`);
+
+    // Check the file exists in S3
+    const res = await client.send(new GetObjectCommand(commandArgs));
+
+    const bodyString = await res.Body.transformToString();
+
+    expect(bodyString).toBe(fileContent);
+  }, 10_000);
 });
 
 describe("S3EmptyDir", () => {
