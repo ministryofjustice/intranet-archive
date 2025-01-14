@@ -2,8 +2,6 @@
 
 exports[`getHttrackArgs should return an array of arguments 1`] = `
 [
-  "-%W",
-  "/archiver/strip_x_amz_query_param.so",
   "https://intranet.justice.gov.uk/",
   "+*.png",
   "+*.gif",
@@ -11,7 +9,11 @@ exports[`getHttrackArgs should return an array of arguments 1`] = `
   "+*.jpeg",
   "+*.css",
   "+*.js",
+  "+*.eot",
+  "+*.ttf",
+  "+*.woff",
   "-ad.doubleclick.net/*",
+  "-justiceuk.sharepoint.com/*",
   "-*intranet.justice.gov.uk/agency-switcher/",
   "-*intranet.justice.gov.uk/?*agency=*",
   "-*intranet.justice.gov.uk/?p=*",

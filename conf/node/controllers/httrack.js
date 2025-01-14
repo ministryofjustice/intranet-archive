@@ -49,6 +49,10 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "+*.jpeg",
     "+*.css",
     "+*.js",
+    // Fonts (including icon-fonts)
+    "+*.eot",
+    "+*.ttf",
+    "+*.woff",
     "-ad.doubleclick.net/*",
     "-justiceuk.sharepoint.com/*",
     "-*intranet.justice.gov.uk/agency-switcher/",
@@ -60,11 +64,18 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "+*intranet.justice.gov.uk/?*agency=" + agency,
   ];
 
+  const commands = {
+    // Remove srcset attributes
+    removeSrcset: `sed -i 's/srcset="[^"]*"//g' $0`,
+    // Replace the agency switcher URL with '/'
+    replaceAgencySwitcher: `sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0`,
+  };
+
   /** @type {string[]} */
   const settings = [
     "-s0", // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
-    '"sed -i \'s/srcset="[^"]*"//g\' $0"',
+    `"${commands.removeSrcset} && ${commands.replaceAgencySwitcher}"`,
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
     "-F",
     "intranet-archive",
