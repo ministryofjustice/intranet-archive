@@ -12,8 +12,8 @@ import cors from "cors";
 import express from "express";
 
 // Relative
-import { corsOptions, jwt, port } from "./constants.js";
-import { parseBody } from "./middleware.js";
+import { corsOptions, intranetJwt,  port } from "./constants.js";
+import { parseBody, checkSignature } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
   getCdnUrl,
@@ -38,7 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
 // Middleware to parse the url and agency
-app.use(parseBody);
+app.use(parseBody, checkSignature);
 
 /**
  * Routes
@@ -48,7 +48,7 @@ app.post("/fetch-test", async function (req, res, next) {
   try {
     const { status } = await fetch(req.mirror.url, {
       redirect: "manual",
-      headers: { Cookie: `jwt=${jwt}` },
+      headers: { Cookie: `jwt=${intranetJwt}` },
     });
     res.status(200).send({ status });
   } catch (err) {
@@ -75,7 +75,13 @@ app.post("/spider", function (req, res) {
   res.status(200).sendFile(path.join("/usr/share/nginx/html/working.html"));
 });
 
-app.get("/access-archive", async function (req, res, next) {
+app.post("/access-archive", async function (req, res, next) {
+  // Check if the request is valid
+  if(!req.isValid) {
+    res.status(403).send({ status: 403 });
+    return;
+  }
+
   try {
     // Get the current domain from the request
     const appUrl = new URL(

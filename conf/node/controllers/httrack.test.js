@@ -8,7 +8,7 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack";
-import { jwt } from "../constants.js";
+import { intranetJwt } from "../constants.js";
 
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
@@ -19,13 +19,13 @@ describe("getHttrackArgs", () => {
       url: new URL("https://intranet.justice.gov.uk/"),
       dest: "/tmp/test-snapshot",
       agency: "hq",
-      jwt,
+      jwt: intranetJwt,
     };
 
     const args = getHttrackArgs(options);
 
     // Redacted args
-    const redactedArgs = args.map((entry) => entry.replace(jwt, "***"));
+    const redactedArgs = args.map((entry) => entry.replace(intranetJwt, "***"));
 
     // Compare to snapshot
     expect(redactedArgs).toMatchSnapshot();
