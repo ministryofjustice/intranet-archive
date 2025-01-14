@@ -36,9 +36,14 @@ describe("runHttrack", () => {
   beforeAll(() => {
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
+
+    fs.rmSync("/tmp/www.all.net", { recursive: true, force: true });
+    fs.rmSync("/tmp/news.ycombinator.com", { recursive: true, force: true });
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    // Wait for httrack close message to log
+    await new Promise((resolve) => setTimeout(resolve, 500));
     // Restore console.log
     jest.restoreAllMocks();
   });
@@ -60,6 +65,41 @@ describe("runHttrack", () => {
 
     expect(exitCode).toBe(0);
   });
+
+  it("should run multiple system commands", async () => {
+    // Remove src attributes (with double and single quotes).
+    const script1 = `sed -i 's/src="[^"]*"//g' $0`;
+    const script2 = `sed -i "s/src='[^']*'//g" $0`;
+    // Replace a link for https://news.ycombinator.com/newsfaq.html with a link to https://example.com
+    const script3 = `sed -i 's|href="https://news.ycombinator.com/newsfaq.html"|href="/example.html"|g' $0`;
+
+    const { listener, promise } = runHttrack([
+      "https://news.ycombinator.com",
+      "-O",
+      "/tmp/news.ycombinator.com",
+      "+*.news.ycombinator.com/*",
+      "-v",
+      "-r1",
+      "-V",
+      `"${script1} && ${script2} && ${script3}"`,
+    ]);
+
+    // listener should have a pid, it should be a number
+    expect(listener.pid).toBeGreaterThan(0);
+
+    const exitCode = await promise;
+
+    expect(exitCode).toBe(0);
+
+    const fileContents = fs.readFileSync(
+      "/tmp/news.ycombinator.com/news.ycombinator.com/index.html",
+      "utf-8",
+    );
+
+    expect(fileContents).toContain("<img");
+    expect(fileContents).not.toContain("src=");
+    expect(fileContents).toContain("/example.html");
+  }, 10_000);
 });
 
 describe("getHttrackProgress", () => {
@@ -183,21 +223,20 @@ describe("waitForHttrackComplete", () => {
     await promise;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }, 10_000);
-
 });
 
 /**
  * Test the way httrack sends cookies.
- * 
+ *
  * This experiment shows that:
  * - we can set a cookie in the cookies.txt file before the crawl starts
- *   it will persist throughout the crawl, even if the server responds 
+ *   it will persist throughout the crawl, even if the server responds
  *   with an update for the cookie.
  * - any updates to the cookies.txt file during the crawl will not be
  *   picked up by httrack.
  */
 
-describe.only("httrack cookie playground", () => {
+xdescribe("httrack cookie playground", () => {
   let server;
   let counter = 0;
 
