@@ -8,10 +8,22 @@ import { getSnapshotPaths } from "./httrack.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
 import { s3BucketName } from "../constants.js";
 
+// Skip tests when running on CI, because this environment doesn't have access to the intranet.
+const skipAllTests = process.env.CI === "true";
+
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
 
 describe("main", () => {
+  if (skipAllTests) {
+    it.skip("should get index files on a shallow scrape", async () => {});
+    it.skip("should delete sensitive files and cleanup local fs", async () => {});
+    it.skip("should create an auth/heartbeat file", async () => {});
+    it.skip("should create root and agency index files", async () => {});
+    it.skip("should get styles.css from the cdn", async () => {});
+    return;
+  }
+
   const url = new URL("https://intranet.justice.gov.uk/");
   const agency = "hq";
   const paths = getSnapshotPaths({ host: url.host, agency });
