@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: ${KUBE_NAMESPACE}
 spec:
-  replicas: 2
+  replicas: 1
   revisionHistoryLimit: 5
   selector:
     matchLabels:
