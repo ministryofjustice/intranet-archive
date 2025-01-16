@@ -132,7 +132,7 @@ if (ordinalNumber === 0) {
   // Schedule the main function to run at the specified times
   snapshotSchedule.forEach(({ agency, ...schedule }) => {
     scheduleFunction(schedule, () => {
-      main({ url: new URL("https://intranet.gov.uk"), agency });
+      main({ url: new URL("https://intranet.justice.gov.uk"), agency });
     });
     console.log("Scheduled", agency, schedule);
   });
