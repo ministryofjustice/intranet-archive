@@ -64,6 +64,10 @@ RUN echo "*/10 * * * * /usr/bin/s3-sync >> /archiver/cron.log 2>&1" >> /etc/cron
 RUN touch /${user}/cron.log && \
     chmod 644 /${user}/cron.log
 
+# Set the timezone to London, for scheduled tasks.
+RUN ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime && \
+    echo "Europe/London" > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
 
 
 # Create a development image, from the base image.

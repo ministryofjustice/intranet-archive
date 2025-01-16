@@ -12,7 +12,7 @@ import cors from "cors";
 import express from "express";
 
 // Relative
-import { corsOptions, intranetJwt, port } from "./constants.js";
+import { corsOptions, intranetJwt, port, snapshotSchedule } from "./constants.js";
 import { parseBody, checkSignature } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
@@ -22,6 +22,7 @@ import {
   getCookiesToClear,
 } from "./controllers/cloudfront.js";
 import { main } from "./controllers/main.js";
+import { scheduleFunction } from "./controllers/schedule.js";
 
 const app = express();
 
@@ -125,3 +126,11 @@ app.post("/access", async function (req, res, next) {
 });
 
 app.listen(port);
+
+// Schedule the main function to run at the specified times
+snapshotSchedule.forEach(({ agency, ...schedule }) => {
+  scheduleFunction(schedule, () => {
+    main({ url: new URL("https://intranet.gov.uk"), agency });
+  });
+  console.log('Scheduled', agency, schedule);
+});

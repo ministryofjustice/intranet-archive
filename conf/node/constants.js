@@ -1,3 +1,5 @@
+import { parseSchduleString } from "./controllers/schedule.js";
+
 export const port = 2000;
 
 /**
@@ -5,6 +7,12 @@ export const port = 2000;
 */
 
 export const intranetJwt = process.env.INTRANET_JWT;
+export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
+
+/**
+ * Access
+ */
+
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
 
 /**
@@ -23,7 +31,8 @@ export const s3Credentials = process.env.AWS_ACCESS_KEY_ID &&
  * CloudFront
  */
 
-export const cloudFrontKeysObject = process.env.AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT;
+export const cloudFrontKeysObject =
+  process.env.AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT;
 export const cloudFrontPublicKey = process.env.AWS_CLOUDFRONT_PUBLIC_KEY;
 export const cloudFrontPrivateKey = process.env.AWS_CLOUDFRONT_PRIVATE_KEY;
 
@@ -60,6 +69,14 @@ export const allowedTargetHosts = [
 
 export const allowedTargetAgencies =
   process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+
+/**
+ * Schedule
+ */
+
+export const snapshotSchedule = parseSchduleString(
+  process.env.SNAPSHOT_SCHEDULE,
+);
 
 /**
  * Httrack
