@@ -5,4 +5,4 @@ metadata:
   namespace: intranet-archive-dev
 data:
   ALLOWED_AGENCIES: "hq,hmcts"
-  SNAPSHOT_SCHEDULE: "hq:1:17:30,hmcts:4:17:30"
+  SNAPSHOT_SCHEDULE: "hq:Mon:17:30,hmcts:Thu:17:30"
