@@ -34,6 +34,15 @@ Access points:
 Please get in touch with the [Intranet team on Slack](https://mojdt.slack.com/archives/C03QE40GVA6) for further 
 information.
 
+### Technical details of the accessing flow
+
+1. A user logs into the Intranet.
+2. The user clicks a link to the archive.
+3. This submits a POST request to the archive NodeJS server.
+   The payload contains an expiry and the users agency.
+   The request is signed with a shared secret, and the server validates the signature.
+4. The NodeJS responds by redirecting to the CloudFront distribution.
+   The redirect URL contains cookies, so that the user can access the snapshot.
 
 ## Creating a snapshot
 
