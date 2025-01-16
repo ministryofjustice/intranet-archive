@@ -12,7 +12,13 @@ import cors from "cors";
 import express from "express";
 
 // Relative
-import { corsOptions, jwt, port, snapshotSchedule } from "./constants.js";
+import {
+  ordinalNumber,
+  corsOptions,
+  jwt,
+  port,
+  snapshotSchedule,
+} from "./constants.js";
 import { parseBody } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
@@ -121,10 +127,13 @@ app.get("/access-archive", async function (req, res, next) {
 
 app.listen(port);
 
-// Schedule the main function to run at the specified times
-snapshotSchedule.forEach(({ agency, ...schedule }) => {
-  scheduleFunction(schedule, () => {
-    main({ url: new URL("https://intranet.gov.uk"), agency });
+// For now, only schedule to run on the first instance.
+if (ordinalNumber === 0) {
+  // Schedule the main function to run at the specified times
+  snapshotSchedule.forEach(({ agency, ...schedule }) => {
+    scheduleFunction(schedule, () => {
+      main({ url: new URL("https://intranet.gov.uk"), agency });
+    });
+    console.log("Scheduled", agency, schedule);
   });
-  console.log('Scheduled', agency, schedule);
-});
+}
