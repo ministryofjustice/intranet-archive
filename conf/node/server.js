@@ -12,7 +12,7 @@ import cors from "cors";
 import express from "express";
 
 // Relative
-import { corsOptions, intranetJwt,  port } from "./constants.js";
+import { corsOptions, intranetJwt, port } from "./constants.js";
 import { parseBody, checkSignature } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
@@ -75,9 +75,9 @@ app.post("/spider", function (req, res) {
   res.status(200).sendFile(path.join("/usr/share/nginx/html/working.html"));
 });
 
-app.post("/access-archive", async function (req, res, next) {
+app.post("/access", async function (req, res, next) {
   // Check if the request is valid
-  if(!req.isValid) {
+  if (!req.isValid) {
     res.status(403).send({ status: 403 });
     return;
   }
@@ -118,7 +118,7 @@ app.post("/access-archive", async function (req, res, next) {
     });
 
     // Redirect to the CDN URL.
-    res.redirect(cdnUrl.origin);
+    res.redirect(`${cdnUrl.origin}/${req._hostname}/${req.agency}`);
   } catch (err) {
     next(err);
   }

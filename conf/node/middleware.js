@@ -10,7 +10,7 @@ import {
 
 /**
  * @typedef {import('express').Request & { mirror: { url: URL, agency: string, depth: number } }} SpiderRequest
- * @typedef {import('express').Request & { isValid: ?boolean}} AccessRequest
+ * @typedef {import('express').Request & { isValid: ?boolean, agency: string, _hostname: string }} AccessRequest
  */
 
 /**
@@ -52,7 +52,7 @@ export const parseBody = (req, res, next) => {
 };
 
 /**
- * Midleware to make sure that `/access-archive` requests are validated & signed with the shared secret
+ * Midleware to make sure that `/access` requests are validated & signed with the shared secret
  *
  * @param {AccessRequest} req
  * @param {import('express').Response} res
@@ -61,8 +61,8 @@ export const parseBody = (req, res, next) => {
  */
 
 export const checkSignature = (req, res, next) => {
-  // Only validate /access-archive requests
-  if (req.path !== "/access-archive") {
+  // Only validate /access requests
+  if (req.path !== "/access") {
     return next();
   }
 
@@ -70,6 +70,7 @@ export const checkSignature = (req, res, next) => {
   const { sig, ...body } = req.body;
 
   if (!sig || !body.payload) {
+    console.error("Error: Missing signature or payload");
     res.status(403).send({ status: 403 });
     return;
   }
@@ -89,6 +90,25 @@ export const checkSignature = (req, res, next) => {
   const expiry = parseInt(payloadObject.expiry, 10) * 1000;
 
   if (expiry < Date.now()) {
+    console.error("Error: Request expired");
+    res.status(403).send({ status: 403 });
+    return;
+  }
+
+  // Make sure the request is for an allowed agency
+  req.agency = payloadObject.agency;
+
+  if (!allowedTargetAgencies.includes(req.agency)) {
+    console.error("Error: Agency not allowed");
+    res.status(403).send({ status: 403 });
+    return;
+  }
+
+  // Make sure the request is for an allowed hostname
+  req._hostname = payloadObject.hostname;
+
+  if (!allowedTargetHosts.includes(req._hostname)) {
+    console.error("Error: Hostname not allowed");
     res.status(403).send({ status: 403 });
     return;
   }
@@ -98,9 +118,12 @@ export const checkSignature = (req, res, next) => {
   const expectedSig = hmac.update(body.payload).digest("base64");
 
   if (sig !== expectedSig) {
+    console.error("Error: Invalid signature");
     res.status(403).send({ status: 403 });
     return;
   }
+
+  console.log("Request is valid");
 
   req.isValid = true;
   next();
