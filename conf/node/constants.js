@@ -1,5 +1,6 @@
 import { parseSchduleString } from "./controllers/schedule.js";
 
+export const ordinalNumber = process.env.ORDINAL_NUMBER;
 export const port = 2000;
 export const jwt = process.env.JWT;
 
