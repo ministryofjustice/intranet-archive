@@ -23,7 +23,7 @@ exports[`getHttrackArgs should return an array of arguments 1`] = `
   "+*intranet.justice.gov.uk/?*agency=hq",
   "-s0",
   "-V",
-  ""sed -i 's/srcset="[^"]*"//g' $0"",
+  ""sed -i 's/srcset="[^"]*"//g' $0 && sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0"",
   "-%k",
   "-F",
   "intranet-archive",

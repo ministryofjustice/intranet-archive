@@ -16,7 +16,7 @@ import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
  * @param {Object} props
  * @param {URL} props.url
  * @param {string} props.agency
- * @param {?number} props.depth
+ * @param {number} [props.depth]
  */
 
 export const main = async ({ url, agency, depth }) => {
