@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intranet-archive-production-config
+  namespace: intranet-archive-production
+data:
+  ALLOWED_AGENCIES: ""
+  SNAPSHOT_SCHEDULE: ""
