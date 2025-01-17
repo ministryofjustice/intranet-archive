@@ -1,14 +1,14 @@
 /**
- * Parse the environment variable SCHEDULE to determine when to run the function.
+ * Parse a schedule string to determine when each agency should be crawled.
  *
- * @param {string} scheduleString
+ * @param {string} [scheduleString] - The schedule string in the format "agency:dayOfWeek:hour:min,agency:dayOfWeek:hour:min".
  * @returns {Array<{ agency: string, dayIndex: number, hour: number, min: number }>}
  * 
  * @throws {Error} If the schedule string is not in the correct format.
  */
 
 export const parseSchduleString = (scheduleString) => {
-  const scheduleArray = scheduleString.split(",");
+  const scheduleArray = scheduleString?.split(",") ?? [];
 
   return scheduleArray.map((schedule) => {
     const [agency, dayOfWeek, hourString, minString] = schedule.split(":");

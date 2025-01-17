@@ -1,7 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import fs from "node:fs";
 
-import { jwt } from "../constants.js";
+import { intranetJwt } from "../constants.js";
 
 /**
  * A helper function to get the directory for the snapshot.
@@ -108,7 +108,7 @@ export const runHttrack = (cliArgs) => {
   // verify options array
   console.log(
     "Launching Intranet Spider with the following options: ",
-    cliArgs.map((entry) => entry.replace(jwt, "***")),
+    cliArgs.map((entry) => entry.replace(intranetJwt, "***")),
   );
 
   // return;

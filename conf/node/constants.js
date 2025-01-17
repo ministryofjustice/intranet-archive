@@ -2,12 +2,12 @@ import { parseSchduleString } from "./controllers/schedule.js";
 
 export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
-export const jwt = process.env.JWT;
 
 /**
  * Access
  */
 
+export const intranetJwt = process.env.INTRANET_JWT;
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
 
 /**

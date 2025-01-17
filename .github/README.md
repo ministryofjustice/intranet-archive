@@ -24,17 +24,25 @@ Archiving the Intranet, thankfully, is a task made simple using the following te
 
 Access is granted to the snapshot if, you:
 
-1) Have access to the Digital VPN (Nurved), or
-2) Have your IP address validated and added to our allow-list, and
-3) Are in possession of our basic-auth credentials
+1) Have access to the [MoJ Intranet](intranet.gov.uk), and
+2) Your [MoJ Intranet](intranet.gov.uk) account meets the necessary permissions, as defined in that codebase.
 
 Access points:
 
-1) [HMCTS](https://dni5o46b2208p.cloudfront.net/hmcts/intranet.justice.gov.uk/index.html)
+1) [All agencies](https://intranet.justice.gov.uk/wp/wp-admin/)
 
 Please get in touch with the [Intranet team on Slack](https://mojdt.slack.com/archives/C03QE40GVA6) for further 
 information.
 
+### Technical details of the accessing flow
+
+1. A user logs into the Intranet.
+2. The user clicks a link to the archive.
+3. This submits a POST request to the archive NodeJS server.
+   The payload contains an expiry and the users agency.
+   The request is signed with a shared secret, and the server validates the signature.
+4. The NodeJS responds by redirecting to the CloudFront distribution.
+   The redirect URL contains cookies, so that the user can access the snapshot.
 
 ## Creating a snapshot
 
@@ -95,7 +103,7 @@ using the settings for the Intranet, it will attempt to create an isolated copy 
 The output of HTTrack can be noted in Docker Composes' `stdout` in the running terminal window however, a more 
 detailed and linear output stream is available in the `hts-log.txt` file. You can find this in the root of the snapshot. 
 
-### A custom command and a plugin
+### Custom commands
 
 During the build of the Archiver, we came across many challenges, two of which almost prevented our proof of concept 
 from succeeding. The first was an inability to display images. The second was an inability to download them.
@@ -117,39 +125,20 @@ following `sed` command, where `$0` is the file reference in HTTrack.
 sed -i 's/srcset="[^"]*"//g' $0
 ```
 
-**2) The HTTrack _persisted_ Query String problem**
+**2) The HTTrack `/agengy-switcher` problem**
 
-During normal operation of the Intranet, CDN resources are collected using a signed URL. We use AWS signatures to 
-authorise access to S3 objects however, we only allow 30 minutes for each request. We discovered that HTTrack would 
-_gather_ URLs, mark them as `.tmp` and then pop them in a queue, ready for collection at a later time.
+We do not want the archiver to crawl the `/agency-switcher` page. This is because, the page is unnecessary in the context 
+of browsing an agency's archived snapshot. 
 
-As you can imagine, this method of operation will indeed cause problems should the length of time exceed 30 minutes. In 
-fact, a variation of this issue caused more than 17,000 forbidden errors and prevented more than 6GB of data from being 
-collected in our attempts to take a snapshot of HMCTS.
+We use a custom command to replace the agency switcher link on all pages, and replace it with a link to the root of the cdn domain.
+This link to the root of the cdn domain will show the index page, and allow the user to navigate to the agency they want to view.
 
-Indeed, when the issue was investigated further it was agreed that the Archiver was granted full access to the CDN. In 
-fact, there really shouldn't have been an issue grabbing objects due to this, however, we discovered that if we leave 
-the query string signature in the URL, even though we are authorised, the request validates as 401 unauthorized.
-
-Because HTTrack has very limited options around query string manipulation, we were presented with 2 possibilities to fix
-this problem:
-
-1) Give CDN objects an extended life 
-2) Use HTTracks' plugin system to add functionality
-
-_Yes. You guessed it!_<br>
-We used [HTTracks' plugin system](https://www.httrack.com/html/plug.html). Extending the expiry time would be nowhere 
-near ideal for two reasons; 1) we would never really know the length of time that would be optimal. 2) we are modifying 
-another system to make ours work... that should send alarm-bells ringing in any software developers' head!
-
-As defined by HTTrack, our new plugin needed to be written in C (programming language), compiled using `gcc` and 
-converted to a `.so`, ready for HTTrack to load and launch its operation on every URL. Simples.
-
-The plugin can be viewed in `/conf/httrack/`. 
-
-It can be noted that we identified one query string parameter that needed to be removed for the request to validate 
-correctly. Once this was coded in all requests were successful and our 401 unauthorized was gone. 
-
+```bash
+# find all occurrences of href="https://intranet.justice.gov.uk/agency-switcher/" in the file referenced by $0 
+# and replace them with href="/".
+ 
+sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0
+```
 
 ### Testing and making modifications to the application
 
