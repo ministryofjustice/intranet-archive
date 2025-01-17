@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ${KUBE_NAMESPACE}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: intranet-archive
+  serviceName: intranet-archive-headless-service
+  template:
+    metadata:
+      labels:
+        app: intranet-archive
+    spec:
+      serviceAccountName: ${KUBE_NAMESPACE}-service
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: "RuntimeDefault"
+      containers:
+      - name: intranet-archive
+        image: ${ECR_URL}:${IMAGE_TAG}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 1001
+          runAsGroup: 1001
+          capabilities: 
+            drop: ["ALL"]
+        resources:
+          limits:
+            cpu: 500m
+            memory: 250Mi
+          requests:
+            cpu: 500m
+            memory: 250Mi
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: snapshots
+          mountPath: "/tmp/snapshots"
+        env:
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: s3-bucket-output
+                key: bucket_name
+          - name: AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT
+            valueFrom:
+              secretKeyRef:
+                name: cloudfront-output
+                key: cloudfront_public_keys
+          - name: ORDINAL_NUMBER
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+        envFrom:
+          - configMapRef:
+              name: ${KUBE_NAMESPACE}-config
+          - secretRef:
+              name: ${KUBE_NAMESPACE}-secrets
+          - secretRef:
+              name: ${KUBE_NAMESPACE}-base64-secrets
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 15
+  volumeClaimTemplates:
+  - metadata:
+      name: snapshots
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gp2-expand" # StorageClass name used to create PV
+      resources:
+        requests:
+          storage: 100Gi # Storage resource request size

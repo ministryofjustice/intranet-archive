@@ -36,3 +36,13 @@ jobs:
       environment: staging
       registry: ${{ needs.image.outputs.registry }}
     secrets: inherit
+
+  deploy_production:
+    name: "Production"
+    if: github.event.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    needs: [image, deploy_dev, deploy_staging]
+    with:
+      environment: production
+      registry: ${{ needs.image.outputs.registry }}
+    secrets: inherit
