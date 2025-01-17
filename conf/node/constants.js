@@ -5,15 +5,9 @@ export const port = 2000;
 
 /**
  * Access
-*/
-
-export const intranetJwt = process.env.INTRANET_JWT;
-export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
-
-/**
- * Access
  */
 
+export const intranetJwt = process.env.INTRANET_JWT;
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
 
 /**
