@@ -3,48 +3,50 @@
  *
  * @param {string} [scheduleString] - The schedule string in the format "agency:dayOfWeek:hour:min,agency:dayOfWeek:hour:min".
  * @returns {Array<{ agency: string, dayIndex: number, hour: number, min: number }>}
- * 
+ *
  * @throws {Error} If the schedule string is not in the correct format.
  */
 
 export const parseSchduleString = (scheduleString) => {
   const scheduleArray = scheduleString?.split(",") ?? [];
 
-  return scheduleArray.map((schedule) => {
-    const [agency, dayOfWeek, hourString, minString] = schedule.split(":");
+  return scheduleArray
+    .filter((schedule) => schedule?.length)
+    .map((schedule) => {
+      const [agency, dayOfWeek, hourString, minString] = schedule.split(":");
 
-    const dayIndex = [
-      "Sun",
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat",
-    ].indexOf(dayOfWeek);
+      const dayIndex = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+      ].indexOf(dayOfWeek);
 
-    if (dayIndex === -1) {
-      throw new Error("Invalid day of the week");
-    }
+      if (dayIndex === -1) {
+        throw new Error("Invalid day of the week");
+      }
 
-    // Parse hours and minutes as numbers
-    const hour = parseInt(hourString);
-    const min = parseInt(minString);
+      // Parse hours and minutes as numbers
+      const hour = parseInt(hourString);
+      const min = parseInt(minString);
 
-    // Validate the input
-    if (
-      isNaN(hour) ||
-      isNaN(min) ||
-      hour < 0 ||
-      hour > 23 ||
-      min < 0 ||
-      min > 59
-    ) {
-      throw new Error("Invalid time format");
-    }
+      // Validate the input
+      if (
+        isNaN(hour) ||
+        isNaN(min) ||
+        hour < 0 ||
+        hour > 23 ||
+        min < 0 ||
+        min > 59
+      ) {
+        throw new Error("Invalid time format");
+      }
 
-    return { agency, dayIndex, hour, min };
-  });
+      return { agency, dayIndex, hour, min };
+    });
 };
 
 /**
@@ -53,7 +55,7 @@ export const parseSchduleString = (scheduleString) => {
  * @param {{ dayIndex: number, hour: number, min: number }} schedule - The schedule object containing day of the week, hour, and minute.
  * @param {function} callback - The function to be executed.
  * @returns {void}
- * 
+ *
  * @throws {Error} If the day of the week or time is invalid.
  */
 export const scheduleFunction = ({ dayIndex, hour, min }, callback) => {

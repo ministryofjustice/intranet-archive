@@ -31,6 +31,14 @@ describe("parseSchduleString", () => {
       parseSchduleString(scheduleString);
     }).toThrow("Invalid time format");
   });
+
+  it("should handle an empty string", () => {
+    const scheduleString = "";
+
+    const result = parseSchduleString(scheduleString);
+
+    expect(result).toEqual([]);
+  });
 });
 
 describe("scheduleFunction", () => {
