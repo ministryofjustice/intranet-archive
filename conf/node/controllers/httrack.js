@@ -111,7 +111,8 @@ export const runHttrack = (cliArgs) => {
     cliArgs.map((entry) => {
       // Loop over all the JWTs and replace them with ***
       Object.values(intranetJwts).forEach((jwt) => {
-        entry.replace(jwt, "***");
+        if(!jwt?.length) return;
+        entry = entry.replace(jwt, "***");
       });
       return entry;
     }),

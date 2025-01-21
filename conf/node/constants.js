@@ -20,9 +20,9 @@ export const intranetUrls = {
  */
 
 export const intranetJwts = {
-  "dev.intranet.justice.gov.uk": process.env.INTRANET_JWT_DEV,
-  "staging.intranet.justice.gov.uk": process.env.INTRANET_JWT_STAGING,
-  "intranet.justice.gov.uk": process.env.INTRANET_JWT_PRODUCTION,
+  "dev.intranet.justice.gov.uk": process.env.INTRANET_JWT_DEV?.trim(),
+  "staging.intranet.justice.gov.uk": process.env.INTRANET_JWT_STAGING?.trim(),
+  "intranet.justice.gov.uk": process.env.INTRANET_JWT_PRODUCTION?.trim(),
 };
 
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
