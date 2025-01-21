@@ -125,7 +125,7 @@ app.post("/access", async function (req, res, next) {
     });
 
     // Redirect to the CDN URL.
-    res.redirect(`${cdnUrl.origin}/${req._hostname}/${req.agency}`);
+    res.redirect(`${cdnUrl.origin}/${req._hostname}/${req.agency}/index.html`);
   } catch (err) {
     next(err);
   }
