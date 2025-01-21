@@ -72,7 +72,7 @@ export const defaultUrl = "https://intranet.justice.gov.uk/";
  */
 
 export const allowedTargetHosts = Object.values(intranetUrls).map(
-  (url) => new URL(url).host,
+  (url) => new URL(url).hostname,
 );
 
 export const allowedTargetAgencies =
