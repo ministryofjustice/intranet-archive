@@ -4,10 +4,27 @@ export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
 
 /**
+ * Intranet URLs
+ */
+
+export const intranetUrls = {
+  local: "http://intranet.docker",
+  dev: "https://dev.intranet.justice.gov.uk",
+  staging: "https://staging.intranet.justice.gov.uk",
+  demo: "https://demo.intranet.justice.gov.uk",
+  production: "https://intranet.justice.gov.uk",
+};
+
+/**
  * Access
  */
 
-export const intranetJwt = process.env.INTRANET_JWT;
+export const intranetJwts = {
+  "dev.intranet.justice.gov.uk": process.env.INTRANET_JWT_DEV,
+  "staging.intranet.justice.gov.uk": process.env.INTRANET_JWT_STAGING,
+  "intranet.justice.gov.uk": process.env.INTRANET_JWT_PRODUCTION,
+};
+
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
 
 /**
@@ -54,13 +71,9 @@ export const defaultUrl = "https://intranet.justice.gov.uk/";
  * Validation
  */
 
-export const allowedTargetHosts = [
-  "intranet.docker",
-  "intranet.justice.gov.uk",
-  "dev.intranet.justice.gov.uk",
-  "staging.intranet.justice.gov.uk",
-  "demo.intranet.justice.gov.uk",
-];
+export const allowedTargetHosts = Object.values(intranetUrls).map(
+  (url) => new URL(url).host,
+);
 
 export const allowedTargetAgencies =
   process.env.ALLOWED_AGENCIES?.split(",") ?? [];
@@ -69,9 +82,8 @@ export const allowedTargetAgencies =
  * Schedule
  */
 
-export const snapshotSchedule = parseSchduleString(
-  process.env.SNAPSHOT_SCHEDULE,
-);
+export const getSnapshotSchedule = () =>
+  parseSchduleString(process.env.SNAPSHOT_SCHEDULE);
 
 /**
  * Httrack

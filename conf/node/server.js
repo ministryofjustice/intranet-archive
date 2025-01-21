@@ -15,9 +15,9 @@ import express from "express";
 import {
   ordinalNumber,
   corsOptions,
-  intranetJwt,
+  intranetJwts,
   port,
-  snapshotSchedule,
+  getSnapshotSchedule,
 } from "./constants.js";
 import { parseBody, checkSignature } from "./middleware.js";
 import { checkAccess as checkS3Access } from "./controllers/s3.js";
@@ -55,7 +55,7 @@ app.post("/fetch-test", async function (req, res, next) {
   try {
     const { status } = await fetch(req.mirror.url, {
       redirect: "manual",
-      headers: { Cookie: `jwt=${intranetJwt}` },
+      headers: { Cookie: `jwt=${intranetJwts[req.mirror.hostname]}` },
     });
     res.status(200).send({ status });
   } catch (err) {
@@ -136,10 +136,10 @@ app.listen(port);
 // For now, only schedule to run on the first instance.
 if (ordinalNumber === 0) {
   // Schedule the main function to run at the specified times
-  snapshotSchedule.forEach(({ agency, ...schedule }) => {
+  getSnapshotSchedule().forEach(({ url, agency, depth, ...schedule }) => {
     scheduleFunction(schedule, () => {
-      main({ url: new URL("https://intranet.justice.gov.uk"), agency });
+      main({ url, agency, depth });
     });
-    console.log("Scheduled", agency, schedule);
+    console.log("Scheduled", url.hostname, agency, schedule, depth ?? '');
   });
 }
