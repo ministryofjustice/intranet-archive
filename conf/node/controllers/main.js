@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 
-import { intranetJwt, s3BucketName, sensitiveFiles } from "../constants.js";
+import { intranetJwts, s3BucketName, sensitiveFiles } from "../constants.js";
 import {
   getSnapshotPaths,
   getHttrackArgs,
@@ -30,7 +30,7 @@ export const main = async ({ url, agency, depth }) => {
       url,
       dest: paths.fs,
       agency,
-      jwt: intranetJwt,
+      jwt: intranetJwts[url.hostname],
       depth,
     });
 

@@ -1,8 +1,10 @@
+import { intranetUrls } from "../constants.js";
+
 /**
  * Parse a schedule string to determine when each agency should be crawled.
  *
  * @param {string} [scheduleString] - The schedule string in the format "agency:dayOfWeek:hour:min,agency:dayOfWeek:hour:min".
- * @returns {Array<{ agency: string, dayIndex: number, hour: number, min: number }>}
+ * @returns {Array<{ url: URL, agency: string, depth?: number, dayIndex: number, hour: number, min: number }>}
  *
  * @throws {Error} If the schedule string is not in the correct format.
  */
@@ -13,7 +15,14 @@ export const parseSchduleString = (scheduleString) => {
   return scheduleArray
     .filter((schedule) => schedule?.length)
     .map((schedule) => {
-      const [agency, dayOfWeek, hourString, minString] = schedule.split(":");
+      const [environment, agency, dayOfWeek, timeString, optionalDepth] =
+        schedule.split("::");
+
+      if (!intranetUrls[environment]) {
+        throw new Error("Invalid environment");
+      }
+
+      const url = new URL(intranetUrls[environment]);
 
       const dayIndex = [
         "Sun",
@@ -28,6 +37,8 @@ export const parseSchduleString = (scheduleString) => {
       if (dayIndex === -1) {
         throw new Error("Invalid day of the week");
       }
+
+      const [hourString, minString] = timeString.split(":");
 
       // Parse hours and minutes as numbers
       const hour = parseInt(hourString);
@@ -45,7 +56,17 @@ export const parseSchduleString = (scheduleString) => {
         throw new Error("Invalid time format");
       }
 
-      return { agency, dayIndex, hour, min };
+      if (!optionalDepth) {
+        return { url, agency, dayIndex, hour, min };
+      }
+
+      const depth = parseInt(optionalDepth);
+
+      if (isNaN(depth) || depth.toString() !== optionalDepth) {
+        throw new Error("Invalid depth");
+      }
+
+      return { url, agency, dayIndex, hour, min, depth };
     });
 };
 

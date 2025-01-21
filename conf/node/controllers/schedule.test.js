@@ -6,18 +6,39 @@ jest.useFakeTimers();
 
 describe("parseSchduleString", () => {
   it("should parse the schedule string into an object", () => {
-    const scheduleString = "hq:Mon:17:30,hmcts:Tue:17:30";
+    const scheduleString = "dev::hq::Mon::17:30::1,production::hmcts::Tue::17:30";
 
     const result = parseSchduleString(scheduleString);
 
     expect(result).toEqual([
-      { agency: "hq", dayIndex: 1, hour: 17, min: 30 },
-      { agency: "hmcts", dayIndex: 2, hour: 17, min: 30 },
+      {
+        url: new URL("https://dev.intranet.justice.gov.uk"),
+        agency: "hq",
+        dayIndex: 1,
+        hour: 17,
+        min: 30,
+        depth: 1,
+      },
+      {
+        url: new URL("https://intranet.justice.gov.uk"),
+        agency: "hmcts",
+        dayIndex: 2,
+        hour: 17,
+        min: 30,
+      },
     ]);
   });
 
+  it("should throw an error for an invalid environment", () => {
+    const scheduleString = "preprod::hq::Mon::17:30";
+
+    expect(() => {
+      parseSchduleString(scheduleString);
+    }).toThrow("Invalid environment");
+  });
+
   it("should throw an error for an invalid day of the week", () => {
-    const scheduleString = "hq:Monday:17:30";
+    const scheduleString = "dev::hq::Monday::17:30";
 
     expect(() => {
       parseSchduleString(scheduleString);
@@ -25,11 +46,19 @@ describe("parseSchduleString", () => {
   });
 
   it("should throw an error for an invalid time format", () => {
-    const scheduleString = "hq:Mon:25:00";
+    const scheduleString = "staging::hq::Mon::25:00";
 
     expect(() => {
       parseSchduleString(scheduleString);
     }).toThrow("Invalid time format");
+  });
+
+  it("should throw an error for an invalid depth", () => {
+    const scheduleString = "dev::hq::Mon::17:30::abc";
+
+    expect(() => {
+      parseSchduleString(scheduleString);
+    }).toThrow("Invalid depth");
   });
 
   it("should handle an empty string", () => {

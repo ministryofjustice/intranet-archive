@@ -32,7 +32,9 @@ jobs:
           # AWS_CLOUDFRONT_PUBLIC_KEY_EXPIRING: "${{ secrets.AWS_CLOUDFRONT_PUBLIC_KEY_B }}"
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASS: ${{ secrets.BASIC_AUTH_PASS }}
-          INTRANET_JWT: ${{ secrets.INTRANET_JWT }}
+          INTRANET_JWT_DEV: ${{ secrets.INTRANET_JWT_DEV }}
+          INTRANET_JWT_STAGING: ${{ secrets.INTRANET_JWT_STAGING }}
+          INTRANET_JWT_PRODUCTION: ${{ secrets.INTRANET_JWT_PRODUCTION }}
           INTRANET_ARCHIVE_SHARED_SECRET: ${{ secrets.INTRANET_ARCHIVE_SHARED_SECRET }}
         run: |
           ## - - - - - - - - - -

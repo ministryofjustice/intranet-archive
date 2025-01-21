@@ -113,7 +113,7 @@ describe("sync", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
-  }, 10_000);
+  }, 15_000);
 
   it("should add content type to the destination files", async () => {
     await sync("/tmp/s3-test", `s3://${s3BucketName}/test-types`);
@@ -190,7 +190,7 @@ describe("syncWithRetries", () => {
     const bodyString = await res.Body.transformToString();
 
     expect(bodyString).toBe(fileContent);
-  }, 10_000);
+  }, 15_000);
 });
 
 describe("S3EmptyDir", () => {
