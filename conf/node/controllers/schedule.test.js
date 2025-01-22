@@ -6,13 +6,14 @@ jest.useFakeTimers();
 
 describe("parseScheduleString", () => {
   it("should parse the schedule string into an object", () => {
-    const scheduleString = "dev::hq::Mon::17:30::1,production::hmcts::Tue::17:30";
+    const scheduleString =
+      "dev::hq::Mon::17:30::1,production::hmcts::Tue::17:30";
 
     const result = parseScheduleString(scheduleString);
 
     expect(result).toEqual([
       {
-        url: new URL("https://dev.intranet.justice.gov.uk"),
+        env: "dev",
         agency: "hq",
         dayIndex: 1,
         hour: 17,
@@ -20,7 +21,7 @@ describe("parseScheduleString", () => {
         depth: 1,
       },
       {
-        url: new URL("https://intranet.justice.gov.uk"),
+        env: "production",
         agency: "hmcts",
         dayIndex: 2,
         hour: 17,
