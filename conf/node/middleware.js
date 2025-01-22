@@ -1,15 +1,16 @@
 import { createHmac } from "node:crypto";
 
 import {
+  intranetUrls,
   sharedSecret,
-  defaultUrl,
+  defaultEnv,
   defaultAgency,
   allowedTargetHosts,
   allowedTargetAgencies,
 } from "./constants.js";
 
 /**
- * @typedef {import('express').Request & { mirror: { url: URL, agency: string, depth: number } }} SpiderRequest
+ * @typedef {import('express').Request & { mirror: { env: string, agency: string, depth: number } }} SpiderRequest
  * @typedef {import('express').Request & { isValid: ?boolean, agency: string, _hostname: string }} AccessRequest
  */
 
@@ -29,14 +30,14 @@ export const parseBody = (req, res, next) => {
 
   try {
     req.mirror = {
-      url: new URL(req.body.url || defaultUrl),
+      env: req.body.env || defaultEnv,
       agency: req.body.agency || defaultAgency,
       // Optionally add the depth parameter, if it can be parsed as an integer
       depth: parseInt(req.body.depth, 10) || undefined,
     };
 
-    if (!allowedTargetHosts.includes(req.mirror.url.host)) {
-      throw new Error("Host not allowed");
+    if (undefined === intranetUrls[req.mirror.env]) {
+      throw new Error("Env not allowed");
     }
 
     if (!allowedTargetAgencies.includes(req.mirror.agency)) {

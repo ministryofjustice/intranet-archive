@@ -26,11 +26,11 @@ exports[`generateAgencyIndex should return the snapshots as a string 1`] = `
       <main>
         <div class="container px-4 py-5">
           <h1>Ministry of Justice Intranet Archive</h1>
-          <h2 class="pb-2 border-bottom">test.generate.indexes - hmcts</h2>
+          <h2 class="pb-2 border-bottom">dev.intranet.justice.gov.uk - hmcts</h2>
           <ul class="list-group">
             
                 <li class="list-group-item">
-                  <a href="/test.generate.indexes/hmcts/2024-01-01/test.generate.indexes/index.html" target="_blank">2024-01-01</a>
+                  <a href="/dev-hmcts/2024-01-01/dev.intranet.justice.gov.uk/index.html" target="_blank">2024-01-01</a>
                 </li>
           </ul>
         </div>
@@ -65,15 +65,15 @@ exports[`generateRootIndex should return the agencies as a string 1`] = `
       <main>
         <div class="container px-4 py-5">
           <h1>Ministry of Justice Intranet Archive</h1>
-          <h2 class="pb-2 border-bottom">test.generate.indexes</h2>
+          <h2 class="pb-2 border-bottom">dev.intranet.justice.gov.uk</h2>
           <ul class="list-group">
             
                 <li class="list-group-item">
-                  <a href="/test.generate.indexes/hmcts/index.html" target="_blank">hmcts</a>
+                  <a href="/dev-hmcts/index.html" target="_blank">hmcts</a>
                 </li>
 
                 <li class="list-group-item">
-                  <a href="/test.generate.indexes/hq/index.html" target="_blank">hq</a>
+                  <a href="/dev-hq/index.html" target="_blank">hq</a>
                 </li>
           </ul>
         </div>

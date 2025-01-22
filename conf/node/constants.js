@@ -1,4 +1,4 @@
-import { parseSchduleString } from "./controllers/schedule.js";
+import { parseScheduleString } from "./controllers/schedule.js";
 
 export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
@@ -20,9 +20,9 @@ export const intranetUrls = {
  */
 
 export const intranetJwts = {
-  "dev.intranet.justice.gov.uk": process.env.INTRANET_JWT_DEV?.trim(),
-  "staging.intranet.justice.gov.uk": process.env.INTRANET_JWT_STAGING?.trim(),
-  "intranet.justice.gov.uk": process.env.INTRANET_JWT_PRODUCTION?.trim(),
+  dev: process.env.INTRANET_JWT_DEV?.trim(),
+  staging: process.env.INTRANET_JWT_STAGING?.trim(),
+  production: process.env.INTRANET_JWT_PRODUCTION?.trim(),
 };
 
 export const sharedSecret = process.env.INTRANET_ARCHIVE_SHARED_SECRET;
@@ -65,7 +65,7 @@ export const corsOptions = {
  */
 
 export const defaultAgency = "hq";
-export const defaultUrl = "https://intranet.justice.gov.uk/";
+export const defaultEnv = "production";
 
 /**
  * Validation
@@ -83,7 +83,7 @@ export const allowedTargetAgencies =
  */
 
 export const getSnapshotSchedule = () =>
-  parseSchduleString(process.env.SNAPSHOT_SCHEDULE);
+  parseScheduleString(process.env.SNAPSHOT_SCHEDULE);
 
 /**
  * Httrack

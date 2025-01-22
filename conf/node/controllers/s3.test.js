@@ -325,7 +325,7 @@ describe("getAgenciesFromS3", () => {
     await client.send(
       new PutObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.agencies/hmcts/2024-01-01/index.html",
+        Key: "dev-hmcts/2024-01-01/index.html",
         Body: "test",
       }),
     );
@@ -333,7 +333,15 @@ describe("getAgenciesFromS3", () => {
     await client.send(
       new PutObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.agencies/hq/2024-01-01/index.html",
+        Key: "dev-hq/2024-01-01/index.html",
+        Body: "test",
+      }),
+    );
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "hq/2024-01-01/index.html",
         Body: "test",
       }),
     );
@@ -344,15 +352,36 @@ describe("getAgenciesFromS3", () => {
     client.send(
       new DeleteObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.agencies/",
+        Key: "dev-hmcts/",
+      }),
+    );
+
+    client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "dev-hq/",
+      }),
+    );
+
+    client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "hq/",
       }),
     );
 
     client.destroy();
   });
 
-  it("should return an array of agencies", async () => {
-    const agencies = await getAgenciesFromS3(undefined, "test.get.agencies");
+  it("should return an array of agencies - production", async () => {
+    const agencies = await getAgenciesFromS3(undefined, "production");
+
+    expect(agencies).toBeInstanceOf(Array);
+    expect(agencies).toStrictEqual(["hq"]);
+  });
+
+  it("should return an array of agencies - dev", async () => {
+    const agencies = await getAgenciesFromS3(undefined, "dev");
 
     expect(agencies).toBeInstanceOf(Array);
     expect(agencies).toStrictEqual(["hmcts", "hq"]);
@@ -365,11 +394,14 @@ describe("getSnapshotsFromS3", () => {
   beforeAll(async () => {
     client = new S3Client(s3Options);
 
+    await s3EmptyDir("dev-hq");
+    await s3EmptyDir("hq");
+
     // Make a folder on s3 for the test
     await client.send(
       new PutObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.snapshots/hq/2024-01-01/index.html",
+        Key: "dev-hq/2024-01-01/index.html",
         Body: "test",
       }),
     );
@@ -377,7 +409,7 @@ describe("getSnapshotsFromS3", () => {
     await client.send(
       new PutObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.snapshots/hq/2024-01-02/index.html",
+        Key: "dev-hq/2024-01-02/index.html",
         Body: "test",
       }),
     );
@@ -385,32 +417,37 @@ describe("getSnapshotsFromS3", () => {
     await client.send(
       new PutObjectCommand({
         Bucket: s3BucketName,
-        Key: "test.get.snapshots/hq/non-date-folder/index.html",
+        Key: "dev-hq/non-date-folder/index.html",
+        Body: "test",
+      }),
+    );
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: s3BucketName,
+        Key: "hq/2024-01-01/index.html",
         Body: "test",
       }),
     );
   });
 
-  afterAll(() => {
-    // Remove the test folder
-    client.send(
-      new DeleteObjectCommand({
-        Bucket: s3BucketName,
-        Key: "test.get.snapshots/",
-      }),
-    );
+  afterAll(async () => {
+    // Remove the test folders
+    await s3EmptyDir("dev-hq");
+    await s3EmptyDir("hq");
 
     client.destroy();
   });
 
-  it("should return an array of snapshots", async () => {
-    const snapshots = await getSnapshotsFromS3(
-      undefined,
-      "test.get.snapshots",
-      "hq",
-    );
+  it("should return an array of snapshots - production", async () => {
+    const snapshots = await getSnapshotsFromS3(undefined, "production", "hq");
 
-    expect(snapshots).toBeInstanceOf(Array);
+    expect(snapshots).toStrictEqual(["2024-01-01"]);
+  });
+
+  it("should return an array of snapshots - dev", async () => {
+    const snapshots = await getSnapshotsFromS3(undefined, "dev", "hq");
+
     expect(snapshots).toStrictEqual(["2024-01-01", "2024-01-02"]);
   });
 });
