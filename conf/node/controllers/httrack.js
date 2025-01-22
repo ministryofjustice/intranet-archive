@@ -1,22 +1,29 @@
 import { spawn, execSync } from "node:child_process";
 import fs from "node:fs";
 
-import { intranetJwts } from "../constants.js";
+import { intranetUrls, intranetJwts } from "../constants.js";
 
 /**
  * A helper function to get the directory for the snapshot.
  *
  * @param {Object} props
- * @param {string} props.host
+ * @param {string} props.env
  * @param {string} props.agency
  * @returns {{s3: string, fs: string}} the s3 and fs paths
  */
 
-export const getSnapshotPaths = ({ host, agency }) => {
+export const getSnapshotPaths = ({ env, agency }) => {
   // Get date in format: 2023-01-17
   const dateString = new Date().toISOString().slice(0, 10);
 
-  const s3Path = `${host}/${agency}/${dateString}`;
+  if(!Object.keys(intranetJwts).includes(env)) {
+    throw new Error(`Invalid environment: ${env}`);
+  }
+
+  const s3Path =
+    env === "production"
+      ? `${agency}/${dateString}`
+      : `${env}-${agency}/${dateString}`;
 
   const fsPath = `/tmp/snapshots/${s3Path}`;
 
@@ -111,7 +118,7 @@ export const runHttrack = (cliArgs) => {
     cliArgs.map((entry) => {
       // Loop over all the JWTs and replace them with ***
       Object.values(intranetJwts).forEach((jwt) => {
-        if(!jwt?.length) return;
+        if (!jwt?.length) return;
         entry = entry.replace(jwt, "***");
       });
       return entry;

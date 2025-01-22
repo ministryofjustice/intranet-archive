@@ -14,6 +14,7 @@ import express from "express";
 // Relative
 import {
   ordinalNumber,
+  intranetUrls,
   corsOptions,
   intranetJwts,
   port,
@@ -53,9 +54,10 @@ app.use(parseBody, checkSignature);
 
 app.post("/fetch-test", async function (req, res, next) {
   try {
-    const { status } = await fetch(req.mirror.url, {
+    const url = intranetUrls[req.mirror.env];
+    const { status } = await fetch(url, {
       redirect: "manual",
-      headers: { Cookie: `jwt=${intranetJwts[req.mirror.hostname]}` },
+      headers: { Cookie: `jwt=${intranetJwts[req.mirror.env]}` },
     });
     res.status(200).send({ status });
   } catch (err) {
@@ -136,10 +138,10 @@ app.listen(port);
 // For now, only schedule to run on the first instance.
 if (ordinalNumber === 0) {
   // Schedule the main function to run at the specified times
-  getSnapshotSchedule().forEach(({ url, agency, depth, ...schedule }) => {
+  getSnapshotSchedule().forEach(({ env, agency, depth, ...schedule }) => {
     scheduleFunction(schedule, () => {
-      main({ url, agency, depth });
+      main({ env, agency, depth });
     });
-    console.log("Scheduled", url.hostname, agency, schedule, depth ?? '');
+    console.log("Scheduled", env, agency, schedule, depth ?? '');
   });
 }

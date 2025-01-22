@@ -12,6 +12,7 @@ import {
   s3Credentials as credentials,
   s3Region,
   heartbeatEndpoint,
+  allowedTargetAgencies
 } from "../constants.js";
 
 /**
@@ -126,13 +127,17 @@ export const syncWithRetries = async (source, destination, options = {}) => {
         output = await sync(source, destination, options);
         return resolve(output);
       } catch (error) {
-        console.error("Sync failed, retrying", { source, destination, retries });
+        console.error("Sync failed, retrying", {
+          source,
+          destination,
+          retries,
+        });
         retries++;
       }
     }
     reject(new Error("Sync failed after 3 retries"));
   });
-}
+};
 
 /**
  * Empty an S3 folder by using sync and deleting all files
@@ -180,35 +185,43 @@ export const checkAccess = async (bucket = s3BucketName) => {
  * e.g looks in s3://s3BucketName/intranet.justice.gov.uk/ and returns an array of hq,hmcts etc.
  *
  * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
- * @param {string} host - The host to the intranet e.g. intranet.justice.gov.uk or dev.intranet.justice.gov.uk
+ * @param {string} env - The env of the intranet e.g. production or dev.
  * @returns {Promise<string[]>}
  *
  * @throws {Error}
  */
 
-export const getAgenciesFromS3 = async (bucket = s3BucketName, host) => {
-  if (!host) {
-    throw new Error("Host is required");
+export const getAgenciesFromS3 = async (bucket = s3BucketName, env) => {
+  if (!env) {
+    throw new Error("Env is required");
   }
 
   const command = new ListObjectsV2Command({
     Bucket: bucket,
-    Prefix: `${host}/`,
+    Prefix: "",
     Delimiter: "/",
   });
 
   const { CommonPrefixes } = await client.send(command);
 
-  return CommonPrefixes.map((folder) =>
-    folder.Prefix.replace(`${host}/`, "").replace("/", ""),
+  const folders = CommonPrefixes.map((folder) =>
+    folder.Prefix.replace("/", "").replace("/", ""),
   );
+
+  if(env === 'production') {
+    return folders.filter((folder) => allowedTargetAgencies.includes(folder) )
+  }
+
+  return folders
+    .filter((folder) => folder.startsWith(`${env}-`))
+    .map((folder) => folder.replace(`${env}-`, ""));
 };
 
 /**
  * Get an agencies snapshots from S3
  *
  * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
- * @param {string} host - The host to the intranet e.g. intranet.justice.gov.uk or dev.intranet.justice.gov.uk
+ * @param {string} env - The environment for the intranet e.g. production or dev
  * @param {string} agency - The agency to get snapshots for e.g. hq, hmcts etc.
  * @returns {Promise<string[]>}
  *
@@ -217,10 +230,10 @@ export const getAgenciesFromS3 = async (bucket = s3BucketName, host) => {
 
 export const getSnapshotsFromS3 = async (
   bucket = s3BucketName,
-  host,
+  env,
   agency,
 ) => {
-  if (!host) {
+  if (!env) {
     throw new Error("Host is required");
   }
 
@@ -228,9 +241,11 @@ export const getSnapshotsFromS3 = async (
     throw new Error("Agency is required");
   }
 
+  const prefix = "production" === env ? `${agency}/` : `${env}-${agency}/`;
+
   const command = new ListObjectsV2Command({
     Bucket: bucket,
-    Prefix: `${host}/${agency}/`,
+    Prefix: prefix,
     Delimiter: "/",
   });
 
@@ -238,7 +253,7 @@ export const getSnapshotsFromS3 = async (
 
   return CommonPrefixes.map(({ Prefix }) =>
     // Remove the host and agency from the Prefix
-    Prefix.replace(`${host}/${agency}/`, "").replace("/", ""),
+    Prefix.replace(prefix, "").replace("/", ""),
   ).filter((folder) =>
     // Filter out any folders that are not in the format YYYY-MM-DD
     /^\d{4}-\d{2}-\d{2}$/.test(folder),

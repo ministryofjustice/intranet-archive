@@ -4,5 +4,5 @@ metadata:
   name: intranet-archive-staging-config
   namespace: intranet-archive-staging
 data:
-  ALLOWED_AGENCIES: ""
-  SNAPSHOT_SCHEDULE: ""
+  ALLOWED_AGENCIES: "jac"
+  SNAPSHOT_SCHEDULE: "staging::jac::Tue::16:45::3"

@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 
-import { intranetJwts, s3BucketName, sensitiveFiles } from "../constants.js";
+import {
+  intranetUrls,
+  intranetJwts,
+  s3BucketName,
+  sensitiveFiles,
+} from "../constants.js";
 import {
   getSnapshotPaths,
   getHttrackArgs,
@@ -14,13 +19,15 @@ import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
 /**
  *
  * @param {Object} props
- * @param {URL} props.url
+ * @param {string} props.env
  * @param {string} props.agency
  * @param {number} [props.depth]
  */
 
-export const main = async ({ url, agency, depth }) => {
-  const paths = getSnapshotPaths({ host: url.host, agency });
+export const main = async ({ env, agency, depth }) => {
+  const paths = getSnapshotPaths({ env, agency });
+
+  const url = new URL(intranetUrls[env]);
 
   const { complete } = await getHttrackProgress(paths.fs);
 
@@ -30,7 +37,7 @@ export const main = async ({ url, agency, depth }) => {
       url,
       dest: paths.fs,
       agency,
-      jwt: intranetJwts[url.hostname],
+      jwt: intranetJwts[env],
       depth,
     });
 
@@ -59,23 +66,26 @@ export const main = async ({ url, agency, depth }) => {
   await fs.rm(paths.fs, { recursive: true, force: true });
 
   // Generate and write content for the agency index file.
-  const agencyIndexHtml = await generateAgencyIndex(
-    s3BucketName,
-    url.host,
-    agency,
-  );
+  const agencyIndexHtml = await generateAgencyIndex(s3BucketName, env, agency);
   await writeToS3(
     s3BucketName,
-    `${url.host}/${agency}/index.html`,
+    "production" === env
+      ? `${agency}/index.html`
+      : `${env}-${agency}/index.html`,
     agencyIndexHtml,
     { cacheMaxAge: 600 },
   );
 
   // Generate and write content for the root index file.
-  const rootIndexHtml = await generateRootIndex(s3BucketName, url.host);
-  await writeToS3(s3BucketName, `index.html`, rootIndexHtml, {
-    cacheMaxAge: 600,
-  });
+  const rootIndexHtml = await generateRootIndex(s3BucketName, env);
+  await writeToS3(
+    s3BucketName,
+    "production" === env ? `index.html` : `${env}.html`,
+    rootIndexHtml,
+    {
+      cacheMaxAge: 600,
+    },
+  );
 
   console.log("Snapshot complete", { url: url.href, agency, depth });
 };

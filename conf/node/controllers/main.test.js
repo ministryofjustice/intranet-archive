@@ -6,7 +6,7 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/clien
 import { main } from "./main.js";
 import { getSnapshotPaths } from "./httrack.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
-import { s3BucketName } from "../constants.js";
+import { intranetUrls, s3BucketName } from "../constants.js";
 
 // Skip tests when running on CI, because this environment doesn't have access to the intranet.
 const skipAllTests = process.env.CI === "true";
@@ -24,9 +24,10 @@ describe("main", () => {
     return;
   }
 
-  const url = new URL("https://intranet.justice.gov.uk/");
+  const env = "production";
+  const url = new URL(intranetUrls[env]);
   const agency = "hq";
-  const paths = getSnapshotPaths({ host: url.host, agency });
+  const paths = getSnapshotPaths({ env, agency });
   const s3Client = new S3Client(s3Options);
 
   beforeAll(async () => {
@@ -50,8 +51,8 @@ describe("main", () => {
     await s3EmptyDir(paths.s3);
   });
 
-  it("should get index files on a shallow scrape", async () => {
-    await main({ url, agency, depth: 1 });
+  it("should get index files on a shallow scrape - production", async () => {
+    await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
     const objects = await s3Client.send(
@@ -76,7 +77,7 @@ describe("main", () => {
   }, 10_000);
 
   it("should delete sensitive files and cleanup local fs", async () => {
-    await main({ url, agency, depth: 1 });
+    await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
     const objects = await s3Client.send(
@@ -106,7 +107,7 @@ describe("main", () => {
   }, 10_000);
 
   it("should create an auth/heartbeat file", async () => {
-    await main({ url, agency, depth: 1 });
+    await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
     const objects = await s3Client.send(
@@ -124,12 +125,12 @@ describe("main", () => {
   }, 10_000);
 
   it("should create root and agency index files", async () => {
-    await main({ url, agency, depth: 1 });
+    await main({ env, agency, depth: 1 });
 
     const rootIndexHtml = await s3Client.send(
       new GetObjectCommand({
         Bucket: s3BucketName,
-        Key: `${url.host}/index.html`,
+        Key: "production" === env ? `index.html` : `${env}.html`,
       }),
     );
     
@@ -138,7 +139,7 @@ describe("main", () => {
     const agencyIndexHtml = await s3Client.send(
       new GetObjectCommand({
         Bucket: s3BucketName,
-        Key: `${url.host}/${agency}/index.html`,
+        Key: `${agency}/index.html`,
       }),
     );
 
@@ -155,7 +156,7 @@ describe("main", () => {
   }
 
   it("should get styles.css from the cdn", async () => {
-    await main({ url, agency, depth: 2 });
+    await main({ env, agency, depth: 2 });
 
     // The snapshot should be on s3
     const objects = await s3Client.send(

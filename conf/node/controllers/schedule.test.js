@@ -1,14 +1,14 @@
 import { expect, it, jest } from "@jest/globals";
 
-import { parseSchduleString, scheduleFunction } from "./schedule";
+import { parseScheduleString, scheduleFunction } from "./schedule";
 
 jest.useFakeTimers();
 
-describe("parseSchduleString", () => {
+describe("parseScheduleString", () => {
   it("should parse the schedule string into an object", () => {
     const scheduleString = "dev::hq::Mon::17:30::1,production::hmcts::Tue::17:30";
 
-    const result = parseSchduleString(scheduleString);
+    const result = parseScheduleString(scheduleString);
 
     expect(result).toEqual([
       {
@@ -33,7 +33,7 @@ describe("parseSchduleString", () => {
     const scheduleString = "preprod::hq::Mon::17:30";
 
     expect(() => {
-      parseSchduleString(scheduleString);
+      parseScheduleString(scheduleString);
     }).toThrow("Invalid environment");
   });
 
@@ -41,7 +41,7 @@ describe("parseSchduleString", () => {
     const scheduleString = "dev::hq::Monday::17:30";
 
     expect(() => {
-      parseSchduleString(scheduleString);
+      parseScheduleString(scheduleString);
     }).toThrow("Invalid day of the week");
   });
 
@@ -49,7 +49,7 @@ describe("parseSchduleString", () => {
     const scheduleString = "staging::hq::Mon::25:00";
 
     expect(() => {
-      parseSchduleString(scheduleString);
+      parseScheduleString(scheduleString);
     }).toThrow("Invalid time format");
   });
 
@@ -57,14 +57,14 @@ describe("parseSchduleString", () => {
     const scheduleString = "dev::hq::Mon::17:30::abc";
 
     expect(() => {
-      parseSchduleString(scheduleString);
+      parseScheduleString(scheduleString);
     }).toThrow("Invalid depth");
   });
 
   it("should handle an empty string", () => {
     const scheduleString = "";
 
-    const result = parseSchduleString(scheduleString);
+    const result = parseScheduleString(scheduleString);
 
     expect(result).toEqual([]);
   });
