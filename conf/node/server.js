@@ -21,7 +21,6 @@ import {
   getSnapshotSchedule,
 } from "./constants.js";
 import { parseBody, checkSignature } from "./middleware.js";
-import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import {
   getCdnUrl,
   getCookies,
@@ -29,6 +28,8 @@ import {
   getCookiesToClear,
 } from "./controllers/cloudfront.js";
 import { main } from "./controllers/main.js";
+import { getAgencyPath } from "./controllers/paths.js";
+import { checkAccess as checkS3Access } from "./controllers/s3.js";
 import { scheduleFunction } from "./controllers/schedule.js";
 
 const app = express();
@@ -85,8 +86,10 @@ app.post("/spider", function (req, res) {
 });
 
 app.post("/access", async function (req, res, next) {
+  const { isValid, env, agency } = req;
+
   // Check if the request is valid
-  if (!req.isValid) {
+  if (!isValid) {
     res.status(403).send({ status: 403 });
     return;
   }
@@ -127,7 +130,7 @@ app.post("/access", async function (req, res, next) {
     });
 
     // Redirect to the CDN URL.
-    res.redirect(`${cdnUrl.origin}/${req._hostname}/${req.agency}/index.html`);
+    res.redirect(`${cdnUrl.origin}/${getAgencyPath(env, agency)}/index.html`);
   } catch (err) {
     next(err);
   }
@@ -142,6 +145,6 @@ if (ordinalNumber === 0) {
     scheduleFunction(schedule, () => {
       main({ env, agency, depth });
     });
-    console.log("Scheduled", env, agency, schedule, depth ?? '');
+    console.log("Scheduled", env, agency, schedule, depth ?? "");
   });
 }

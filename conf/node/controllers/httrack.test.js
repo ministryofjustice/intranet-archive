@@ -3,7 +3,6 @@ import http from "node:http";
 import { afterAll, it, jest } from "@jest/globals";
 
 import {
-  getSnapshotPaths,
   getHttrackArgs,
   runHttrack,
   getHttrackProgress,
@@ -13,43 +12,6 @@ import { intranetUrls, intranetJwts } from "../constants.js";
 
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
-
-describe("getSnapshotPaths", () => {
-  it("should return the s3 and fs paths - production", () => {
-    const env = "production";
-    const agency = "hq";
-
-    const paths = getSnapshotPaths({ env, agency });
-
-    expect(paths).toStrictEqual({
-      s3: `${agency}/${new Date().toISOString().slice(0, 10)}`,
-      fs: `/tmp/snapshots/${agency}/${new Date().toISOString().slice(0, 10)}`,
-    });
-  });
-
-  it("should return the s3 and fs paths - non-production", () => {
-    const env = "dev";
-    const agency = "hq";
-
-    const paths = getSnapshotPaths({ env, agency });
-
-    expect(paths).toStrictEqual({
-      s3: `dev-${agency}/${new Date().toISOString().slice(0, 10)}`,
-      fs: `/tmp/snapshots/dev-${agency}/${new Date()
-        .toISOString()
-        .slice(0, 10)}`,
-    });
-  });
-
-  it("should return the s3 and fs paths - invalid env", () => {
-    const env = "invalid";
-    const agency = "hq";
-
-    expect(() => getSnapshotPaths({ env, agency })).toThrowError(
-      `Invalid environment: ${env}`,
-    );
-  });
-});
 
 describe("getHttrackArgs", () => {
   it("should return an array of arguments", async () => {

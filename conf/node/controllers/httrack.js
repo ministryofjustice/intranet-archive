@@ -1,35 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import fs from "node:fs";
 
-import { intranetUrls, intranetJwts } from "../constants.js";
-
-/**
- * A helper function to get the directory for the snapshot.
- *
- * @param {Object} props
- * @param {string} props.env
- * @param {string} props.agency
- * @returns {{s3: string, fs: string}} the s3 and fs paths
- */
-
-export const getSnapshotPaths = ({ env, agency }) => {
-  // Get date in format: 2023-01-17
-  const dateString = new Date().toISOString().slice(0, 10);
-
-  if(!Object.keys(intranetJwts).includes(env)) {
-    throw new Error(`Invalid environment: ${env}`);
-  }
-
-  const s3Path =
-    env === "production"
-      ? `${agency}/${dateString}`
-      : `${env}-${agency}/${dateString}`;
-
-  const fsPath = `/tmp/snapshots/${s3Path}`;
-
-  // Return directory for the snapshot
-  return { s3: s3Path, fs: fsPath };
-};
+import { intranetJwts } from "../constants.js";
 
 /**
  * Get arguments for httrack cli.

@@ -4,7 +4,7 @@ import { afterAll, beforeEach, expect, it, jest } from "@jest/globals";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 
 import { main } from "./main.js";
-import { getSnapshotPaths } from "./httrack.js";
+import { getSnapshotPaths } from "./paths.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
 import { intranetUrls, s3BucketName } from "../constants.js";
 

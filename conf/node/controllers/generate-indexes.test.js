@@ -6,7 +6,6 @@ import {
 
 import { s3BucketName } from "../constants.js";
 import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
-
 import { s3Options } from "./s3.js";
 
 let client;
