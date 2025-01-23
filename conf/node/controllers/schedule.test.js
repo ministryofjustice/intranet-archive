@@ -1,6 +1,6 @@
 import { expect, it, jest } from "@jest/globals";
 
-import { parseScheduleString, scheduleFunction } from "./schedule";
+import { parseScheduleString, scheduleFunction } from "./schedule.js";
 
 jest.useFakeTimers();
 

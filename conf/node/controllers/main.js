@@ -7,12 +7,12 @@ import {
   sensitiveFiles,
 } from "../constants.js";
 import {
-  getSnapshotPaths,
   getHttrackArgs,
   runHttrack,
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
+import { getAgencyPath, getSnapshotPaths } from "./paths.js";
 import { createHeartbeat, sync, writeToS3 } from "./s3.js";
 import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
 
@@ -69,9 +69,7 @@ export const main = async ({ env, agency, depth }) => {
   const agencyIndexHtml = await generateAgencyIndex(s3BucketName, env, agency);
   await writeToS3(
     s3BucketName,
-    "production" === env
-      ? `${agency}/index.html`
-      : `${env}-${agency}/index.html`,
+    `${getAgencyPath(env, agency)}/index.html`,
     agencyIndexHtml,
     { cacheMaxAge: 600 },
   );

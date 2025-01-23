@@ -1,5 +1,6 @@
 import { intranetUrls, s3BucketName, indexCss } from "../constants.js";
 import { getAgenciesFromS3, getSnapshotsFromS3 } from "./s3.js";
+import { getAgencyPath } from "./paths.js";
 
 /**
  * Generate the root index html
@@ -15,8 +16,6 @@ export const generateRootIndex = async (bucket = s3BucketName, env) => {
   if (!env) {
     throw new Error("Env is required");
   }
-
-  const agencyPrefix = "production" === env ? '' : `${env}-`;
 
   const agencies = await getAgenciesFromS3(bucket, env);
 
@@ -34,7 +33,10 @@ export const generateRootIndex = async (bucket = s3BucketName, env) => {
               .map(
                 (agency) => `
                 <li class="list-group-item">
-                  <a href="/${agencyPrefix}${agency}/index.html" target="_blank">${agency}</a>
+                  <a href="/${getAgencyPath(
+                    env,
+                    agency,
+                  )}/index.html" target="_blank">${agency}</a>
                 </li>`,
               )
               .join("\n")}
@@ -75,9 +77,6 @@ export const generateAgencyIndex = async (
 
   const snapshots = await getSnapshotsFromS3(bucket, env, agency);
 
-  const snapshotParent =
-    "production" === env ? `${agency}` : `${env}-${agency}`;
-
   const html = `<!doctype html><html lang="en">
     <head><title>Intranet Archive Index</title><style>${indexCss}</style></head>
     <body>
@@ -90,7 +89,9 @@ export const generateAgencyIndex = async (
               .map(
                 (snapshot) => `
                 <li class="list-group-item">
-                  <a href="/${snapshotParent}/${snapshot}/${url.hostname}/index.html" target="_blank">${snapshot}</a>
+                  <a href="/${getAgencyPath(env, agency)}/${snapshot}/${
+                  url.hostname
+                }/index.html" target="_blank">${snapshot}</a>
                 </li>`,
               )
               .join("\n")}

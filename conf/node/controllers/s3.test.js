@@ -18,7 +18,7 @@ import {
   writeToS3,
   getAgenciesFromS3,
   getSnapshotsFromS3,
-} from "./s3";
+} from "./s3.js";
 
 describe("checkAccess", () => {
   let client;

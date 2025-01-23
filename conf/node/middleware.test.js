@@ -47,6 +47,16 @@ describe("checkSignature middleware", () => {
     expect(res.send).toHaveBeenCalledWith({ status: 400 });
   });
 
+  it("should return 403 if hostname is not found", () => {
+    const payload = Buffer.from(
+      JSON.stringify({ expiry: Date.now() / 1000 + 10, hostname: "invalid" }),
+    ).toString("base64");
+    req.body = { sig: "signature", payload };
+    checkSignature(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.send).toHaveBeenCalledWith({ status: 403 });
+  });
+
   it("should return 403 if request has expired", () => {
     const payload = Buffer.from(
       JSON.stringify({ expiry: Date.now() / 1000 - 10 }),

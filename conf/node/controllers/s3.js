@@ -12,8 +12,9 @@ import {
   s3Credentials as credentials,
   s3Region,
   heartbeatEndpoint,
-  allowedTargetAgencies
+  allowedTargetAgencies,
 } from "../constants.js";
+import { getAgencyPath } from "./paths.js";
 
 /**
  * S3 client options
@@ -208,8 +209,8 @@ export const getAgenciesFromS3 = async (bucket = s3BucketName, env) => {
     folder.Prefix.replace("/", "").replace("/", ""),
   );
 
-  if(env === 'production') {
-    return folders.filter((folder) => allowedTargetAgencies.includes(folder) )
+  if (env === "production") {
+    return folders.filter((folder) => allowedTargetAgencies.includes(folder));
   }
 
   return folders
@@ -241,7 +242,7 @@ export const getSnapshotsFromS3 = async (
     throw new Error("Agency is required");
   }
 
-  const prefix = "production" === env ? `${agency}/` : `${env}-${agency}/`;
+  const prefix = `${getAgencyPath(env, agency)}/`;
 
   const command = new ListObjectsV2Command({
     Bucket: bucket,

@@ -11,7 +11,7 @@ import {
 
 /**
  * @typedef {import('express').Request & { mirror: { env: string, agency: string, depth: number } }} SpiderRequest
- * @typedef {import('express').Request & { isValid: ?boolean, agency: string, _hostname: string }} AccessRequest
+ * @typedef {import('express').Request & { isValid: ?boolean, agency: string, env: string }} AccessRequest
  */
 
 /**
@@ -106,10 +106,14 @@ export const checkSignature = (req, res, next) => {
   }
 
   // Make sure the request is for an allowed hostname
-  req._hostname = payloadObject.hostname;
+  req.env = Object.keys(intranetUrls).find(
+    (env) =>
+      intranetUrls[env] &&
+      new URL(intranetUrls[env]).hostname === payloadObject.hostname,
+  );
 
-  if (!allowedTargetHosts.includes(req._hostname)) {
-    console.error("Error: Hostname not allowed");
+  if (!req.env) {
+    console.error("Error: Env not found");
     res.status(403).send({ status: 403 });
     return;
   }
