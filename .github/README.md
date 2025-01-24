@@ -179,5 +179,4 @@ kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snaps
 | `make launch`       | Checks if the intranet docker instance is running; if not, launch dory and docker in the background and open the site in the systems default browser  |
 | `make run`          | Launch the application locally with `docker compose up`, requiring `env` + `dory`                                                                     |
 | `make down`         | Alias of `docker compose down`.                                                                                                                       |
-| `make shell`        | Open a bash shell on the spider container. The application must already be running (e.g. via `make run`) before this can be used.                     |
-| `make sync` <img width="145" /> | Open a bash shell and execute `s3sync`. Uploads all assets to AWS S3                                                                      |
+| `make bash`         | Open a bash shell on the spider container. The application must already be running (e.g. via `make run`) before this can be used.                     |

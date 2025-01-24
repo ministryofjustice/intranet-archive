@@ -10,4 +10,4 @@ npm install
 echo -e "${DOTS} ${DOTS} Running dev server ${DOTS}\n"
 
 # Start the server in watch mode with the `dev` script.
-npm run dev &
+npm run dev

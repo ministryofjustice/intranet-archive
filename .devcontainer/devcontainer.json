@@ -1,7 +1,7 @@
 {
     "dockerComposeFile": "../docker-compose.yml",
     "service": "spider",
-    "workspaceFolder": "/usr/local/bin/node",
+    "workspaceFolder": "/home/node/app",
     "customizations": {
         "vscode": {
             "extensions": [

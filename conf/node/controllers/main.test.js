@@ -14,7 +14,9 @@ const skipAllTests = process.env.CI === "true";
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
 
-describe("main", () => {
+const envs = ['dev', 'production'];
+
+describe.each(envs)("main - %s", (env) => {
   if (skipAllTests) {
     it.skip("should get index files on a shallow scrape", async () => {});
     it.skip("should delete sensitive files and cleanup local fs", async () => {});
@@ -24,7 +26,6 @@ describe("main", () => {
     return;
   }
 
-  const env = "production";
   const url = new URL(intranetUrls[env]);
   const agency = "hq";
   const paths = getSnapshotPaths({ env, agency });
@@ -51,7 +52,7 @@ describe("main", () => {
     await s3EmptyDir(paths.s3);
   });
 
-  it("should get index files on a shallow scrape - production", async () => {
+  it("should get index files on a shallow scrape", async () => {
     await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3

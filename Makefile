@@ -20,8 +20,6 @@ down:
 dory:
 	@chmod +x ./bin/dory-start.sh && ./bin/dory-start.sh
 
-sync:
-	@docker compose exec spider s3sync
 
 launch:
 	@bin/launch.sh
@@ -32,8 +30,15 @@ image: Dockerfile Makefile build
 	docker build -t $(IMAGE) .
 
 # Get inside the spider container
-shell:
+bash:
 	docker compose exec spider /bin/bash
+
+# Production environment for testing the production builds locally
+build-prod: 
+	docker compose -f docker-compose.prod.yml build
+
+up-prod:
+	docker compose -f docker-compose.prod.yml up
 
 # The following key-gen-* commands are for CloudFront RSA key generation/management.
 key-gen-private:

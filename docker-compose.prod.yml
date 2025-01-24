@@ -8,8 +8,6 @@ services:
     container_name: intranet-archive-prod
     environment:
       VIRTUAL_HOST: app.archive.intranet.docker
-      VIRTUAL_PORT: "8080"
-    volumes:
-      - ./snapshots:/archiver/snapshots
+      VIRTUAL_PORT: "2000"
     ports:
-      - "8080:8080"
+      - "2000:2000"
