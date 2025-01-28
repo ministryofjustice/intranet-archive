@@ -41,6 +41,8 @@ jobs:
 
       - name: Node test
         uses: snyk/actions/node@master
+        with:
+          working-directory: conf/node
         continue-on-error: true
 
         # Build the docker image for testing
