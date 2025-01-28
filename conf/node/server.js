@@ -53,14 +53,8 @@ const cache = {
  * Middleware
  */
 
-// TODO
-// app.use(express.static("/usr/share/nginx/html"));
-
 // Middleware to parse incoming POST requests
 app.use(express.urlencoded({ extended: true }));
-
-// Middleware to enable CORS
-app.use(cors(corsOptions));
 
 // Middleware to parse the url and agency
 app.use(parseBody, checkSignature);
