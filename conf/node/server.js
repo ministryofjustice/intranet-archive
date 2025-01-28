@@ -4,14 +4,12 @@
  *************************************************/
 
 // npm packages
-import cors from "cors";
 import express from "express";
 
 // Relative
 import {
   ordinalNumber,
   intranetUrls,
-  corsOptions,
   intranetJwts,
   port,
   getSnapshotSchedule,
