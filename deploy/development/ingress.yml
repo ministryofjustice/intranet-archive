@@ -5,9 +5,6 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/set-identifier: intranet-archive-dev-ingress-intranet-archive-dev-green
     external-dns.alpha.kubernetes.io/aws-weight: "100"
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: basic-auth-secret
-    nginx.ingress.kubernetes.io/auth-realm: 'Development Access | Authentication Required'
     nginx.ingress.kubernetes.io/server-snippet: |
       location = /health {
         auth_basic off;
@@ -30,10 +27,11 @@ spec:
   - host: app.archive.dev.intranet.justice.gov.uk
     http:
       paths:
-      - path: /
+      # Limit public to the `access` route.
+      - path: /access
         pathType: ImplementationSpecific
         backend:
           service:
             name: intranet-archive-service
             port:
-              number: 8080
+              number: 2000

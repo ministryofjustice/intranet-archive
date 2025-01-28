@@ -1,11 +1,7 @@
-#!/usr/bin/env node
 /**
  * Intranet Archive - NodeJS Form Processing
  * -
  *************************************************/
-
-// node packages
-import path from "node:path";
 
 // npm packages
 import cors from "cors";
@@ -20,25 +16,45 @@ import {
   port,
   getSnapshotSchedule,
 } from "./constants.js";
-import { parseBody, checkSignature } from "./middleware.js";
+import {
+  parseBody,
+  checkSignature,
+  HttpError,
+  errorHandler,
+} from "./middleware.js";
 import {
   getCdnUrl,
   getCookies,
   getDateLessThan,
   getCookiesToClear,
 } from "./controllers/cloudfront.js";
+import { deleteOldSnapshots } from "./controllers/lifecycle.js";
 import { main } from "./controllers/main.js";
 import { getAgencyPath } from "./controllers/paths.js";
-import { checkAccess as checkS3Access } from "./controllers/s3.js";
+import {
+  checkAccess as checkS3Access,
+  syncErrorPages,
+} from "./controllers/s3.js";
 import { scheduleFunction } from "./controllers/schedule.js";
 
+const __dirname = import.meta.dirname;
+
 const app = express();
+
+// An in-memory cache to store the status data (so this endpoint can be open).
+const cache = {
+  status: {
+    expiry: 0,
+    data: null,
+  },
+};
 
 /**
  * Middleware
  */
 
-app.use(express.static("/usr/share/nginx/html"));
+// TODO
+// app.use(express.static("/usr/share/nginx/html"));
 
 // Middleware to parse incoming POST requests
 app.use(express.urlencoded({ extended: true }));
@@ -53,14 +69,36 @@ app.use(parseBody, checkSignature);
  * Routes
  */
 
-app.post("/fetch-test", async function (req, res, next) {
+app.get("/health", function (_req, res) {
+  res.status(200).send("OK");
+});
+
+app.get("/status", async function (_req, res, next) {
   try {
-    const url = intranetUrls[req.mirror.env];
-    const { status } = await fetch(url, {
-      redirect: "manual",
-      headers: { Cookie: `jwt=${intranetJwts[req.mirror.env]}` },
-    });
-    res.status(200).send({ status });
+    // Get envs where a JWT has been set.
+    const envs = Object.entries(intranetJwts)
+      .filter(([, jwt]) => jwt)
+      .map(([env]) => env);
+
+    const fetchStatuses = await Promise.all(
+      envs.map(async (env) => {
+        const url = intranetUrls[env];
+        const { status } = await fetch(url, {
+          redirect: "manual",
+          headers: { Cookie: `jwt=${intranetJwts[env]}` },
+        });
+        return { env, status };
+      }),
+    );
+
+    const data = { fetchStatuses, s3Status: await checkS3Access() };
+
+    cache.status = {
+      expiry: Date.now() + 1000 * 60 * 5, // 5 minutes
+      data,
+    };
+
+    res.status(200).send(data);
   } catch (err) {
     // Handling errors like this will send the error to the default Express error handler.
     // It will log the error to the console, return a 500 error page,
@@ -69,20 +107,11 @@ app.post("/fetch-test", async function (req, res, next) {
   }
 });
 
-app.post("/bucket-test", async function (_req, res, next) {
-  try {
-    const canAccess = await checkS3Access();
-    res.status(200).send({ canAccess });
-  } catch (err) {
-    next(err);
-  }
-});
-
 app.post("/spider", function (req, res) {
-  // Start the main function - without awiting for the result.
+  // Start the main function - without awaiting for the result.
   main(req.mirror);
   // Handle the response
-  res.status(200).sendFile(path.join("/usr/share/nginx/html/working.html"));
+  res.status(200).send({ status: 200 });
 });
 
 app.post("/access", async function (req, res, next) {
@@ -90,7 +119,8 @@ app.post("/access", async function (req, res, next) {
 
   // Check if the request is valid
   if (!isValid) {
-    res.status(403).send({ status: 403 });
+    const error = new HttpError("Invalid request", 400);
+    next(error);
     return;
   }
 
@@ -136,7 +166,28 @@ app.post("/access", async function (req, res, next) {
   }
 });
 
+app.use(function (_req, res) {
+  // Return a 404 page if no route is matched
+  res.status(404).sendFile("static/404.html", { root: __dirname });
+});
+
+/**
+ * Middleware - Error Handling
+ */
+
+app.use(errorHandler);
+
+/**
+ * Start the Server
+ */
+
 app.listen(port);
+
+console.log("Server started on port", port);
+
+/**
+ * Schedule
+ */
 
 // For now, only schedule to run on the first instance.
 if (ordinalNumber === 0) {
@@ -148,3 +199,12 @@ if (ordinalNumber === 0) {
     console.log("Scheduled", env, agency, schedule, depth ?? "");
   });
 }
+
+// Schedule the deleteOldSnapshots function to run at 1:45 AM every day
+scheduleFunction({ min: 45, hour: 1 }, deleteOldSnapshots);
+
+/**
+ * Other Function(s)
+ */
+
+syncErrorPages();

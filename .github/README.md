@@ -44,13 +44,30 @@ information.
 4. The NodeJS responds by redirecting to the CloudFront distribution.
    The redirect URL contains cookies, so that the user can access the snapshot.
 
-## Creating a snapshot
+## Scheduling a snapshot
 
-Access is granted if you are in possession of the basic-auth credentials.
+Find the config file at `deploy/<namespace>/config.yml`.
 
-Access point: [via Cloud Platform (dev)](https://dev-intranet-archive.apps.live.cloud-platform.service.justice.gov.uk/)
+Update the `SNAPSHOT_SCHEDULE` environment variable with values for the desired agency.
 
-![](https://docs.google.com/drawings/d/e/2PACX-1vTJqlB4knZZt1XA7t2No80oOjcvRRk5HuZ8BlRBnYmBD5So28xrr_pt3fZuV1vobUK_ndkKXR9zBST2/pub?w=1440&h=810)
+It should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>`.
+
+And, multiple values should be comma separated.
+
+e.g. `dev::hq::Mon::17:30::3,dev::hmcts::Thu::17:30::3`
+
+## Manually creating a snapshot
+
+Snapshot scheduling should cover the project's use-case; manually creating a snapshot is limited to developers for debugging.
+
+As such, it's required to `port-forward` to the running service, and make a POST request to the `/spider` endpoint.
+
+```bash
+# example POST request
+curl -X POST http://localhost:2000/spider -d "agency=hq&env=dev&depth=2"
+```
+
+See the Cloud Platform and Commands sections below.
 
 ## Local development
 
@@ -78,11 +95,11 @@ There is a script designed to help you install the [Dory Proxy](https://github.c
 
 If you chose to install Dory, you can access the application here:
 
-[spider.intranet.docker](http://spider.intranet.docker/)
+[app.archive.intranet.docker](http://app.archive.intranet.docker/)
 
 Otherwise, access the application here:
 
-[localhost:8080](http://localhost:8080/)
+[localhost:2000](http://localhost:2000/)
 
 ## Understanding application logic
 
@@ -147,9 +164,12 @@ options used to set HTTrack up.
 
 To understand the build process further, please look at the Makefile.
 
-## Caveats
+## Cloud Platform
 
-The Archiver currently runs an unprivileged image on Cloud Platform that isn't yet confgiured to run CRON jobs. This has meant that an automated script to synchronise a snapshot with the configured S3 bucket fails to run. In order to get the content from our application to S3, the command `s3sync` needs to be executed on the pod that is running the snapshot process.
+In an aim to towards good security practices, when this application is deployed to the Cloud Platform, the `/access` is the only route that is open publicly.
+The `/access` route allows users to be redirected to the CloudFront distribution, where they can access the snapshot.
+
+Private routes, `/status` and `/spider` are used for developer purposes only. To access these endpoints, port-forward to the service. See the command below.
 
 It may be possible to 
 [interact with running pods with help from this cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods).
@@ -169,6 +189,9 @@ kubectl -n intranet-archive-dev get pods
 # copy a log file from a pod to your local machine 
 # update pod-id, agency and date
 kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snapshots/intranet.justice.gov.uk/<agency>/<date>/hts-log.txt ~/hts-log.txt
+
+# port-forward to a running pod
+kubectl -n intranet-archive-dev service/intranet-archive-service 2000:80
 ```
 
 **Make**

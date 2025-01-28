@@ -8,7 +8,7 @@ spec:
   ports:
   - port: 80
     name: http
-    targetPort: 8080
+    targetPort: 2000
   selector:
     app: intranet-archive
 ---
@@ -22,7 +22,7 @@ spec:
   ports:
   - port: 80
     name: http
-    targetPort: 8080
+    targetPort: 2000
   clusterIP: None # Headless service setting
   selector:
     app: intranet-archive

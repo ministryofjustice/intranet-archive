@@ -4,7 +4,7 @@ import { intranetUrls } from "../constants.js";
  * Parse a schedule string to determine when each agency should be crawled.
  *
  * @param {string} [scheduleString] - The schedule string in the format "agency:dayOfWeek:hour:min,agency:dayOfWeek:hour:min".
- * @returns {Array<{ env: string, agency: string, depth?: number, dayIndex: number, hour: number, min: number }>}
+ * @returns {Array<{ env: string, agency: string, depth?: number, dayIndexes: number[], hour: number, min: number }>}
  *
  * @throws {Error} If the schedule string is not in the correct format.
  */
@@ -55,7 +55,7 @@ export const parseScheduleString = (scheduleString) => {
       }
 
       if (!optionalDepth) {
-        return { env, agency, dayIndex, hour, min };
+        return { env, agency, dayIndexes: [dayIndex], hour, min };
       }
 
       const depth = parseInt(optionalDepth);
@@ -64,21 +64,27 @@ export const parseScheduleString = (scheduleString) => {
         throw new Error("Invalid depth");
       }
 
-      return { env, agency, dayIndex, hour, min, depth };
+      return { env, agency, dayIndexes: [dayIndex], hour, min, depth };
     });
 };
 
 /**
  * Schedules a function to run at a specific day of the week and time.
  *
- * @param {{ dayIndex: number, hour: number, min: number }} schedule - The schedule object containing day of the week, hour, and minute.
+ * @param {{ dayIndexes?: number[], hour: number, min: number }} schedule - The schedule object containing day of the week, hour, and minute.
  * @param {function} callback - The function to be executed.
  * @returns {void}
  *
  * @throws {Error} If the day of the week or time is invalid.
  */
-export const scheduleFunction = ({ dayIndex, hour, min }, callback) => {
-  if (dayIndex < 0 || dayIndex > 6) {
+export const scheduleFunction = ({ dayIndexes, hour, min }, callback) => {
+  // Default to all days of the week
+  if(!dayIndexes) {
+    dayIndexes = [0, 1, 2, 3, 4, 5, 6];
+  }
+
+  // Validate day the input
+  if (dayIndexes.some((dayIndex) => dayIndex < 0 || dayIndex > 6)) {
     throw new Error("Invalid day of the week");
   }
 
@@ -96,7 +102,7 @@ export const scheduleFunction = ({ dayIndex, hour, min }, callback) => {
   function checkAndRun() {
     const now = new Date();
     if (
-      now.getDay() === dayIndex &&
+      dayIndexes.includes(now.getDay()) &&
       now.getHours() === hour &&
       now.getMinutes() === min
     ) {
