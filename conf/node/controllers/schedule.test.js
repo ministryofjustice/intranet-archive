@@ -15,7 +15,7 @@ describe("parseScheduleString", () => {
       {
         env: "dev",
         agency: "hq",
-        dayIndex: 1,
+        dayIndexes: [1],
         hour: 17,
         min: 30,
         depth: 1,
@@ -23,7 +23,7 @@ describe("parseScheduleString", () => {
       {
         env: "production",
         agency: "hmcts",
-        dayIndex: 2,
+        dayIndexes: [2],
         hour: 17,
         min: 30,
       },
@@ -74,7 +74,7 @@ describe("parseScheduleString", () => {
 describe("scheduleFunction", () => {
   it("should execute the callback at the scheduled time", () => {
     const callback = jest.fn();
-    const schedule = { dayIndex: 1, hour: 14, min: 30 };
+    const schedule = { dayIndexes: [1], hour: 14, min: 30 };
 
     // Mock Date to control the current time
     const mockDate = new Date("2023-10-02T14:29:30"); // A Monday at 14:29:30
@@ -90,7 +90,7 @@ describe("scheduleFunction", () => {
 
   it("should execute multiple times over the course of 3 weeks", () => {
     const callback = jest.fn();
-    const schedule = { dayIndex: 1, hour: 14, min: 30 };
+    const schedule = { dayIndexes: [1], hour: 14, min: 30 };
 
     // Mock Date to control the current time
     const mockDate = new Date("2023-10-02T14:29:30"); // A Monday at 14:29:30
@@ -107,7 +107,7 @@ describe("scheduleFunction", () => {
 
   it("should not execute the callback before the scheduled time", () => {
     const callback = jest.fn();
-    const schedule = { dayIndex: 1, hour: 14, min: 30 };
+    const schedule = { dayIndexes: [1], hour: 14, min: 30 };
 
     // Mock Date to control the current time
     const mockDate = new Date("2023-10-02T14:29:00"); // A Monday at 14:29
@@ -121,9 +121,26 @@ describe("scheduleFunction", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it("should default to all days of the week", () => {
+    const callback = jest.fn();
+    const schedule = { hour: 14, min: 30 };
+
+    // Mock Date to control the current time
+    const mockDate = new Date("2023-10-02T14:29:30"); // A Monday at 14:29:30
+    jest.setSystemTime(mockDate);
+
+    scheduleFunction(schedule, callback);
+
+    // Fast-forward 8 days
+    jest.advanceTimersByTime(8 * 24 * 60 * 60 * 1000);
+
+    // The callback should have been called 8 times
+    expect(callback).toHaveBeenCalledTimes(8);
+  });
+
   it("should throw an error for an invalid day of the week", () => {
     const callback = jest.fn();
-    const schedule = { dayIndex: 8, hour: 14, min: 30 };
+    const schedule = { dayIndexes: [8], hour: 14, min: 30 };
 
     expect(() => {
       scheduleFunction(schedule, callback);
@@ -132,7 +149,7 @@ describe("scheduleFunction", () => {
 
   it("should throw an error for an invalid time format", () => {
     const callback = jest.fn();
-    const schedule = { dayIndex: 1, hour: 25, min: 0 };
+    const schedule = { dayIndexes: [1], hour: 25, min: 0 };
 
     expect(() => {
       scheduleFunction(schedule, callback);

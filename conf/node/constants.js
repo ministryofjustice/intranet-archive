@@ -49,18 +49,6 @@ export const cloudFrontPublicKey = process.env.AWS_CLOUDFRONT_PUBLIC_KEY;
 export const cloudFrontPrivateKey = process.env.AWS_CLOUDFRONT_PRIVATE_KEY;
 
 /**
- * Options
- */
-
-export const corsOptions = {
-  methods: ["POST"],
-  origin: [
-    "http://spider.intranet.docker/",
-    "https://dev-intranet-archive.apps.live.cloud-platform.service.justice.gov.uk/",
-  ],
-};
-
-/**
  * Defaults
  */
 

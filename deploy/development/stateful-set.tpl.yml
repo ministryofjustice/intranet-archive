@@ -24,8 +24,8 @@ spec:
         image: ${ECR_URL}:${IMAGE_TAG}
         securityContext:
           allowPrivilegeEscalation: false
-          runAsUser: 1001
-          runAsGroup: 1001
+          runAsUser: 1000
+          runAsGroup: 1000
           capabilities: 
             drop: ["ALL"]
         resources:
@@ -36,7 +36,7 @@ spec:
             cpu: 500m
             memory: 250Mi
         ports:
-        - containerPort: 8080
+        - containerPort: 2000
         volumeMounts:
         - name: snapshots
           mountPath: "/tmp/snapshots"
@@ -65,13 +65,13 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 8080
+            port: 2000
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
-            port: 8080
+            port: 2000
           initialDelaySeconds: 10
           periodSeconds: 15
   volumeClaimTemplates:

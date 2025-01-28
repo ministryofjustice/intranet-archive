@@ -18,6 +18,7 @@ import {
   writeToS3,
   getAgenciesFromS3,
   getSnapshotsFromS3,
+  syncErrorPages,
 } from "./s3.js";
 
 describe("checkAccess", () => {
@@ -449,5 +450,48 @@ describe("getSnapshotsFromS3", () => {
     const snapshots = await getSnapshotsFromS3(undefined, "dev", "hq");
 
     expect(snapshots).toStrictEqual(["2024-01-01", "2024-01-02"]);
+  });
+});
+
+describe.only("syncErrorPages", () => {
+
+  let client;
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+    await s3EmptyDir("error_pages");
+  });
+  
+  afterAll(async () => {
+    await s3EmptyDir("error_pages");
+    client.destroy();
+  });
+
+  it("should sync the error pages", async () => {
+    await syncErrorPages();
+
+    const objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "error_pages",
+      }),
+    );
+
+    expect(objects.Contents.length).toBeGreaterThan(0);
+
+    // Get the first object
+    const object = objects.Contents[0];
+
+    const res = await client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: object.Key,
+      }),
+    );
+
+    const bodyString = await res.Body.transformToString();
+
+    expect(bodyString).not.toBe("");
+    expect(res.ContentType).toBe("text/html");
   });
 });

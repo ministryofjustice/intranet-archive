@@ -34,47 +34,63 @@ describe("checkSignature middleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it("should return 403 if sig or payload is missing", () => {
+  it("should call next with HttpError 400 if sig or payload is missing", () => {
     checkSignature(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.send).toHaveBeenCalledWith({ status: 403 });
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(400);
   });
 
-  it("should return 400 if payload is not valid base64", () => {
+  it("should call next with HttpError 400 if payload is not valid base64", () => {
     req.body = { sig: "signature", payload: "invalid-base64" };
-    checkSignature(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.send).toHaveBeenCalledWith({ status: 400 });
+    checkSignature(req, res, next); 
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(400);
   });
 
-  it("should return 403 if hostname is not found", () => {
+  it("should call next with HttpError 400 if hostname is not found", () => {
     const payload = Buffer.from(
       JSON.stringify({ expiry: Date.now() / 1000 + 10, hostname: "invalid" }),
     ).toString("base64");
     req.body = { sig: "signature", payload };
     checkSignature(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.send).toHaveBeenCalledWith({ status: 403 });
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(400);
   });
 
-  it("should return 403 if request has expired", () => {
+  it("should call next with HttpError 400 if request has expired", () => {
     const payload = Buffer.from(
       JSON.stringify({ expiry: Date.now() / 1000 - 10 }),
     ).toString("base64");
     req.body = { sig: "signature", payload };
     checkSignature(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.send).toHaveBeenCalledWith({ status: 403 });
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(400);
   });
 
-  it("should return 403 if signature does not match", () => {
+  it("should call next with HttpError 400 if signature does not match", () => {
     const payload = Buffer.from(
       JSON.stringify({ expiry: Date.now() / 1000 + 10 }),
     ).toString("base64");
     req.body = { sig: "invalid-signature", payload };
     checkSignature(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.send).toHaveBeenCalledWith({ status: 403 });
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(400);
+  });
+
+  it("should call next with HttpError 403 if sig is invalid", () => {
+    const payload = Buffer.from(
+      JSON.stringify({
+        expiry: Date.now() / 1000 + 10,
+        agency: "hmcts",
+        hostname: "intranet.docker",
+      }),
+    ).toString("base64");
+    const hmac = createHmac("sha256", sharedSecret);
+    const sig = hmac.update(`${payload}-invalid`).digest("base64");
+    req.body = { sig, payload };
+    checkSignature(req, res, next);
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[0][0].status).toBe(403);
   });
 
   it("should call next if signature matches", () => {
