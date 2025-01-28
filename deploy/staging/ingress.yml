@@ -1,9 +1,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: intranet-archive-dev-ingress
+  name: intranet-archive-staging-ingress
   annotations:
-    external-dns.alpha.kubernetes.io/set-identifier: intranet-archive-dev-ingress-intranet-archive-dev-green
+    external-dns.alpha.kubernetes.io/set-identifier: intranet-archive-staging-ingress-intranet-archive-staging-green
     external-dns.alpha.kubernetes.io/aws-weight: "100"
     nginx.ingress.kubernetes.io/server-snippet: |
       location = /health {
@@ -19,10 +19,10 @@ spec:
   ingressClassName: default
   tls:
   - hosts:
-    - app.archive.dev.intranet.justice.gov.uk
-    secretName: intranet-archive-dev-cert-secret
+    - app.archive.staging.intranet.justice.gov.uk
+    secretName: intranet-archive-staging-cert-secret
   rules:
-  - host: app.archive.dev.intranet.justice.gov.uk
+  - host: app.archive.staging.intranet.justice.gov.uk
     http:
       paths:
       # Limit public to the `access` route.
