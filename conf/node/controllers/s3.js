@@ -305,5 +305,9 @@ export const syncErrorPages = async (
   source = "static/error-pages",
   destination = "error_pages",
 ) => {
-  await sync(source, `s3://${bucket}/${destination}`, { del: true });
+  try {
+    await sync(source, `s3://${bucket}/${destination}`, { del: true });
+  } catch (err) {
+    console.error("Error syncing error pages", err);
+  }
 };
