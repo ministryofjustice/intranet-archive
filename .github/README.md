@@ -91,6 +91,7 @@ Start docker compose:
 ```
 make run
 ```
+
 There is a script designed to help you install the [Dory Proxy](https://github.com/FreedomBen/dory), if you'd like to.
 
 If you chose to install Dory, you can access the application here:
@@ -101,13 +102,81 @@ Otherwise, access the application here:
 
 [localhost:2000](http://localhost:2000/)
 
+## Application routes
+
+### `/status`
+
+There is a private `/status` route that will return a JSON response with the applications status, 
+including if it has access to the S3 bucket and intranet URLs.
+
+```
+# Make a GET request with curl to the /status route
+curl http://app.archive.intranet.docker/status
+```
+
+The response should include `{"fetchStatuses":[{"env":"local","status":200}],"s3Status":true}`
+
+### `/spider`
+
+This is a private route that will trigger a snapshot, it should only be used for debugging purposes.
+
+```bash
+# Make a POST request with curl to the /spider route
+curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=1"
+```
+
+The response should be `{"status":200}` and the container logs should show the snapshot being created.
+
+### `/access`
+
+The primary route is `/access`, this is the only public route and it redirects to the CloudFront distribution. 
+For this to work, you should be running the intranet project locally, on the Intranet Dashboard click on the link to the archive.
+Your browser will be sent to `http://app.archive.intranet.docker/access` and you will be redirected to a URL like `http://archive.intranet.docker/local-hmcts/index.html`.
+
+
 ## Understanding application logic
 
-Let's begin with servers and their interactions within... 
+Let's begin with the main controller...
 
-The Archiver has an Nginx server. This is used to display responses from the underlying NodeJS 
-server where Node processes form requests and decides how to treat them. Essentially, if happy with the request, Node 
-will instruct HTTrack to perform a website copy operation, and it does this with predefined options, and a custom plugin.
+The main controller, [main.js](./conf/node/controllers/main.js), is a script that runs all necessary functions in order to create a snapshot and then upload it to S3.
+
+The entrypoint script is [server.js](./conf/node/server.js). This script is responsible for setting up the server and scheduling the main controller to run at specific times.
+
+As we are running an Express server, we use middleware, located at [middleware.js](./conf/node/middleware.js), in order to parse and validate incoming requests.
+
+Along side the main controller are various distinct controllers. These controllers are each concerned with one distinct aspect of the snapshot process. 
+For example, the [cloudfront.js](./conf/node/controllers/cloudfront.js) controller is responsible for various functions related to the CloudFront distribution, including creating signed cookies.
+
+## Tests and TDD
+
+In an aim to make the application robust and easy to maintain, we have implemented tests using Jest.
+
+Middleware, and the controllers have tests, the tests are adjacent to the files they are testing e.g. `middleware.test.js` will be found next to `middleware.js`.
+
+When making a change to the application, you can run the tests with the following command:
+
+```bash
+# Exec into the container
+make bash
+# Run the tests
+npm run test
+# Or, run tests while watching for changes
+npm run test:watch
+# Or, append a particular test file
+npm run test middleware
+# Or, append a particular test file and watch for changes
+npm run test:watch middleware
+```
+
+The main test requires access to the live intranet. If you see the following logs:
+
+> Could not access production.  
+  Add JWT to your .env file to access the intranet.
+
+... and the main test is failing, you should add a JWT to the `.env` file.
+
+Visit dev.intranet.justice.gov.uk and copy the JWT from the browser's cookies.
+
 
 ## HTTrack
 
@@ -159,7 +228,7 @@ sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0
 
 ### Testing and making modifications to the application
 
-All processing for HTTrack is managed in the `process.js` file located in the NodeJS application. You will find all the 
+All processing for HTTrack is managed in the `server.js` file located in the NodeJS application. You will find all the 
 options used to set HTTrack up.
 
 To understand the build process further, please look at the Makefile.

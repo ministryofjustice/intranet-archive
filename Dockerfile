@@ -26,6 +26,8 @@ ENV NODE_ENV=development
 
 USER node
 
+CMD []
+
 
 
 # Create a production image, from the base image.

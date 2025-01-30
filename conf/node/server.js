@@ -8,6 +8,7 @@ import express from "express";
 
 // Relative
 import {
+  isLocal,
   ordinalNumber,
   intranetUrls,
   intranetJwts,
@@ -72,6 +73,10 @@ app.get("/status", async function (_req, res, next) {
       .filter(([, jwt]) => jwt)
       .map(([env]) => env);
 
+    if(isLocal) {
+      envs.push("local");
+    }
+
     const fetchStatuses = await Promise.all(
       envs.map(async (env) => {
         const url = intranetUrls[env];
@@ -92,6 +97,7 @@ app.get("/status", async function (_req, res, next) {
 
     res.status(200).send(data);
   } catch (err) {
+    console.log(err);
     // Handling errors like this will send the error to the default Express error handler.
     // It will log the error to the console, return a 500 error page,
     // and show the error message on dev environments, but hide it on production.

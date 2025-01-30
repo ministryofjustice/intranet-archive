@@ -9,12 +9,3 @@ echo -e "${DOTS} ${DOTS} Firing the website up... ${DOTS}\n"
 
 # bring docker online (background)
 docker compose up -d
-
-# launch in browser
-echo -e "${DOTS} ${DOTS} Launching your default browser... ${DOTS}\n"
-sleep 2
-
-if command -v python &> /dev/null
-then
-  python -m webbrowser http://spider.intranet.docker
-fi
