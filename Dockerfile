@@ -1,10 +1,14 @@
-FROM node:23-bookworm-slim AS base
+FROM node:23-alpine AS base
 
-ENV TZ="Europe/London"
+# Set the time-zone.
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Europe/London /etc/localtime && \
+    echo "Europe/London" >  /etc/timezone && \
+    apk del tzdata
 
-RUN apt-get update && \
-    apt-get -y install -qq \
-    httrack
+# Install HTTrack.
+RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk add --update httrack@testing && rm -rf /var/cache/apk/*
 
 COPY conf/node /home/node/app
 
@@ -26,6 +30,7 @@ ENV NODE_ENV=development
 
 USER node
 
+CMD []
 
 
 # Create a production image, from the base image.

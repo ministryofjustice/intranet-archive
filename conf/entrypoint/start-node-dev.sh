@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/bin/ash
 
 # If there is a command, then run it and exit - used for running custom commands, i.e. CI.
 if [ "$1" ]; then
   exec "$@"
-  exit
 fi
 
 DOTS="\n \033[0;32m***\033[0m"
