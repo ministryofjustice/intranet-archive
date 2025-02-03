@@ -25,7 +25,7 @@ launch:
 
 # Get inside the spider container
 bash:
-	docker compose exec spider /bin/bash
+	docker compose exec spider /bin/ash
 
 # Production environment for testing the production builds locally
 build-prod: 
