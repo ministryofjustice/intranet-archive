@@ -164,7 +164,7 @@ app.post("/access", async function (req, res, next) {
 
 app.use(function (_req, res) {
   // Return a 404 page if no route is matched
-  res.status(404).sendFile("static/404.html", { root: __dirname });
+  res.status(404).sendFile("static/error-pages/404.html", { root: __dirname });
 });
 
 /**

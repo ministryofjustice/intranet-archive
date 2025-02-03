@@ -1,7 +1,5 @@
 default: launch
 
-IMAGE := ministryofjustice/intranet-archive
-
 # Start the application
 run: env dory
 	docker compose up
@@ -20,14 +18,10 @@ down:
 dory:
 	@chmod +x ./bin/dory-start.sh && ./bin/dory-start.sh
 
-
 launch:
 	@bin/launch.sh
-	@echo "\n Intranet spider available here: http://spider.intranet.docker/\n"
+	@echo "\n Intranet archive available here: http://app.archive.intranet.docker/status\n"
 	@docker compose logs -f spider
-
-image: Dockerfile Makefile build
-	docker build -t $(IMAGE) .
 
 # Get inside the spider container
 bash:
