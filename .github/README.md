@@ -81,11 +81,11 @@ Find the config file at `deploy/<namespace>/config.yml`.
 
 Update the `SNAPSHOT_SCHEDULE` environment variable with values for the desired agency.
 
-It should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>`.
+It should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>(::<optional-depth>)`.
 
 And, multiple values should be comma separated.
 
-e.g. `dev::hq::Mon::17:30::3,dev::hmcts::Thu::17:30::3`
+e.g. `dev::hq::Mon::17:30,dev::hmcts::Thu::17:30::3`
 
 ## Manually creating a snapshot
 
