@@ -162,6 +162,8 @@ export const checkSignature = (req, _res, next) => {
  */
 
 export const errorHandler = (err, _req, res, _next) => {
+  console.log(err);
+
   if (err.status === 400) {
     res
       .status(400)
@@ -176,6 +178,6 @@ export const errorHandler = (err, _req, res, _next) => {
     return;
   }
 
-  // For everthing else, return a 500 error
+  // For everything else, return a 500 error
   res.status(500).sendFile("static/error-pages/500.html", { root: __dirname });
 };

@@ -168,31 +168,138 @@ npm run test middleware
 npm run test:watch middleware
 ```
 
-The main test requires access to the live intranet. If you see the following logs:
+The main test requires access to dev and live intranet sites. If you see the following logs:
 
 > Could not access production.  
   Add JWT to your .env file to access the intranet.
 
 ... and the main test is failing, you should add a JWT to the `.env` file.
 
-Visit dev.intranet.justice.gov.uk and copy the JWT from the browser's cookies.
+Visit dev.intranet.justice.gov.uk, wait for one heartbeat request (30s), and copy the JWT from the browser's cookies.
 
+Save this to `INTRANET_JWT_DEV` in `.env`. 
+
+Similarly, visit the production intranet and save the JWT to `INTRANET_JWT_PROD` in `.env`.
+
+The main test should run successfully.
 
 ## HTTrack
 
-At the very heart of the Archiver sits [HTTrack](https://en.wikipedia.org/wiki/HTTrack). This application is configured 
-by Node to take a snapshot of the MoJ Intranet. Potentially, you can point the Archiver at any website address and, 
-using the settings for the Intranet, it will attempt to create an isolated copy of it.
+At the very heart of the Archiver sits [HTTrack](https://en.wikipedia.org/wiki/HTTrack). This application is configured by Node to take a snapshot of the MoJ Intranet. 
+
+Node's `spawn` and `exec` functions are used to run HTTrack in the background. The functions are located at [httrack.js](./conf/node/httrack.js), and the test suite is at [httrack.test.js](./conf/node/httrack.test.js).
+
+Observe HTTrack with the following actions:
+
+- HTTrack functions can be tested with the command `npm run test httrack`.
+- It is also a dependency of `main`, that can be tested with the command `npm run test main`.
+- And, it can be seen in action if the `/spider` route is requested.
+   ```bash
+   # Make a POST request with curl to the /spider route
+   curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=1"
+   ```
+- Use the `SNAPSHOT_SCHEDULE` environment variable to schedule a snapshot.
+
+## Configuration
+
+The following table lists the environment variables that can be set in the `.env` file.
+
+When the application is deployed: 
+- the secrets are stored in the [Github Actions secrets](https://github.com/ministryofjustice/intranet-archive/settings/secrets/actions).
+- config values (that are not secret) are stored in each environment's [config.yml](./deploy/dev/config.yml) file.
+
+| Variable                            | Description                                                         | Format/Example                |
+| ------------------------------------| ------------------------------------------------------------------- | ----------------------------- |
+| Application Config                                                                                                                        |
+| `ALLOWED_AGENCIES`                  | A comma separated list of agencies that are allowed to be archived. | `hq,hmcts`                    |
+| `SNAPSHOT_SCHEDULE`                 | A comma separated of formatted schedules for the snapshots.         | `dev::hq::Mon::17:30::3`      |
+| Intranet Secrets                                                                                                                          |
+| `INTRANET_JWT_DEV`                  | JWT for the dev intranet                                            | Header, payload and sig.      |
+| `INTRANET_JWT_STAGING`              | JWT for the staging intranet                                        | 〃                            |
+| `INTRANET_JWT_PRODUCTION`           | JWT for the production intranet                                     | 〃                            |
+| `INTRANET_ARCHIVE_SHARED_SECRET`    | Shared secret for, for signing `/access` requests                   | 64 bit base64 string          |
+| AWS Secrets (local only)                                                                                                                  |
+| `AWS_ACCESS_KEY_ID`                 | AWS access key (for minio)                                          | `local-key-id`                |
+| `AWS_SECRET_ACCESS_KEY`             | AWS secret access key (for minio)                                   | `local-access-key`            |
+| S3                                                                                                                                        |
+| `S3_BUCKET_NAME`                    | The S3 bucket on Cloud Platform this is an output of S3 module      | `local-bucket` `cloud-platf…` |
+| Cloudfront                                                                                                                                |
+| `AWS_CLOUDFRONT_PRIVATE_KEY`        | The private key for signing CloudFront cookies                      | RSA private key               |
+| `AWS_CLOUDFRONT_PUBLIC_KEY`         | The public that CloudFront uses to verify the signed access policy  | RSA public key                |
+| `AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT` | Active keys from the CF module (used to lookup ID from public key)  | [{"id":"*","comment":"hash"}] |
+
+### JWTs for local development
+
+Obtaining JWTs when working locally is a manual process. 
+
+Visit dev.intranet.justice.gov.uk, wait for one heartbeat request (30s), and copy the JWT from the browser's cookies.
+
+Save this to `INTRANET_JWT_DEV` in `.env`. 
+
+Similarly, visit the production intranet and save the JWT to `INTRANET_JWT_PROD` in `.env`.
+
+### JWTs for the Cloud Platform
+
+To obtain JWTs that will be used by the application on Cloud Platform, you will need to run a command on an intranet FPM container.
+
+There is a helper script for this in the [intranet-tools](https://github.com/ministryofjustice/intranet-tools) repository.
+
+```bash
+# Clone the intranet-tools repository
+# Set NSP=intranet-dev, NSP=intranet-staging or NSP=intranet-production in .env
+# Run this command from the project root
+make gen-jwt role=intranet-archive
+```
+
+These JWTs should be stored in GitHub repository secrets.
+
+Note: these JWTs are valid for 3 years, and are only valid for requests originating from Cloud Platform's egress.
+
+### Shared secret
+
+The shared secret is used to sign requests to the `/access` route. This is to ensure that only authorised requests are able to access the snapshots.
+
+For local development:
+
+- Run `make key-gen` from the intranet project.
+- Copy `INTRANET_ARCHIVE_SHARED_SECRET` from the intranet project's `.env` file to the intranet-archive project's `.env` file.
+
+For Cloud Platform:
+
+- Run `key-gen-shared-secret` from the root of this project.
+- Paste the output to the GitHub repository secrets for both the intranet and intranet-archive repositories.
+- Repeat this step for each environment: so that dev keys are different to staging keys, and staging keys are different to production keys.
+
+### CloudFront keys
+
+In this project, CloudFront keys are used to sign cookies. The keys are always generated locally by running `make key-gen-` commands.
+
+For local development:
+
+A set of dummy keys, that are not actually valid for a CloudFront distribution, are required so that the application can run and be tested. 
+
+These keys are generated by running the following command: `key-gen-private`. Follow the instructions in the terminal (marked as A) to generate the keys for your .env file.
+
+For CI/CD:
+
+Again,  set of dummy keys, that are not actually valid for a CloudFront distribution, are required so that the application can tested.
+
+Run: `key-gen-private`. Follow the instructions in the terminal (marked as B) to generate the keys for the `TEST_AWS_CLOUDFRONT_*` GitHub repository secrets.
+
+For Cloud Platform:
+
+The keys are generated by running the following command: `key-gen-private`. Follow the instructions in the terminal (marked as C) to generate the keys for the `AWS_CLOUDFRONT_*` GitHub repository secrets.
 
 ### Debugging
 
-The output of HTTrack can be noted in Docker Composes' `stdout` in the running terminal window however, a more 
-detailed and linear output stream is available in the `hts-log.txt` file. You can find this in the root of the snapshot. 
+The output of the controllers and HTTrack can be noted in Docker Composes' `stdout` in the running terminal window.
+
+Fot HHTrack, a detailed and linear output stream is available in the `hts-log.txt` file. You can find this in the root of the snapshot. e.g. `/tmp/snapshots/hq/2021-09-01/hts-log.txt`.
 
 ### Custom commands
 
 During the build of the Archiver, we came across many challenges, two of which almost prevented our proof of concept 
-from succeeding. The first was an inability to display images. The second was an inability to download them.
+from succeeding. The first was an inability to display images. The second was changing the Agency Switcher link destination.
 
 **1) The HTTrack `srcset` problem**
 
@@ -226,13 +333,6 @@ This link to the root of the cdn domain will show the index page, and allow the 
 sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0
 ```
 
-### Testing and making modifications to the application
-
-All processing for HTTrack is managed in the `server.js` file located in the NodeJS application. You will find all the 
-options used to set HTTrack up.
-
-To understand the build process further, please look at the Makefile.
-
 ## Cloud Platform
 
 In an aim to towards good security practices, when this application is deployed to the Cloud Platform, the `/access` is the only route that is open publicly.
@@ -240,9 +340,9 @@ The `/access` route allows users to be redirected to the CloudFront distribution
 
 Private routes, `/status` and `/spider` are used for developer purposes only. To access these endpoints, port-forward to the service. See the command below.
 
-It may be possible to 
+It is possible to 
 [interact with running pods with help from this cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods).
-Please be aware that with every call to the CP k8s cluster, you will need to provide the namespace, as shown below:
+Please be aware that with every call to the Cloud Platform k8s cluster, you will need to provide the namespace, as shown below:
 
 ```bash
 kubectl -n intranet-archive-dev

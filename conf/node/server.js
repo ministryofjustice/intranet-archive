@@ -97,10 +97,8 @@ app.get("/status", async function (_req, res, next) {
 
     res.status(200).send(data);
   } catch (err) {
-    console.log(err);
     // Handling errors like this will send the error to the default Express error handler.
-    // It will log the error to the console, return a 500 error page,
-    // and show the error message on dev environments, but hide it on production.
+    // It will log the error to the console, return a 500 error page.
     next(err);
   }
 });
