@@ -46,6 +46,11 @@ spec:
               secretKeyRef:
                 name: s3-bucket-output
                 key: bucket_name
+          - name: AWS_CLOUDFRONT_ALIAS
+            valueFrom:
+              secretKeyRef:
+                name: cloudfront-output
+                key: cloudfront_alias
           - name: AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT
             valueFrom:
               secretKeyRef:

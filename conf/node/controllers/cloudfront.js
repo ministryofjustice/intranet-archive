@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { getSignedCookies } from "@aws-sdk/cloudfront-signer";
 
 import {
+  cloudfrontAlias,
   cloudFrontKeysObject as keysObject,
   cloudFrontPublicKey as publicKey,
   cloudFrontPrivateKey as privateKey,
@@ -9,6 +10,22 @@ import {
 
 /** @type {string} */
 let cachedKeyPairId = null;
+
+/**
+ * Check if the distribution is accessible by fetching the root object
+ *
+ * @param {string} url - The distributon URL, defaults to the s3BucketName constant
+ * @returns {Promise<boolean>} - The status code
+ *
+ * @throws {Error}
+ */
+
+export const checkAccess = async (url = cloudfrontAlias) => {
+  const response = await fetch(url);
+
+  return response.ok;
+};
+
 
 /**
  * Infer the CloudFront CDN URL from the app host

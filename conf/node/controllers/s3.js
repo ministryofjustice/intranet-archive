@@ -292,12 +292,13 @@ export const writeToS3 = async (
 
 /**
  * Sync error pages to S3
- * 
+ *
  * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
  * @param {string} source - The source directory e.g. `static/error-pages`
  * @param {string} destination - The destination directory e.g. `error_pages`
- * 
+ *
  * @returns {Promise<void>}
+ * @throws {Error}
  */
 
 export const syncErrorPages = async (

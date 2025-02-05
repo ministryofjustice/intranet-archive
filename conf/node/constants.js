@@ -43,6 +43,8 @@ export const s3Credentials = process.env.AWS_ACCESS_KEY_ID &&
  * CloudFront
  */
 
+export const cloudfrontAlias = process.env.AWS_CLOUDFRONT_ALIAS;
+
 export const cloudFrontKeysObject =
   process.env.AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT;
 export const cloudFrontPublicKey = process.env.AWS_CLOUDFRONT_PUBLIC_KEY;
