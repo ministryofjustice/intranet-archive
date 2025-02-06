@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { getSignedCookies } from "@aws-sdk/cloudfront-signer";
 
 import {
-  isLocal,
   cloudFrontKeysObject as keysObject,
   cloudFrontPublicKey as publicKey,
   cloudFrontPrivateKey as privateKey,
