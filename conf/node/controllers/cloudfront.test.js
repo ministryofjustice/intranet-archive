@@ -13,6 +13,11 @@ describe("getCdnUrl", () => {
     expect(result.origin).toBe("https://archive.example.com");
   });
 
+  it("should return a localhost URL object", () => {
+    const result = getCdnUrl(new URL("http://localhost:2000"));
+    expect(result).toStrictEqual(new URL("http://localhost:2029"));
+  });
+
   it("should throw an error for invalid host", () => {
     expect(() => getCdnUrl(new URL("https://archive.example.com"))).toThrow(
       "Invalid host",

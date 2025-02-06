@@ -108,19 +108,43 @@ Requires
 
 Optional
 
-- Local instance of the Intranet (for testing local scrape & access endpoints)
+- Local instance of the Intranet
+
+### Local Intranet
+
+For reference, the code related to this project in the [intranet repository](https://github.com/ministryofjustice/intranet/) is at:
+
+- [app/themes/clarity/inc/agency.php](https://github.com/ministryofjustice/intranet/blob/main/public/app/themes/clarity/inc/agency.php)
+- [app/themes/clarity/inc/admin/intranet-archive-link.php](https://github.com/ministryofjustice/intranet/blob/main/public/app/themes/clarity/inc/admin/intranet-archive-link.php)
+
+If you want to test scraping of the intranet from a local source then the intranet must be running locally at [http://intranet.docker].
+
+For the archive link on the intranet dashboard to work correctly:
+
+- At least one agency should have `'has_archive' => true` set in `agency.php -> getList()`.
+- The environment variables: `INTRANET_ARCHIVE_URL` and `INTRANET_ARCHIVE_SHARED_SECRET` must be set. See [Configuration section](#configuration).
 
 ### Installation
 
 Clone to your machine:
 
-```
+```bash
 git clone https://github.com/ministryofjustice/intranet-archive.git && cd intranet-archive
 ```
 
+Prepare the environment:
+
+```bash
+make env
+```
+
+This command, will create a `.env` file in the root of the project. 
+
+Open the .env file and set the variables, annotated with the numbers 1 - 7.
+
 Start docker compose:
 
-```
+```bash
 make run
 ```
 
@@ -136,6 +160,14 @@ Otherwise, access the application here:
 
 ## Application routes
 
+Locally, request can be made to these routes as part of familiarisation with the application.
+
+Ensure that previous steps have been followed:
+
+- populate the .env file of this project
+- populate the .env file of the intranet project
+- both projects are running and the intranet is accessible at [http://intranet.docker]
+
 ### `/status`
 
 There is a private `/status` route that will return a JSON response with the applications status, 
@@ -144,6 +176,7 @@ including if it has access to the S3 bucket and intranet URLs.
 ```
 # Make a GET request with curl to the /status route
 curl http://app.archive.intranet.docker/status
+curl http://localhost:2000/status
 ```
 
 The response should include `{"fetchStatuses":[{"env":"local","status":200}],"s3Status":true}`
@@ -154,10 +187,20 @@ This is a private route that will trigger a snapshot, it should only be used for
 
 ```bash
 # Make a POST request with curl to the /spider route
-curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=1"
+curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=2"
 ```
 
 The response should be `{"status":200}` and the container logs should show the snapshot being created.
+
+> [!NOTE]
+> The progress logs can be found in the terminal where the application is running.
+> The updates interval is every second for the first second, then every 5 minutes after that.
+
+A scrape depth of 2 is sufficient to validate that HTTrack is working correctly. It will take approx. 1 minute to complete.
+
+For a more thorough scrape, set the depth to 3, that will take approx. 20 minutes.
+
+For a full scrape, remove the optional depth parameter, that will take approx. 12 hours.
 
 ### `/access`
 
@@ -165,6 +208,11 @@ The primary route is `/access`, this is the only public route and it redirects t
 For this to work, you should be running the intranet project locally, on the Intranet Dashboard click on the link to the archive.
 Your browser will be sent to `http://app.archive.intranet.docker/access` and you will be redirected to a URL like `http://archive.intranet.docker/local-hmcts/index.html`.
 
+### Additional local endpoints
+
+It may help with local debugging to browse the S3 bucket. Minio is used as an alternative to AWS S3, and can be accessed at [http://minio.archive.intranet.docker] or [http://localhost:9010]. 
+
+Refer to `AWS_ACCESS_KEY_ID` & `AWS_SECRET_ACCESS_KEY` in the `.env` file - these are the web interface credentials.
 
 ## Understanding application logic
 
@@ -209,11 +257,19 @@ The main test requires access to dev and live intranet sites. If you see the fol
 
 Visit dev.intranet.justice.gov.uk, wait for one heartbeat request (30s), and copy the JWT from the browser's cookies.
 
+> [!NOTE]  
+> As dev.intranet.justice.gov.uk uses an Entra App that is on the development tenant, 
+> you will need to use your `@devl.justice.gov.uk` email address to log in.
+
 Save this to `INTRANET_JWT_DEV` in `.env`. 
 
 Similarly, visit the production intranet and save the JWT to `INTRANET_JWT_PROD` in `.env`.
 
 The main test should run successfully.
+
+> [!NOTE]  
+> These JWTs are short lived credentials and will expire after 60 minutes.
+> It is therefore recommended to run the complete test suite `npm run test` immediately after obtaining the JWTs.
 
 ## HTTrack
 

@@ -66,25 +66,39 @@ app.get("/health", function (_req, res) {
   res.status(200).send("OK");
 });
 
-app.get("/status", async function (_req, res, next) {
+app.get("/status", async function (req, res, next) {
   try {
     // Get envs where a JWT has been set.
     const envs = Object.entries(intranetJwts)
       .filter(([, jwt]) => jwt)
       .map(([env]) => env);
 
-    if(isLocal) {
+    if (isLocal) {
       envs.push("local");
     }
+
+    // Set an agency cookie so that we don't get a redirect status code to the agency switcher page.
+    const defaultCookie = `dw_agency=hq`;
 
     const fetchStatuses = await Promise.all(
       envs.map(async (env) => {
         const url = intranetUrls[env];
-        const { status } = await fetch(url, {
-          redirect: "manual",
-          headers: { Cookie: `jwt=${intranetJwts[env]}` },
-        });
-        return { env, status };
+        let cookie = defaultCookie;
+
+        if (intranetJwts[env]) {
+          cookie += `; jwt=${intranetJwts[env]}`;
+        }
+
+        try {
+          const { status } = await fetch(url, {
+            redirect: "manual",
+            headers: { Cookie: cookie },
+          });
+          return { env, status };
+        } catch (err) {
+          console.error(`Error fetching ${url}`, err);
+          return { env, status: err.message };
+        }
       }),
     );
 
@@ -143,7 +157,7 @@ app.post("/access", async function (req, res, next) {
     // Set the cookies on the response
     Object.entries(cookies).forEach(([name, value]) => {
       res.cookie(name, value, {
-        domain: cdnUrl.host,
+        domain: cdnUrl.hostname,
         secure: cdnUrl.protocol === "https:",
         sameSite: "lax",
         httpOnly: true,
@@ -154,6 +168,9 @@ app.post("/access", async function (req, res, next) {
     getCookiesToClear(cdnUrl.host).forEach(({ domain, name }) => {
       res.clearCookie(name, { domain });
     });
+
+    // Clear the agency cookie from the CDN domain, it can cause a redirect loop.
+    res.clearCookie('dw_agency', { domain: cdnUrl.hostname });
 
     // Redirect to the CDN URL.
     res.redirect(`${cdnUrl.origin}/${getAgencyPath(env, agency)}/index.html`);

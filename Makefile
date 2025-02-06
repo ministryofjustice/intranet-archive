@@ -1,7 +1,7 @@
 default: launch
 
 # Start the application
-run: env dory
+run: dory
 	docker compose up
 
 up_daemon: env dory

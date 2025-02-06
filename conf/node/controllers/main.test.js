@@ -30,7 +30,7 @@ const envs = ["dev", "production"];
 const canFetchEnv = async (env) => {
   const { status } = await fetch(intranetUrls[env], {
     redirect: "manual",
-    headers: { Cookie: `jwt=${intranetJwts[env]}` },
+    headers: { Cookie: `dw_agency=hq; jwt=${intranetJwts[env]}` },
   });
   return status === 200;
 };
