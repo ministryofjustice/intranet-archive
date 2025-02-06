@@ -4,6 +4,13 @@ export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
 
 /**
+ * Archive rate limiting
+ */
+
+export const maxRequests = 20;
+export const timeWindow = 60 * 1000; // 60 seconds
+
+/**
  * Intranet URLs
  */
 

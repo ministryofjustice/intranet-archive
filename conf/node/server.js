@@ -15,6 +15,7 @@ import {
   getSnapshotSchedule,
 } from "./constants.js";
 import {
+  rateLimiter,
   parseBody,
   checkSignature,
   HttpError,
@@ -39,6 +40,9 @@ const __dirname = import.meta.dirname;
 
 const app = express();
 
+// Trust the first proxy (Cloud Platform) to report the correct IP address. Used for to rate limiting middleware.
+app.set('trust proxy', 1);
+
 // An in-memory cache to store the status data (so this endpoint can be open).
 const cache = {
   status: {
@@ -55,7 +59,7 @@ const cache = {
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware to parse the url and agency
-app.use(parseBody, checkSignature);
+app.use(rateLimiter, parseBody, checkSignature);
 
 /**
  * Routes
@@ -66,6 +70,13 @@ app.get("/health", function (_req, res) {
 });
 
 app.get("/status", async function (_req, res, next) {
+  const now = Date.now();
+  // Return the cached data if it is still valid.
+  if (cache.status.expiry > now) {
+    res.status(200).send(cache.status.data);
+    return;
+  }
+  
   try {
     // Get envs where a JWT has been set.
     const envs = Object.entries(intranetJwts)
@@ -86,7 +97,7 @@ app.get("/status", async function (_req, res, next) {
     const data = { fetchStatuses, s3Status: await checkS3Access() };
 
     cache.status = {
-      expiry: Date.now() + 1000 * 60 * 5, // 5 minutes
+      expiry: now + 1000 * 60 * 5, // 5 minutes
       data,
     };
 
