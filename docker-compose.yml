@@ -24,6 +24,8 @@ services:
       minio-init:
         # Wait for minio-init to complete before starting.
         condition: service_completed_successfully
+      cdn:
+        condition: service_started
     # Requests to intranet.docker and cdn.intranet.docker should go to host machine
     extra_hosts:
       - "intranet.docker:host-gateway"

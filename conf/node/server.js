@@ -29,6 +29,7 @@ import {
 } from "./controllers/cloudfront.js";
 import { deleteOldSnapshots } from "./controllers/lifecycle.js";
 import { main } from "./controllers/main.js";
+import { getAllMetrics, getMetricsString } from "./controllers/metrics.js";
 import { getAgencyPath } from "./controllers/paths.js";
 import {
   checkAccess as checkS3Access,
@@ -113,6 +114,17 @@ app.get("/status", async function (req, res, next) {
   } catch (err) {
     // Handling errors like this will send the error to the default Express error handler.
     // It will log the error to the console, return a 500 error page.
+    next(err);
+  }
+});
+
+app.get("/metrics", async function (_req, res, next) {
+  try {
+    const metrics = await getAllMetrics();
+    const metricsString = getMetricsString(metrics);
+    res.setHeader("Content-Type", "text/plain");
+    res.status(200).send(metricsString);
+  } catch (err) {
     next(err);
   }
 });
