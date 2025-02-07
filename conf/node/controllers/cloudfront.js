@@ -3,6 +3,7 @@ import { getSignedCookies } from "@aws-sdk/cloudfront-signer";
 
 import {
   isLocal,
+  isCi,
   cloudfrontAlias,
   cloudFrontKeysObject as keysObject,
   cloudFrontPublicKey as publicKey,
@@ -22,11 +23,12 @@ let cachedKeyPairId = null;
  */
 
 export const checkForbidden = async (url = cloudfrontAlias) => {
-  const response = await fetch(`${isLocal ? 'http://' : 'https://'}${url}/index.html`);
+  const response = await fetch(
+    `${isLocal || isCi ? "http://" : "https://"}${url}/index.html`,
+  );
 
   return response.status === 403;
 };
-
 
 /**
  * Infer the CloudFront CDN URL from the app host
