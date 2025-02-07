@@ -1,5 +1,6 @@
 import { parseScheduleString } from "./controllers/schedule.js";
 
+export const isLocal = process.env.NODE_ENV === "development";
 export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
 

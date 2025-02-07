@@ -1,8 +1,8 @@
 # A local mock CDN to proxy requests to the Minio (S3) server.
 # Mimics AWS CloudFront, and removes the bucket path from the URL.
-# e.g. Request: http://archive.intranet.docker/intranet.justice.gov.uk/hmcts/2024-12-13/index.html
-# proxies to  : http://minio:9000/bucket-name/intranet.justice.gov.uk/hmcts/2024-12-13/index.html
+# e.g. Request: http://archive.intranet.docker/dev-hmcts/2024-12-13/index.html
+# proxies to  : http://minio:9010/bucket-name/dev-hmcts/2024-12-13/index.html
 
-:2019
+:2029
 rewrite * /{$S3_BUCKET_NAME}{uri}
-reverse_proxy minio:9000
+reverse_proxy intranet-archive-minio:9010

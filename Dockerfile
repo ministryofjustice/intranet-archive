@@ -33,6 +33,7 @@ USER node
 CMD []
 
 
+
 # Create a production image, from the base image.
 # The image is used for deployment, and can be run locally.
 FROM base AS build-prod
