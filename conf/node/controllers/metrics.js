@@ -112,7 +112,7 @@ export const getAllMetrics = async (envs) => {
   const intranetPromises = envs.map(async (env) => {
     const { status } = await fetch(intranetUrls[env], {
       redirect: "manual",
-      headers: { Cookie: `dw_agengy=hq; jwt=${intranetJwts[env]}` },
+      headers: { Cookie: `dw_agency=hq; jwt=${intranetJwts[env]}` },
     });
     return { env, value: +(status === 200) };
   });
