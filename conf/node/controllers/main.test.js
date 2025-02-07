@@ -1,12 +1,16 @@
 import fs from "fs/promises";
 import { afterAll, beforeEach, expect, it, jest } from "@jest/globals";
 
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 
 import { main } from "./main.js";
 import { getSnapshotPaths } from "./paths.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
-import { intranetUrls, s3BucketName } from "../constants.js";
+import { intranetUrls, intranetJwts, s3BucketName } from "../constants.js";
 
 // Skip tests when running on CI, because this environment doesn't have access to the intranet.
 const skipAllTests = process.env.CI === "true";
@@ -14,7 +18,22 @@ const skipAllTests = process.env.CI === "true";
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
 
-const envs = ['dev', 'production'];
+const envs = ["dev", "production"];
+
+/**
+ * Can we access the intranet?
+ *
+ * @param {string} env
+ * @returns {Promise<boolean>}
+ */
+
+const canFetchEnv = async (env) => {
+  const { status } = await fetch(intranetUrls[env], {
+    redirect: "manual",
+    headers: { Cookie: `dw_agency=hq; jwt=${intranetJwts[env]}` },
+  });
+  return status === 200;
+};
 
 describe.each(envs)("main - %s", (env) => {
   if (skipAllTests) {
@@ -31,7 +50,17 @@ describe.each(envs)("main - %s", (env) => {
   const paths = getSnapshotPaths({ env, agency });
   const s3Client = new S3Client(s3Options);
 
+  // Can we access the intranet? i.e. is our JWT valid?
+  let access = false;
+
   beforeAll(async () => {
+    access = await canFetchEnv(env);
+    if (!access) {
+      console.info(
+        `Could not access ${env}.\nAdd JWT to your .env file to access the intranet.`,
+      );
+    }
+
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
   });
@@ -53,6 +82,10 @@ describe.each(envs)("main - %s", (env) => {
   });
 
   it("should get index files on a shallow scrape", async () => {
+    if (!access) {
+      return expect(access).toBe(true);
+    }
+
     await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
@@ -78,6 +111,10 @@ describe.each(envs)("main - %s", (env) => {
   }, 10_000);
 
   it("should delete sensitive files and cleanup local fs", async () => {
+    if (!access) {
+      return expect(access).toBe(true);
+    }
+
     await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
@@ -108,24 +145,32 @@ describe.each(envs)("main - %s", (env) => {
   }, 10_000);
 
   it("should create an auth/heartbeat file", async () => {
+    if (!access) {
+      return expect(access).toBe(true);
+    }
+
     await main({ env, agency, depth: 1 });
 
     // The snapshot should be on s3
     const objects = await s3Client.send(
       new ListObjectsV2Command({
         Bucket: s3BucketName,
-        Prefix: 'auth/heartbeat',
+        Prefix: "auth/heartbeat",
       }),
     );
 
     const heartbeat = objects.Contents.find(
-      (object) => object.Key === 'auth/heartbeat',
+      (object) => object.Key === "auth/heartbeat",
     );
 
     expect(heartbeat).toBeDefined();
   }, 10_000);
 
   it("should create root and agency index files", async () => {
+    if (!access) {
+      return expect(access).toBe(true);
+    }
+
     await main({ env, agency, depth: 1 });
 
     const rootIndexHtml = await s3Client.send(
@@ -134,7 +179,7 @@ describe.each(envs)("main - %s", (env) => {
         Key: "production" === env ? `index.html` : `${env}.html`,
       }),
     );
-    
+
     expect(rootIndexHtml).toBeDefined();
 
     const agencyIndexHtml = await s3Client.send(
@@ -157,6 +202,10 @@ describe.each(envs)("main - %s", (env) => {
   }
 
   it("should get styles.css from the cdn", async () => {
+    if (!access) {
+      return expect(access).toBe(true);
+    }
+
     await main({ env, agency, depth: 2 });
 
     // The snapshot should be on s3

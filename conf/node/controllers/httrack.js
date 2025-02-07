@@ -1,7 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import fs from "node:fs";
 
-import { intranetJwts } from "../constants.js";
+import { isLocal, intranetJwts } from "../constants.js";
 
 /**
  * Get arguments for httrack cli.
@@ -34,14 +34,26 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "+*.woff",
     "-ad.doubleclick.net/*",
     "-justiceuk.sharepoint.com/*",
+    // Exclude the agency switcher and WordPress URLs (on *.intranet.justice.gov.uk)
     "-*intranet.justice.gov.uk/agency-switcher/",
     "-*intranet.justice.gov.uk/?*agency=*",
     "-*intranet.justice.gov.uk/?p=*",
     "-*intranet.justice.gov.uk/?page_id=*",
     "-*intranet.justice.gov.uk/wp-json/*/embed*",
     "-*intranet.justice.gov.uk/wp/*",
-    "+*intranet.justice.gov.uk/?*agency=" + agency,
   ];
+
+  if (isLocal) {
+    // Exclude the agency switcher and WordPress URLs (on intranet.docker)
+    rules.push(
+      "-intranet.docker/agency-switcher/",
+      "-intranet.docker/?*agency=*",
+      "-intranet.docker/?p=*",
+      "-intranet.docker/?page_id=*",
+      "-intranet.docker/wp-json/*/embed*",
+      "-intranet.docker/wp/*",
+    );
+  }
 
   const commands = {
     // Remove srcset attributes
@@ -49,6 +61,12 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     // Replace the agency switcher URL with '/'
     replaceAgencySwitcher: `sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0`,
   };
+
+  let cookie = `dw_agency=${agency}`;
+
+  if (jwt) {
+    cookie += `; jwt=${jwt}`;
+  }
 
   /** @type {string[]} */
   const settings = [
@@ -59,7 +77,7 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "-F",
     "intranet-archive",
     "-%X",
-    `Cookie: dw_agency=${agency}; jwt=${jwt}`,
+    `Cookie: ${cookie}`,
     ...(depth ? [`-r${depth}`] : []), // set the mirror depth
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     dest,

@@ -37,6 +37,12 @@ export const checkAccess = async (url = cloudfrontAlias) => {
  */
 
 export const getCdnUrl = (appUrl) => {
+  // If the app is running locally without using `.docker` hostname.
+  if (appUrl.host === "localhost:2000") {
+    // Return the localhost CDN URL.
+    return new URL("http://localhost:2029");
+  }
+
   // Check appHost starts with `app.`
   if (!appUrl.host.startsWith("app.")) {
     throw new Error("Invalid host");
