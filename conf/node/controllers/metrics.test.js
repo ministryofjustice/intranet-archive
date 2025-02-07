@@ -4,7 +4,7 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
-import { s3BucketName } from "../constants.js";
+import { isCi, s3BucketName } from "../constants.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
 
 import {
@@ -51,7 +51,7 @@ beforeAll(async () => {
   // Clear ot the agency snapshots
   const agencies = snapshots.map(({ agency }) => agency);
 
-  for(const agency of [...new Set(agencies)]) {
+  for (const agency of [...new Set(agencies)]) {
     await s3EmptyDir(`local-${agency}`);
   }
 
@@ -82,14 +82,14 @@ afterAll(async () => {
   return Promise.all(promises);
 });
 
-describe.only("getEnvsForMetrics", () => {
+describe("getEnvsForMetrics", () => {
   it("should return the environments for metrics", () => {
     const envs = getEnvsForMetrics();
     expect(envs).toStrictEqual(["dev", "production", "local"]);
   });
 });
 
-describe.only("getAgencySnapshotMetrics", () => {
+describe("getAgencySnapshotMetrics", () => {
   const agency = "hq";
 
   it("should return metrics for an agency", async () => {
@@ -108,9 +108,14 @@ describe.only("getAgencySnapshotMetrics", () => {
   });
 });
 
-describe.only("getAllMetrics", () => {
+describe("getAllMetrics", () => {
+  if (isCi) {
+    it.skip("should return metrics for all agencies", async () => {});
+    return;
+  }
+
   it("should return metrics for all agencies", async () => {
-    const metrics = await getAllMetrics(['local']);
+    const metrics = await getAllMetrics(["local"]);
 
     expect(metrics).toStrictEqual([
       {
@@ -148,15 +153,15 @@ describe.only("getAllMetrics", () => {
       {
         name: "most_recent_snapshot_age",
         facets: [
-          { env: 'local', agency: 'hmcts', value: 1 },
-          { env: 'local', agency: 'hq', value: 2 }
+          { env: "local", agency: "hmcts", value: 1 },
+          { env: "local", agency: "hq", value: 2 },
         ],
       },
     ]);
   }, 15_000);
 });
 
-describe.only("getMetricsString", () => {
+describe("getMetricsString", () => {
   it("should return metrics in opentelemetry format", async () => {
     const metrics = [
       {
