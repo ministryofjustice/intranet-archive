@@ -162,7 +162,8 @@ export const checkSignature = (req, _res, next) => {
  */
 
 export const errorHandler = (err, _req, res, _next) => {
-  console.log(err);
+  // Log the error to the console - will be available in Kibana logs.
+  console.error(err);
 
   if (err.status === 400) {
     res
