@@ -10,7 +10,6 @@ import { s3Options, s3EmptyDir } from "./s3.js";
 import {
   getEnvsForMetrics,
   getAgencySnapshotMetrics,
-  getHttpMetrics,
   getAllMetrics,
   getMetricsString,
 } from "./metrics.js";
@@ -98,7 +97,7 @@ describe.only("getAgencySnapshotMetrics", () => {
 
     expect(metrics).toStrictEqual([
       {
-        name: "snapshots_taken",
+        name: "snapshot_count",
         facets: [{ env: "local", agency, value: 3 }],
       },
       {
@@ -106,39 +105,6 @@ describe.only("getAgencySnapshotMetrics", () => {
         facets: [{ env: "local", agency, value: 2 }],
       },
     ]);
-  });
-});
-
-describe("getHttpMetrics", () => {
-  it("should return metrics for http requests", async () => {
-    const metrics = await getHttpMetrics();
-
-    console.log(metrics);
-
-    // S3
-    const s3 = metrics.find((status) => status.name === "bucket_access");
-    expect(s3).toStrictEqual({
-      name: "bucket_access",
-      value: 1,
-    });
-
-    // Intranet
-    const devIntranet = metrics.find(
-      (status) =>
-        "env" in status &&
-        status.env === "dev" &&
-        status.name === "intranet_access",
-    );
-
-    const prodIntranet = metrics.find(
-      (status) =>
-        "env" in status &&
-        status.env === "production" &&
-        status.name === "intranet_access",
-    );
-
-    expect([0, 1]).toContain(devIntranet.value);
-    expect([0, 1]).toContain(prodIntranet.value);
   });
 });
 
@@ -152,7 +118,20 @@ describe.only("getAllMetrics", () => {
         value: 1,
       },
       {
-        name: "snapshots_taken",
+        name: "cdn_forbidden",
+        value: 0,
+      },
+      {
+        name: "intranet_access",
+        facets: [
+          {
+            env: "local",
+            value: 1,
+          },
+        ],
+      },
+      {
+        name: "snapshot_count",
         facets: [
           {
             agency: "hmcts",
@@ -185,7 +164,7 @@ describe.only("getMetricsString", () => {
         value: 1,
       },
       {
-        name: "cdn_access",
+        name: "cdn_forbidden",
         value: 1,
       },
       {
@@ -260,9 +239,9 @@ describe.only("getMetricsString", () => {
     # TYPE bucket_access gauge
     bucket_access 1
 
-    # HELP cdn_access Are access requirements met for the CDN
-    # TYPE cdn_access gauge
-    cdn_access 1
+    # HELP cdn_forbidden Is unauthorised access to the CDN forbidden
+    # TYPE cdn_forbidden gauge
+    cdn_forbidden 1
     
     # HELP intranet_access Can the service access the intranet
     # TYPE intranet_access gauge
@@ -283,6 +262,8 @@ describe.only("getMetricsString", () => {
     most_recent_snapshot_age{env="dev",agency="hq"} 2
     most_recent_snapshot_age{env="production",agency="hmcts"} 14
     most_recent_snapshot_age{env="production",agency="hq"} 7
+
+    EOF
     `
         // Remove leading whitespace
         .replace(/    /g, "");

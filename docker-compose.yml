@@ -27,7 +27,7 @@ services:
     # Requests to intranet.docker and cdn.intranet.docker should go to host machine
     extra_hosts:
       - "intranet.docker:host-gateway"
-      - "cdn.intranet.docker:host-gateway"
+      - "archive.intranet.docker:host-gateway"
 
   minio:
     image: minio/minio

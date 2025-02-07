@@ -129,8 +129,8 @@ export const metricsProperties = {
     help: "Can the service access the S3 bucket",
     type: "gauge",
   },
-  cdn_access: {
-    help: "Are access requirements met for the CDN",
+  cdn_forbidden: {
+    help: "Is unauthorised access to the CDN forbidden",
     type: "gauge",
   },
   intranet_access: {

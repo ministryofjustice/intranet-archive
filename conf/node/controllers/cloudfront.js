@@ -15,16 +15,16 @@ let cachedKeyPairId = null;
 /**
  * Check if the distribution is accessible by fetching the root object
  *
- * @param {string} url - The distributon URL, defaults to the s3BucketName constant
+ * @param {string} url - The CloudFront distributon domain.
  * @returns {Promise<boolean>} - The status code
  *
  * @throws {Error}
  */
 
-export const checkAccess = async (url = cloudfrontAlias) => {
-  const response = await fetch(`${isLocal ? 'http://' : 'https://'}${url}`);
+export const checkForbidden = async (url = cloudfrontAlias) => {
+  const response = await fetch(`${isLocal ? 'http://' : 'https://'}${url}/index.html`);
 
-  return response.ok;
+  return response.status === 403;
 };
 
 

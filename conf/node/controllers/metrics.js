@@ -5,7 +5,7 @@ import {
   intranetJwts,
   metricsProperties,
 } from "../constants.js";
-import { checkAccess as checkCdnAccess } from "./cloudfront.js";
+import { checkForbidden as checkCdnForbidden } from "./cloudfront.js";
 import {
   checkAccess as checkS3Access,
   getAgenciesFromS3,
@@ -32,7 +32,7 @@ export const getEnvsForMetrics = () => {
  * The metric object.
  *
  * @typedef {Object} Metric
- * @property {string} name The name of the metric e.g. snapshots_taken
+ * @property {string} name The name of the metric e.g. snapshot_count
  * @property {number} [value] The value of the metric (can be undefined).
  * @property {Object[]} [facets] The facets of the metric.
  * @property {string} [facets.env] The environment the metric is for.
@@ -54,7 +54,7 @@ export const getAgencySnapshotMetrics = async (env, agency) => {
   if (!snapshots?.length) {
     return [
       {
-        name: "snapshots_taken",
+        name: "snapshot_count",
         facets: [{ env, agency, value: 0 }],
       },
       {
@@ -73,7 +73,7 @@ export const getAgencySnapshotMetrics = async (env, agency) => {
 
   return [
     {
-      name: "snapshots_taken",
+      name: "snapshot_count",
       facets: [{ env, agency, value: snapshots.length }],
     },
     {
@@ -92,47 +92,9 @@ export const getAgencySnapshotMetrics = async (env, agency) => {
 };
 
 /**
- * Get http metrics.
- *
- * Ensure we have a valid JWT for the various scheduled tasks, by making a fetch request to the intranet.
- * Ensure the CloudFront distribution returns the expected status codes:
- * - 200 when a signed cookie is present
- * - 403 when a signed cookie is not present
- */
-
-export const getHttpMetrics = async () => {
-  // Get envs where a JWT has been set.
-  const envs = Object.entries(intranetJwts)
-    .filter(([, jwt]) => jwt)
-    .map(([env]) => env);
-
-  const intranetPromise = Promise.all(
-    envs.map(async (env) => {
-      const url = intranetUrls[env];
-      const { status } = await fetch(url, {
-        redirect: "manual",
-        headers: { Cookie: `jwt=${intranetJwts[env]}` },
-      });
-      return { name: "intranet_access", env, value: +(status === 200) };
-    }),
-  );
-
-  // const cloudFrontPromise
-
-  const [intranet, s3Access] = await Promise.all([
-    intranetPromise,
-    checkS3Access(),
-  ]);
-
-  const metrics = [...intranet, { name: "bucket_access", value: +s3Access }];
-
-  return metrics;
-};
-
-/**
  * Get the metrics for all agencies and all environments.
  *
- * @param {string[]} envs - The environments to get metrics for.
+ * @param {string[]} [envs] - The environments to get metrics for.
  * @returns {Promise<Metric[]>} The metrics for all agencies.
  */
 
@@ -141,10 +103,25 @@ export const getAllMetrics = async (envs) => {
 
   /** @type Metric[] */
   const metrics = [
-    // 0️⃣ The bucket access and CDN access metric can be calculated outside of any loop.
+    // The bucket access and CDN access metric can be calculated outside of any loop.
     { name: "bucket_access", value: +(await checkS3Access()) },
-    { name: "cdn_access", value: +(await checkCdnAccess()) },
+    { name: "cdn_forbidden", value: +(await checkCdnForbidden()) },
   ];
+
+  // Map over all environments and check if the intranet is accessible.
+  const intranetPromises = envs.map(async (env) => {
+    const { status } = await fetch(intranetUrls[env], {
+      redirect: "manual",
+      headers: { Cookie: `dw_agengy=hq; jwt=${intranetJwts[env]}` },
+    });
+    return { env, value: +(status === 200) };
+  });
+
+  // Add the intranet access metric to the metrics array.
+  metrics.push({
+    name: "intranet_access",
+    facets: await Promise.all(intranetPromises),
+  });
 
   // 1️⃣ Nested loop part 1 - loop over all environments.
   for (const env of envs) {
@@ -172,7 +149,8 @@ export const getAllMetrics = async (envs) => {
     }
   }
 
-  return Promise.all(metrics);
+
+  return metrics;
 };
 
 /**
@@ -191,6 +169,7 @@ export const getMetricsString = (metrics) => {
     const metric = metrics.find((metric) => metric.name === key);
 
     if (!metric?.facets?.length && typeof metric?.value === "undefined") {
+      console.log(metric);
       throw new Error(`Metric ${key} has no value or facets.`);
     }
 
@@ -211,7 +190,7 @@ export const getMetricsString = (metrics) => {
     }
 
     // If the metric has a value, add it to the output, then add a blank line and return.
-    if (metric?.value) {
+    if (typeof metric?.value !== "undefined") {
       return lines.push(`${key} ${metric.value}`, "");
     }
 
@@ -228,6 +207,8 @@ export const getMetricsString = (metrics) => {
     // Add a blank line between each metric.
     lines.push("");
   });
+
+  lines.push("EOF", '');
 
   return lines.join("\n");
 };
