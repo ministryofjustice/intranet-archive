@@ -1,4 +1,11 @@
-import { intranetUrls, intranetJwts } from "../constants.js";
+import {
+  isLocal,
+  isCi,
+  intranetUrls,
+  intranetJwts,
+  metricsProperties,
+} from "../constants.js";
+import { checkAccess as checkCdnAccess } from "./cloudfront.js";
 import {
   checkAccess as checkS3Access,
   getAgenciesFromS3,
@@ -6,31 +13,55 @@ import {
 } from "./s3.js";
 
 /**
- * The metrics object.
+ * Get the environments that have a JWT set (plus local if working locally).
  *
- * @typedef {Object} Metrics
- * @property {string} agency The agency the metrics are for
- * @property {number} snapshotsTaken The number of snapshots taken.
- * @property {number} mostRecentSnapshotAge The age of the most recent snapshot.
+ * @returns {string[]} The environments that have a JWT set (plus local if working locally).
+ */
+
+export const getEnvsForMetrics = () => {
+  const envs = Object.keys(intranetJwts).filter((env) => intranetJwts[env]);
+
+  if (isLocal || isCi) {
+    envs.push("local");
+  }
+
+  return envs;
+};
+
+/**
+ * The metric object.
+ *
+ * @typedef {Object} Metric
+ * @property {string} name The name of the metric e.g. snapshots_taken
+ * @property {number} [value] The value of the metric (can be undefined).
+ * @property {Object[]} [facets] The facets of the metric.
+ * @property {string} [facets.env] The environment the metric is for.
+ * @property {string} [facets.agency] The agency the metric is for.
+ * @property {number} facets.value The value of the metric.
  */
 
 /**
- * Get the metrics for a specific agency.
+ * Get the metrics for a specific environment & agency.
  *
  * @param {string} env - The environment for the intranet e.g. production or dev
  * @param {string} agency - The agency to get snapshots for e.g. hq, hmcts etc.
- * @returns {Promise<Metrics>} The metrics for the agency.
+ * @returns {Promise<Metric[]>} The stats for the agency.
  * @throws {Error} If getSnapshotsFromS3 throws, or a date format is invalid.
  */
 export const getAgencySnapshotMetrics = async (env, agency) => {
   const snapshots = await getSnapshotsFromS3(undefined, env, agency);
 
   if (!snapshots?.length) {
-    return {
-      agency,
-      snapshotsTaken: 0,
-      mostRecentSnapshotAge: 0,
-    };
+    return [
+      {
+        name: "snapshots_taken",
+        facets: [{ env, agency, value: 0 }],
+      },
+      {
+        name: "most_recent_snapshot_age",
+        facets: [{ env, agency, value: 0 }],
+      },
+    ];
   }
 
   const mostRecentSnapshot = snapshots.sort((a, b) => (a > b ? -1 : 1))[0];
@@ -40,13 +71,24 @@ export const getAgencySnapshotMetrics = async (env, agency) => {
     throw new Error(`Invalid date format: ${mostRecentSnapshot}`);
   }
 
-  return {
-    agency,
-    snapshotsTaken: snapshots?.length,
-    mostRecentSnapshotAge: Math.floor(
-      (Date.now() - new Date(mostRecentSnapshot).getTime()) / 86400000,
-    ),
-  };
+  return [
+    {
+      name: "snapshots_taken",
+      facets: [{ env, agency, value: snapshots.length }],
+    },
+    {
+      name: "most_recent_snapshot_age",
+      facets: [
+        {
+          env,
+          agency,
+          value: Math.floor(
+            (Date.now() - new Date(mostRecentSnapshot).getTime()) / 86400000,
+          ),
+        },
+      ],
+    },
+  ];
 };
 
 /**
@@ -71,38 +113,121 @@ export const getHttpMetrics = async () => {
         redirect: "manual",
         headers: { Cookie: `jwt=${intranetJwts[env]}` },
       });
-      return { target: "intranet", env, access: status === 200 };
+      return { name: "intranet_access", env, value: +(status === 200) };
     }),
   );
 
-  const cloudFrontPromise 
+  // const cloudFrontPromise
 
   const [intranet, s3Access] = await Promise.all([
     intranetPromise,
     checkS3Access(),
   ]);
 
-  const metrics = [
-    ...intranet,
-    { target: "s3", env: 'default', access: s3Access },
-  ];
+  const metrics = [...intranet, { name: "bucket_access", value: +s3Access }];
 
   return metrics;
 };
 
 /**
- * Get the metrics for all agencies.
+ * Get the metrics for all agencies and all environments.
  *
- * @param {string} env - The environment for the intranet e.g. production or dev
- * @returns {Promise<Metrics[]>} The metrics for all agencies.
+ * @param {string[]} envs - The environments to get metrics for.
+ * @returns {Promise<Metric[]>} The metrics for all agencies.
  */
 
-export const getMetrics = async (env) => {
-  const agencies = await getAgenciesFromS3(undefined, env);
+export const getAllMetrics = async (envs) => {
+  envs = envs || getEnvsForMetrics();
 
-  const allAgencyMetrics = await Promise.all(
-    agencies.map(async (agency) => getAgencySnapshotMetrics(env, agency)),
-  );
+  /** @type Metric[] */
+  const metrics = [
+    // 0️⃣ The bucket access and CDN access metric can be calculated outside of any loop.
+    { name: "bucket_access", value: +(await checkS3Access()) },
+    { name: "cdn_access", value: +(await checkCdnAccess()) },
+  ];
 
-  return allAgencyMetrics;
+  // 1️⃣ Nested loop part 1 - loop over all environments.
+  for (const env of envs) {
+    const agencies = await getAgenciesFromS3(undefined, env);
+
+    // 2️⃣ Nested loop part 2 - loop over all agencies.
+    for (const agency of agencies) {
+      const snapshotMetrics = await getAgencySnapshotMetrics(env, agency);
+
+      // 3️⃣ Nested loop part 3 - loop over all snapshot metrics for the agency.
+      for (const metric of snapshotMetrics) {
+        const metricName = metric.name;
+        // Find the index in the metrics array where the metric name matches.
+        const index = metrics.findIndex((m) => m.name === metricName);
+
+        // If the metric doesn't exist, add it to the metrics array.
+        if (index === -1) {
+          metrics.push(metric);
+          continue;
+        }
+
+        // If the metric exists, add the facets to the existing metric.
+        metrics[index].facets.push(...metric.facets);
+      }
+    }
+  }
+
+  return Promise.all(metrics);
+};
+
+/**
+ * Transform the metrics object to OpenTelemetry format.
+ *
+ * @param {Metric[]} metrics
+ * @returns string The metrics in OpenTelemetry format.
+ */
+
+export const getMetricsString = (metrics) => {
+  const lines = [];
+
+  // Loop over each metricsProperty (from constants.js).
+  Object.entries(metricsProperties).forEach(([key, propertyStaticValues]) => {
+    // Find the metric from this functions parameter.
+    const metric = metrics.find((metric) => metric.name === key);
+
+    if (!metric?.facets?.length && typeof metric?.value === "undefined") {
+      throw new Error(`Metric ${key} has no value or facets.`);
+    }
+
+    if (metric?.facets && metric?.value) {
+      throw new Error(
+        `Metric ${key} has both a value and facets. It should only have one.`,
+      );
+    }
+
+    // Start building up the output for the metric.
+    lines.push(
+      `# HELP ${key} ${propertyStaticValues.help}`,
+      `# TYPE ${key} ${propertyStaticValues.type}`,
+    );
+
+    if (propertyStaticValues.unit) {
+      lines.push(`# UNIT ${key} ${propertyStaticValues.unit}`);
+    }
+
+    // If the metric has a value, add it to the output, then add a blank line and return.
+    if (metric?.value) {
+      return lines.push(`${key} ${metric.value}`, "");
+    }
+
+    // If the metric has facets, loop over each one and add it to the output.
+    for (const { env, agency, value } of metric?.facets) {
+      const envLabel = env && `env="${env}"`;
+      const agencyLabel = agency && `agency="${agency}"`;
+
+      const labels = [envLabel, agencyLabel].filter(Boolean).join(",");
+
+      lines.push(`${key}{${labels}} ${value}`);
+    }
+
+    // Add a blank line between each metric.
+    lines.push("");
+  });
+
+  return lines.join("\n");
 };

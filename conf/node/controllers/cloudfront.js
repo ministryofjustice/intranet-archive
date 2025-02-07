@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { getSignedCookies } from "@aws-sdk/cloudfront-signer";
 
 import {
+  isLocal,
   cloudfrontAlias,
   cloudFrontKeysObject as keysObject,
   cloudFrontPublicKey as publicKey,
@@ -21,7 +22,7 @@ let cachedKeyPairId = null;
  */
 
 export const checkAccess = async (url = cloudfrontAlias) => {
-  const response = await fetch(url);
+  const response = await fetch(`${isLocal ? 'http://' : 'https://'}${url}`);
 
   return response.ok;
 };

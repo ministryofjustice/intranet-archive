@@ -1,5 +1,7 @@
 import { parseScheduleString } from "./controllers/schedule.js";
 
+export const isCi = !!process.env.CI;
+export const isLocal = process.env.NODE_ENV === "development";
 export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
 
@@ -117,3 +119,31 @@ export const indexCss = `
   .container:after,.container:before{display:table;content:" "}
   .container:after{clear:both}.list-group{-webkit-box-shadow:0 1px 2px rgba(0,0,0,.075);box-shadow:0 1px 2px rgba(0,0,0,.075)}
 `;
+
+/**
+ * Metrics strings
+ */
+
+export const metricsProperties = {
+  bucket_access: {
+    help: "Can the service access the S3 bucket",
+    type: "gauge",
+  },
+  cdn_access: {
+    help: "Are access requirements met for the CDN",
+    type: "gauge",
+  },
+  intranet_access: {
+    help: "Can the service access the intranet",
+    type: "gauge",
+  },
+  snapshot_count: {
+    help: "The number of snapshots taken",
+    type: "gauge",
+  },
+  most_recent_snapshot_age: {
+    help: "The age of the most recent snapshot",
+    type: "gauge",
+    unit: "days",
+  },
+};
