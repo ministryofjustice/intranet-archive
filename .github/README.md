@@ -315,6 +315,8 @@ When the application is deployed:
 | `AWS_CLOUDFRONT_PRIVATE_KEY`        | The private key for signing CloudFront cookies                      | RSA private key               |
 | `AWS_CLOUDFRONT_PUBLIC_KEY`         | The public that CloudFront uses to verify the signed access policy  | RSA public key                |
 | `AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT` | Active keys from the CF module (used to lookup ID from public key)  | [{"id":"*","comment":"hash"}] |
+| **Cloud Platform**                                                                                                                        |
+| `ALERTS_SLACK_WEBHOOK`              | The Slack webhook for alerts, see [Alerts section](#alerts)         | `https://hooks.slack.com/…`   |
 
 ### JWTs for local development
 
@@ -435,6 +437,15 @@ Please be aware that with every call to the Cloud Platform k8s cluster, you will
 ```bash
 kubectl -n intranet-archive-dev
 ```
+
+### Alerts
+
+Various alerts have been set up, so that the team are notified via Slack if there are any issues with the application.
+
+Cloud Platform's guid: [Creating your own custom alerts](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html)  
+was used to setup the alerts.
+
+The Slack webhook secret is stored in the `ALERTS_SLACK_WEBHOOK` GitHub repository secret. This is then stored in a Kubernetes secret in the `intranet-archive-dev` namespace, as part of the deploy workflow.
 
 ## Commands
 
