@@ -1,13 +1,11 @@
 import { createHmac } from "node:crypto";
 
 import {
-  maxRequests,
-  timeWindow,
+  rateLimitConfig,
   intranetUrls,
   sharedSecret,
   defaultEnv,
   defaultAgency,
-  allowedTargetHosts,
   allowedTargetAgencies,
 } from "./constants.js";
 
@@ -49,6 +47,7 @@ const ipAddresses = new Map();
  */
 
 export const rateLimiter = ({ ip }, _res, next) => {
+  const { maxRequests, timeWindow } = rateLimitConfig;
   const now = Date.now();
 
   // If the ip is not in the map, then add it with a count of 1

@@ -1,11 +1,13 @@
 import { createHmac } from "node:crypto";
 import { jest } from "@jest/globals";
 
-import {  maxRequests, timeWindow, sharedSecret } from "./constants.js";
+import { rateLimitConfig, sharedSecret } from "./constants.js";
 import { rateLimiter, checkSignature } from "./middleware.js";
 
 describe("rateLimiter middleware", () => {
   let req, res, next;
+
+  const { maxRequests, timeWindow } = rateLimitConfig;
 
   jest.useFakeTimers();
 
