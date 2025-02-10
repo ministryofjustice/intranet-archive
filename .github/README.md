@@ -173,13 +173,37 @@ Ensure that previous steps have been followed:
 There is a private `/status` route that will return a JSON response with the applications status, 
 including if it has access to the S3 bucket and intranet URLs.
 
-```
+```bash
 # Make a GET request with curl to the /status route
 curl http://app.archive.intranet.docker/status
 curl http://localhost:2000/status
 ```
 
 The response should include `{"fetchStatuses":[{"env":"local","status":200}],"s3Status":true}`
+
+### `/metrics`
+
+There is a `/metrics` route for exporting metrics in OpenMetrics format.
+
+The response include various metrics to indicate that the application is working as expected.
+
+e.g. do we have access to the S3 bucket for storage, do we have access to the intranet?
+
+An exhaustive list, with help text, can be found in [constants.js](./conf/node/constants.js).
+
+```bash
+# Make a GET request with curl to the /metrics route
+curl http://localhost:2000/metrics
+```
+
+The response should look like the following example:
+
+```
+# HELP bucket_access Can the service access the S3 bucket
+# TYPE bucket_access gauge
+bucket_access 1
+...
+```
 
 ### `/spider`
 
@@ -436,6 +460,29 @@ Please be aware that with every call to the Cloud Platform k8s cluster, you will
 kubectl -n intranet-archive-dev
 ```
 
+### Metrics 
+
+The metrics endpoint exposes important information about the application. 
+
+The metrics can be manually requested directly from the `/metrics` route by port forwarding and making a curl request. This may be useful for debugging.
+
+```bash
+kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
+curl http://localhost:2000/metrics
+```
+
+We can verify that the Prometheus is scraping the metrics by visiting the Prometheus targets page.
+
+e.g. for the dev environment:
+
+https://prometheus.cloud-platform.service.justice.gov.uk/targets?search=&scrapePool=serviceMonitor%2Fintranet-archive-dev%2Fintranet-archive-metrics%2F0
+
+### Grafana Dashboards
+
+A Grafana dashboard has been configured to visualise the metrics data. The dashboards can be accessed at the following URL:
+
+https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive
+
 ## Commands
 
 **Kubernetes**
@@ -448,7 +495,7 @@ kubectl -n intranet-archive-dev get pods
 kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snapshots/intranet.justice.gov.uk/<agency>/<date>/hts-log.txt ~/hts-log.txt
 
 # port-forward to a running pod
-kubectl -n intranet-archive-dev service/intranet-archive-service 2000:80
+kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
 ```
 
 **Make**
