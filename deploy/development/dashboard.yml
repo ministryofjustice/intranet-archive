@@ -73,10 +73,6 @@ data:
                 {
                     "color": "green",
                     "value": null
-                },
-                {
-                    "color": "red",
-                    "value": 80
                 }
                 ]
             },
@@ -179,14 +175,15 @@ data:
                 "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
+                "axisGridShow": true,
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "axisSoftMin": 0,
                 "barAlignment": 0,
                 "barWidthFactor": 0.6,
                 "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
+                "fillOpacity": 50,
+                "gradientMode": "opacity",
                 "hideFrom": {
                 "legend": false,
                 "tooltip": false,
@@ -197,12 +194,12 @@ data:
                 "lineStyle": {
                 "fill": "solid"
                 },
-                "lineWidth": 1,
+                "lineWidth": 3,
                 "pointSize": 5,
                 "scaleDistribution": {
                 "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                 "group": "A",
@@ -291,8 +288,8 @@ data:
                 "barAlignment": 0,
                 "barWidthFactor": 0.6,
                 "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
+                "fillOpacity": 50,
+                "gradientMode": "opacity",
                 "hideFrom": {
                 "legend": false,
                 "tooltip": false,
@@ -303,12 +300,12 @@ data:
                 "lineStyle": {
                 "fill": "solid"
                 },
-                "lineWidth": 1,
+                "lineWidth": 2,
                 "pointSize": 5,
                 "scaleDistribution": {
                 "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                 "group": "A",
@@ -419,10 +416,6 @@ data:
                 {
                     "color": "green",
                     "value": null
-                },
-                {
-                    "color": "red",
-                    "value": 80
                 }
                 ]
             },
@@ -528,14 +521,14 @@ data:
                 "axisGridShow": false,
                 "axisLabel": "",
                 "axisPlacement": "auto",
-                "fillOpacity": 70,
+                "fillOpacity": 50,
                 "gradientMode": "none",
                 "hideFrom": {
                 "legend": false,
                 "tooltip": false,
                 "viz": false
                 },
-                "lineWidth": 1,
+                "lineWidth": 3,
                 "scaleDistribution": {
                 "type": "linear"
                 },
@@ -569,10 +562,6 @@ data:
                 {
                     "color": "green",
                     "value": null
-                },
-                {
-                    "color": "red",
-                    "value": 80
                 }
                 ]
             },
@@ -698,6 +687,6 @@ data:
     "timezone": "",
     "title": "CDPT / Intranet Archive",
     "uid": "xywyqxz07sxkwg",
-    "version": 8,
+    "version": 9,
     "weekStart": ""
     }
