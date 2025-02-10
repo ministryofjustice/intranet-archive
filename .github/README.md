@@ -436,6 +436,33 @@ Please be aware that with every call to the Cloud Platform k8s cluster, you will
 kubectl -n intranet-archive-dev
 ```
 
+### Metrics 
+
+The metrics endpoint exposes important information about the application. 
+
+The metrics can be manually requested directly from the `/metrics` route by port forwarding and making a curl request. This may be useful for debugging.
+
+```bash
+kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
+curl http://localhost:2000/metrics
+```
+
+We can verify that the Prometheus is scraping the metrics by visiting the Prometheus targets page.
+
+e.g. for the dev environment:
+
+https://prometheus.cloud-platform.service.justice.gov.uk/targets?search=&scrapePool=serviceMonitor%2Fintranet-archive-dev%2Fintranet-archive-metrics%2F0
+
+### Grafana Dashboards
+
+A Grafana dashboard has been configured to visualise the metrics data. The dashboards can be accessed at the following URL:
+
+https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive
+
+### Alerts
+
+Various alerts have been set up, so that the team are notified via Slack if there are any issues with the application.
+
 ## Commands
 
 **Kubernetes**
