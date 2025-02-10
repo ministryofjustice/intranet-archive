@@ -339,6 +339,8 @@ When the application is deployed:
 | `AWS_CLOUDFRONT_PRIVATE_KEY`        | The private key for signing CloudFront cookies                      | RSA private key               |
 | `AWS_CLOUDFRONT_PUBLIC_KEY`         | The public that CloudFront uses to verify the signed access policy  | RSA public key                |
 | `AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT` | Active keys from the CF module (used to lookup ID from public key)  | [{"id":"*","comment":"hash"}] |
+| **Cloud Platform**                                                                                                                        |
+| `ALERTS_SLACK_WEBHOOK`              | The Slack webhook for alerts, see [Alerts section](#alerts)         | `https://hooks.slack.com/…`   |
 
 ### JWTs for local development
 
@@ -482,6 +484,7 @@ https://prometheus.cloud-platform.service.justice.gov.uk/targets?search=&scrapeP
 A Grafana dashboard has been configured to visualise the metrics data. The dashboards can be accessed at the following URL:
 
 https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive
+
 
 ## Commands
 
