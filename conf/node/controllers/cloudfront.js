@@ -2,6 +2,9 @@ import crypto from "node:crypto";
 import { getSignedCookies } from "@aws-sdk/cloudfront-signer";
 
 import {
+  isLocal,
+  isCi,
+  cloudfrontAlias,
   cloudFrontKeysObject as keysObject,
   cloudFrontPublicKey as publicKey,
   cloudFrontPrivateKey as privateKey,
@@ -9,6 +12,23 @@ import {
 
 /** @type {string} */
 let cachedKeyPairId = null;
+
+/**
+ * Check if the distribution is accessible by fetching the root object
+ *
+ * @param {string} url - The CloudFront distributon domain.
+ * @returns {Promise<boolean>} - The status code
+ *
+ * @throws {Error}
+ */
+
+export const checkForbidden = async (url = cloudfrontAlias) => {
+  const response = await fetch(
+    `${isLocal || isCi ? "http://" : "https://"}${url}/index.html`,
+  );
+
+  return response.status === 403;
+};
 
 /**
  * Infer the CloudFront CDN URL from the app host
@@ -19,6 +39,12 @@ let cachedKeyPairId = null;
  */
 
 export const getCdnUrl = (appUrl) => {
+  // If the app is running locally without using `.docker` hostname.
+  if (appUrl.host === "localhost:2000") {
+    // Return the localhost CDN URL.
+    return new URL("http://localhost:2029");
+  }
+
   // Check appHost starts with `app.`
   if (!appUrl.host.startsWith("app.")) {
     throw new Error("Invalid host");

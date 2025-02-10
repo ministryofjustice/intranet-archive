@@ -8,6 +8,7 @@ import express from "express";
 
 // Relative
 import {
+  isLocal,
   ordinalNumber,
   intranetUrls,
   intranetJwts,
@@ -29,6 +30,7 @@ import {
 } from "./controllers/cloudfront.js";
 import { deleteOldSnapshots } from "./controllers/lifecycle.js";
 import { main } from "./controllers/main.js";
+import { getAllMetrics, getMetricsString } from "./controllers/metrics.js";
 import { getAgencyPath } from "./controllers/paths.js";
 import {
   checkAccess as checkS3Access,
@@ -76,21 +78,39 @@ app.get("/status", async function (_req, res, next) {
     res.status(200).send(cache.status.data);
     return;
   }
-  
+
   try {
     // Get envs where a JWT has been set.
     const envs = Object.entries(intranetJwts)
       .filter(([, jwt]) => jwt)
       .map(([env]) => env);
 
+    if (isLocal) {
+      envs.push("local");
+    }
+
+    // Set an agency cookie so that we don't get a redirect status code to the agency switcher page.
+    const defaultCookie = `dw_agency=hq`;
+
     const fetchStatuses = await Promise.all(
       envs.map(async (env) => {
         const url = intranetUrls[env];
-        const { status } = await fetch(url, {
-          redirect: "manual",
-          headers: { Cookie: `jwt=${intranetJwts[env]}` },
-        });
-        return { env, status };
+        let cookie = defaultCookie;
+
+        if (intranetJwts[env]) {
+          cookie += `; jwt=${intranetJwts[env]}`;
+        }
+
+        try {
+          const { status } = await fetch(url, {
+            redirect: "manual",
+            headers: { Cookie: cookie },
+          });
+          return { env, status };
+        } catch (err) {
+          console.error(`Error fetching ${url}`, err);
+          return { env, status: err.message };
+        }
       }),
     );
 
@@ -104,8 +124,18 @@ app.get("/status", async function (_req, res, next) {
     res.status(200).send(data);
   } catch (err) {
     // Handling errors like this will send the error to the default Express error handler.
-    // It will log the error to the console, return a 500 error page,
-    // and show the error message on dev environments, but hide it on production.
+    // It will log the error to the console, return a 500 error page.
+    next(err);
+  }
+});
+
+app.get("/metrics", async function (_req, res, next) {
+  try {
+    const metrics = await getAllMetrics();
+    const metricsString = getMetricsString(metrics);
+    res.setHeader("Content-Type", "text/plain");
+    res.status(200).send(metricsString);
+  } catch (err) {
     next(err);
   }
 });
@@ -150,7 +180,7 @@ app.post("/access", async function (req, res, next) {
     // Set the cookies on the response
     Object.entries(cookies).forEach(([name, value]) => {
       res.cookie(name, value, {
-        domain: cdnUrl.host,
+        domain: cdnUrl.hostname,
         secure: cdnUrl.protocol === "https:",
         sameSite: "lax",
         httpOnly: true,
@@ -162,6 +192,9 @@ app.post("/access", async function (req, res, next) {
       res.clearCookie(name, { domain });
     });
 
+    // Clear the agency cookie from the CDN domain, it can cause a redirect loop.
+    res.clearCookie('dw_agency', { domain: cdnUrl.hostname });
+
     // Redirect to the CDN URL.
     res.redirect(`${cdnUrl.origin}/${getAgencyPath(env, agency)}/index.html`);
   } catch (err) {
@@ -171,7 +204,7 @@ app.post("/access", async function (req, res, next) {
 
 app.use(function (_req, res) {
   // Return a 404 page if no route is matched
-  res.status(404).sendFile("static/404.html", { root: __dirname });
+  res.status(404).sendFile("static/error-pages/404.html", { root: __dirname });
 });
 
 /**

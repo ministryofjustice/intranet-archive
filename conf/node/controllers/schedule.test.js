@@ -4,6 +4,13 @@ import { parseScheduleString, scheduleFunction } from "./schedule.js";
 
 jest.useFakeTimers();
 
+describe("system timezone", () => {
+  it("should be be Europe/London", () => {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    expect(timezone).toBe("Europe/London");
+  });
+});
+
 describe("parseScheduleString", () => {
   it("should parse the schedule string into an object", () => {
     const scheduleString =
