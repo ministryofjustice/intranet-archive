@@ -169,6 +169,112 @@ data:
             "type": "prometheus",
             "uid": "prometheus"
         },
+        "description": "The number of snapshots taken",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "palette-classic"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                "group": "A",
+                "mode": "none"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "decimals": 0,
+            "mappings": [],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "none"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 6,
+            "y": 0
+        },
+        "id": 16,
+        "options": {
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+            },
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            }
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "builder",
+            "exemplar": false,
+            "expr": "min by(agency, env) (snapshot_count{namespace=\"intranet-archive-dev\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "{{env}}:{{agency}}",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            }
+        ],
+        "title": "Snapshot Count",
+        "type": "timeseries"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
         "description": "Is unauthorised access to the CDN forbidden",
         "fieldConfig": {
             "defaults": {
@@ -221,8 +327,8 @@ data:
         "gridPos": {
             "h": 4,
             "w": 6,
-            "x": 6,
-            "y": 0
+            "x": 0,
+            "y": 4
         },
         "id": 15,
         "maxDataPoints": 100,
@@ -396,8 +502,8 @@ data:
         "gridPos": {
             "h": 4,
             "w": 6,
-            "x": 12,
-            "y": 0
+            "x": 0,
+            "y": 8
         },
         "id": 11,
         "options": {
@@ -486,6 +592,6 @@ data:
     "timezone": "",
     "title": "CDPT / Intranet Archive",
     "uid": "xywyqxz07sxkwg",
-    "version": 6,
+    "version": 7,
     "weekStart": ""
     }
