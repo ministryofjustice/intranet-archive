@@ -34,6 +34,7 @@ jobs:
           INTRANET_JWT_STAGING: ${{ secrets.INTRANET_JWT_STAGING }}
           INTRANET_JWT_PRODUCTION: ${{ secrets.INTRANET_JWT_PRODUCTION }}
           INTRANET_ARCHIVE_SHARED_SECRET: ${{ secrets.INTRANET_ARCHIVE_SHARED_SECRET }}
+          ALERTS_SLACK_WEBHOOK: ${{ secrets.ALERTS_SLACK_WEBHOOK }}
         run: |
           ## - - - - - - - - - -
           ## CloudFront  - - - -
