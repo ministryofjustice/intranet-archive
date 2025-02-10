@@ -442,10 +442,14 @@ kubectl -n intranet-archive-dev
 
 Various alerts have been set up, so that the team are notified via Slack if there are any issues with the application.
 
-Cloud Platform's guid: [Creating your own custom alerts](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html)  
+Cloud Platform's guide: [Creating your own custom alerts](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html)  
 was used to setup the alerts.
 
 The Slack webhook secret is stored in the `ALERTS_SLACK_WEBHOOK` GitHub repository secret. This is then stored in a Kubernetes secret in the `intranet-archive-dev` namespace, as part of the deploy workflow.
+
+https://prometheus.live.cloud-platform.service.justice.gov.uk/graph?g0.expr=&g0.tab=1&g0.display_mode=lines&g0.show_exemplars=0&g0.range_input=1h
+
+https://prometheus.live.cloud-platform.service.justice.gov.uk/alerts?search=intranet-dev
 
 ## Commands
 
