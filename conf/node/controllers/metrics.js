@@ -208,7 +208,5 @@ export const getMetricsString = (metrics) => {
     lines.push("");
   });
 
-  lines.push("EOF", '');
-
   return lines.join("\n");
 };

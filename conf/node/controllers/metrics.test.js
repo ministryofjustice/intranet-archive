@@ -267,8 +267,6 @@ describe("getMetricsString", () => {
     most_recent_snapshot_age{env="dev",agency="hq"} 2
     most_recent_snapshot_age{env="production",agency="hmcts"} 14
     most_recent_snapshot_age{env="production",agency="hq"} 7
-
-    EOF
     `
         // Remove leading whitespace
         .replace(/    /g, "");
