@@ -544,6 +544,23 @@ data:
             },
             "disableTextWrap": false,
             "editorMode": "builder",
+            "expr": "max by(service) (up{namespace=\"$namespace\", service=\"intranet-archive-service\"})",
+            "fullMetaSearch": false,
+            "hide": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "Service UP",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "builder",
             "exemplar": false,
             "expr": "min by(namespace) (bucket_access{namespace=\"$namespace\"})",
             "format": "time_series",
@@ -552,7 +569,7 @@ data:
             "instant": false,
             "legendFormat": "Bucket Access",
             "range": true,
-            "refId": "A",
+            "refId": "B",
             "useBackend": false
             },
             {
@@ -571,7 +588,7 @@ data:
             "instant": false,
             "legendFormat": "CDN Forbidden",
             "range": true,
-            "refId": "B",
+            "refId": "C",
             "useBackend": false
             },
             {
@@ -585,7 +602,7 @@ data:
             "instant": false,
             "legendFormat": "Intranet Access ({{env}})",
             "range": true,
-            "refId": "C"
+            "refId": "D"
             }
         ],
         "title": "Historic Access Metrics",
@@ -950,6 +967,6 @@ data:
     "timezone": "",
     "title": "CDPT / Intranet Archive",
     "uid": "xywyqxz07sxkwg",
-    "version": 11,
+    "version": 12,
     "weekStart": ""
     }
