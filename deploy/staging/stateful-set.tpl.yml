@@ -37,6 +37,7 @@ spec:
             memory: 250Mi
         ports:
         - containerPort: 2000
+          name: http
         volumeMounts:
         - name: snapshots
           mountPath: "/tmp/snapshots"
