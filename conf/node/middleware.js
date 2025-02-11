@@ -99,7 +99,7 @@ export const rateLimiter = ({ ip, path }, _res, next) => {
  */
 
 export const parseBody = (req, _res, next) => {
-  if (req.method !== "POST") {
+  if (req.method !== "POST" || req.path !== "/spider") {
     return next();
   }
 
