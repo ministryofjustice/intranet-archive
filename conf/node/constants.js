@@ -6,6 +6,12 @@ export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
 export const port = 2000;
 
 /**
+ * Intranet Archive (NodeJS) rate limiting
+ */
+
+export const rateLimitConfig = { maxRequests: 20, timeWindow: 60 * 1000 }; // 20 requests per minute
+
+/**
  * Intranet URLs
  */
 

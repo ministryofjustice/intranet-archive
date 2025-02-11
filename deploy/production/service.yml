@@ -11,18 +11,3 @@ spec:
     targetPort: 2000
   selector:
     app: intranet-archive
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: intranet-archive-headless-service
-  labels:
-    app: intranet-archive
-spec:
-  ports:
-  - port: 80
-    name: http
-    targetPort: 2000
-  clusterIP: None # Headless service setting
-  selector:
-    app: intranet-archive
