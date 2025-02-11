@@ -19,7 +19,7 @@ spec:
         alert: ServiceDown
         # Service is down AND it's after 6am and it's before 10pm UK time - this accounts for the development environment's scheduled down time.
         expr: |
-          max by(service) (up{namespace="intranet-archive-dev", service="intranet-archive-service"}) == 0 AND ON() (6 <= hour() < 22)
+          max by(service, namespace) (up{namespace="intranet-archive-dev", service="intranet-archive-service"}) == 0 AND ON() (6 <= hour() < 22)
         for: 20m
         labels:
           # TODO update severity when issued by Cloud Platform. Also update in README.md
