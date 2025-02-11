@@ -648,7 +648,7 @@ data:
                 "type": "linear"
                 },
                 "showPoints": "never",
-                "spanNulls": false,
+                "spanNulls": 43200000,
                 "stacking": {
                 "group": "A",
                 "mode": "none"
@@ -744,7 +744,7 @@ data:
                 "viz": false
                 },
                 "insertNulls": false,
-                "lineInterpolation": "linear",
+                "lineInterpolation": "stepAfter",
                 "lineStyle": {
                 "fill": "solid"
                 },
@@ -754,7 +754,7 @@ data:
                 "type": "linear"
                 },
                 "showPoints": "never",
-                "spanNulls": false,
+                "spanNulls": 43200000,
                 "stacking": {
                 "group": "A",
                 "mode": "none"
@@ -860,7 +860,7 @@ data:
                 "type": "linear"
                 },
                 "showPoints": "never",
-                "spanNulls": false,
+                "spanNulls": 3600000,
                 "stacking": {
                 "group": "A",
                 "mode": "none"
