@@ -1,0 +1,972 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intranet-archive-dashboard
+  namespace: intranet-archive-dev
+  labels:
+    grafana_dashboard: "intranet-archive"
+data:
+  intranet-archive-dashboard.json: |
+    {
+    "annotations": {
+        "list": [
+        {
+            "builtIn": 1,
+            "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+        }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 190,
+    "links": [],
+    "panels": [
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "Can the service access the S3 bucket",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "fixedColor": "transparent",
+                "mode": "fixed"
+            },
+            "mappings": [
+                {
+                "options": {
+                    "0": {
+                    "index": 1,
+                    "text": "❌"
+                    },
+                    "1": {
+                    "index": 2,
+                    "text": "✅"
+                    }
+                },
+                "type": "value"
+                },
+                {
+                "options": {
+                    "match": "null",
+                    "result": {
+                    "index": 0,
+                    "text": "❔"
+                    }
+                },
+                "type": "special"
+                }
+            ],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "short"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 0
+        },
+        "id": 14,
+        "maxDataPoints": 100,
+        "options": {
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+            "calcs": [
+                "lastNotNull"
+            ],
+            "fields": "/^Value$/",
+            "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "dsType": "influxdb",
+            "editorMode": "code",
+            "expr": "bucket_access{namespace=\"$namespace\"}",
+            "format": "table",
+            "groupBy": [
+                {
+                "params": [
+                    "$__interval"
+                ],
+                "type": "time"
+                },
+                {
+                "params": [
+                    "null"
+                ],
+                "type": "fill"
+                }
+            ],
+            "hide": false,
+            "intervalFactor": 2,
+            "legendFormat": "__auto",
+            "orderByTime": "ASC",
+            "policy": "default",
+            "range": true,
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+                [
+                {
+                    "params": [
+                    "value"
+                    ],
+                    "type": "field"
+                },
+                {
+                    "params": [],
+                    "type": "mean"
+                }
+                ]
+            ],
+            "step": 2,
+            "tags": []
+            }
+        ],
+        "timeFrom": "1m",
+        "title": "Bucket Access",
+        "type": "stat"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "Is unauthorised access to the CDN forbidden",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "fixedColor": "transparent",
+                "mode": "fixed"
+            },
+            "mappings": [
+                {
+                "options": {
+                    "0": {
+                    "index": 1,
+                    "text": "❌"
+                    },
+                    "1": {
+                    "index": 2,
+                    "text": "✅"
+                    }
+                },
+                "type": "value"
+                },
+                {
+                "options": {
+                    "match": "null",
+                    "result": {
+                    "index": 0,
+                    "text": "❔"
+                    }
+                },
+                "type": "special"
+                }
+            ],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "short"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 0
+        },
+        "id": 15,
+        "maxDataPoints": 100,
+        "options": {
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "percentChangeColorMode": "standard",
+            "reduceOptions": {
+            "calcs": [
+                "lastNotNull"
+            ],
+            "fields": "/^Value$/",
+            "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "dsType": "influxdb",
+            "editorMode": "code",
+            "expr": "cdn_forbidden{namespace=\"$namespace\"}",
+            "format": "table",
+            "groupBy": [
+                {
+                "params": [
+                    "$__interval"
+                ],
+                "type": "time"
+                },
+                {
+                "params": [
+                    "null"
+                ],
+                "type": "fill"
+                }
+            ],
+            "hide": false,
+            "intervalFactor": 2,
+            "legendFormat": "__auto",
+            "orderByTime": "ASC",
+            "policy": "default",
+            "range": true,
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+                [
+                {
+                    "params": [
+                    "value"
+                    ],
+                    "type": "field"
+                },
+                {
+                    "params": [],
+                    "type": "mean"
+                }
+                ]
+            ],
+            "step": 2,
+            "tags": []
+            }
+        ],
+        "timeFrom": "1m",
+        "title": "CDN Access Forbidden",
+        "type": "stat"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "Can the service access the intranet",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "thresholds"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisGridShow": false,
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 50,
+                "gradientMode": "none",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "lineWidth": 3,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "mappings": [
+                {
+                "options": {
+                    "0": {
+                    "index": 1,
+                    "text": "❌"
+                    },
+                    "1": {
+                    "index": 2,
+                    "text": "✅"
+                    },
+                    "null": {
+                    "index": 0,
+                    "text": "❓"
+                    }
+                },
+                "type": "value"
+                }
+            ],
+            "noValue": "❓",
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "bool_yes_no"
+            },
+            "overrides": [
+            {
+                "__systemRef": "hideSeriesFrom",
+                "matcher": {
+                "id": "byNames",
+                "options": {
+                    "mode": "exclude",
+                    "names": [
+                    "< Yes"
+                    ],
+                    "prefix": "All except:",
+                    "readOnly": true
+                }
+                },
+                "properties": [
+                {
+                    "id": "custom.hideFrom",
+                    "value": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": true
+                    }
+                }
+                ]
+            }
+            ]
+        },
+        "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 0
+        },
+        "id": 11,
+        "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": false
+            },
+            "orientation": "auto",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            },
+            "xField": "env",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "code",
+            "exemplar": false,
+            "expr": "min by(env) (intranet_access{namespace=\"$namespace\"})",
+            "format": "table",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": true,
+            "legendFormat": "{{env}}",
+            "range": false,
+            "refId": "A",
+            "useBackend": false
+            }
+        ],
+        "title": "Intranet Access",
+        "type": "barchart"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "palette-classic"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 5,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                "group": "A",
+                "mode": "none"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "decimals": 0,
+            "mappings": [
+                {
+                "options": {
+                    "0": {
+                    "index": 1,
+                    "text": "❌"
+                    },
+                    "1": {
+                    "index": 2,
+                    "text": "✅"
+                    },
+                    "null": {
+                    "index": 0,
+                    "text": "❓"
+                    }
+                },
+                "type": "value"
+                }
+            ],
+            "noValue": "❓",
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "bool"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 4
+        },
+        "id": 20,
+        "options": {
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+            },
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            }
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "builder",
+            "expr": "max by(service) (up{namespace=\"$namespace\", service=\"intranet-archive-service\"})",
+            "fullMetaSearch": false,
+            "hide": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "Service UP",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "builder",
+            "exemplar": false,
+            "expr": "min by(namespace) (bucket_access{namespace=\"$namespace\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "Bucket Access",
+            "range": true,
+            "refId": "B",
+            "useBackend": false
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "builder",
+            "exemplar": false,
+            "expr": "min by(namespace) (cdn_forbidden{namespace=\"$namespace\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "hide": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "CDN Forbidden",
+            "range": true,
+            "refId": "C",
+            "useBackend": false
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "editorMode": "code",
+            "expr": "min by(env) (intranet_access{namespace=\"$namespace\"})",
+            "hide": false,
+            "instant": false,
+            "legendFormat": "Intranet Access ({{env}})",
+            "range": true,
+            "refId": "D"
+            }
+        ],
+        "title": "Historic Access Metrics",
+        "type": "timeseries"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "The number of snapshots taken",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "palette-classic"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisGridShow": true,
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 50,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 5,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": 43200000,
+                "stacking": {
+                "group": "A",
+                "mode": "none"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "decimals": 0,
+            "mappings": [],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "none"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 11,
+            "w": 8,
+            "x": 0,
+            "y": 9
+        },
+        "id": 16,
+        "options": {
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+            },
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            }
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "code",
+            "exemplar": false,
+            "expr": "min by(agency, env) (snapshot_count{namespace=\"$namespace\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "{{env}}:{{agency}}",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            }
+        ],
+        "title": "Snapshot Count",
+        "type": "timeseries"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "The age of the most recent snapshot",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "palette-classic"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 50,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "stepAfter",
+                "lineStyle": {
+                "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": 43200000,
+                "stacking": {
+                "group": "A",
+                "mode": "none"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "decimals": 0,
+            "mappings": [],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "d"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 11,
+            "w": 8,
+            "x": 8,
+            "y": 9
+        },
+        "id": 17,
+        "options": {
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+            },
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            }
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "code",
+            "exemplar": false,
+            "expr": "min by(agency, env) (most_recent_snapshot_age{namespace=\"$namespace\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "{{env}}:{{agency}}",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            }
+        ],
+        "title": "Most Recent Snapshot Age",
+        "type": "timeseries"
+        },
+        {
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "description": "Available space on the Persistent Volume",
+        "fieldConfig": {
+            "defaults": {
+            "color": {
+                "mode": "palette-classic"
+            },
+            "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 50,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": 3600000,
+                "stacking": {
+                "group": "A",
+                "mode": "none"
+                },
+                "thresholdsStyle": {
+                "mode": "off"
+                }
+            },
+            "decimals": 0,
+            "mappings": [],
+            "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                {
+                    "color": "green",
+                    "value": null
+                }
+                ]
+            },
+            "unit": "decbytes"
+            },
+            "overrides": []
+        },
+        "gridPos": {
+            "h": 11,
+            "w": 8,
+            "x": 16,
+            "y": 9
+        },
+        "id": 18,
+        "options": {
+            "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+            },
+            "tooltip": {
+            "mode": "single",
+            "sort": "none"
+            }
+        },
+        "pluginVersion": "11.3.0",
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "disableTextWrap": false,
+            "editorMode": "code",
+            "exemplar": false,
+            "expr": "min by(persistentvolumeclaim) (kubelet_volume_stats_available_bytes{namespace=\"$namespace\"})",
+            "format": "time_series",
+            "fullMetaSearch": false,
+            "includeNullMetadata": true,
+            "instant": false,
+            "legendFormat": "{{persistentvolumeclaim}}",
+            "range": true,
+            "refId": "A",
+            "useBackend": false
+            }
+        ],
+        "title": "Available disk space",
+        "type": "timeseries"
+        }
+    ],
+    "preload": false,
+    "refresh": "auto",
+    "schemaVersion": 40,
+    "tags": [],
+    "templating": {
+        "list": [
+        {
+            "current": {
+            "text": "intranet-archive-dev",
+            "value": "intranet-archive-dev"
+            },
+            "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+            },
+            "definition": "label_values(intranet_access,namespace)",
+            "includeAll": false,
+            "label": "Namespace",
+            "name": "namespace",
+            "options": [],
+            "query": {
+            "qryType": 1,
+            "query": "label_values(intranet_access,namespace)",
+            "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "refresh": 2,
+            "regex": "",
+            "type": "query"
+        }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "CDPT / Intranet Archive",
+    "uid": "xywyqxz07sxkwg",
+    "version": 12,
+    "weekStart": ""
+    }
