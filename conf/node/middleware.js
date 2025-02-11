@@ -46,8 +46,14 @@ const ipAddresses = new Map();
  * @returns {void}
  */
 
-export const rateLimiter = ({ ip }, _res, next) => {
-  const { maxRequests, timeWindow } = rateLimitConfig;
+export const rateLimiter = ({ ip, path }, _res, next) => {
+  const { maxRequests, timeWindow, ignoreRoutes } = rateLimitConfig;
+
+  // If the path is in the ignore list, then skip the rate limiting
+  if (ignoreRoutes.includes(path)) {
+    return next();
+  }
+
   const now = Date.now();
 
   // If the ip is not in the map, then add it with a count of 1
@@ -207,9 +213,7 @@ export const checkSignature = (req, _res, next) => {
 
 export const errorHandler = (err, _req, res, _next) => {
   if (err.status === 429) {
-    res
-      .status(429)
-      .send("Rate limit exceeded. Please try again later.");
+    res.status(429).send("Rate limit exceeded. Please try again later.");
     return;
   }
 
