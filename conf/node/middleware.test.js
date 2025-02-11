@@ -19,6 +19,7 @@ describe("rateLimiter middleware", () => {
   beforeEach(() => {
     req = {
       ip: "192.168.1.1",
+      path: "/access",
     };
     res = {};
     next = jest.fn();
@@ -59,6 +60,15 @@ describe("rateLimiter middleware", () => {
 
     rateLimiter(req, res, next);
 
+    expect(next).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should call next if path is in the ignore list", () => {
+    req.path = "/health";
+    for (let i = 0; i <= maxRequests * 2; i++) {
+      rateLimiter(req, res, next);
+    }
     expect(next).toHaveBeenCalled();
     expect(next).not.toHaveBeenCalledWith(expect.any(Error));
   });
