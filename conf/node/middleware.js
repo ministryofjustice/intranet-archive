@@ -206,6 +206,13 @@ export const checkSignature = (req, _res, next) => {
  */
 
 export const errorHandler = (err, _req, res, _next) => {
+  if (err.status === 429) {
+    res
+      .status(429)
+      .send("Rate limit exceeded. Please try again later.");
+    return;
+  }
+
   // Log the error to the console - will be available in Kibana logs.
   console.error(err);
 
