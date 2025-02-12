@@ -79,9 +79,14 @@ sequenceDiagram
 
 Find the config file at `deploy/<namespace>/config.yml`.
 
-Update the `SNAPSHOT_SCHEDULE` environment variable with values for the desired agency.
+Update the `SNAPSHOT_SCHEDULE_##` environment variable with values for the desired agency.
 
-It should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>(::<optional-depth>)`.
+> [!NOTE]  
+> Replace ## with the number of the pod in the stateful set. Use 00 for the first pod, 01 for the second, and so on.
+> This is so that the load of multiple snapshots is distributed across the pods,  
+> even though, it is technically possible to run multiple snapshots at the same time.
+
+The value should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>(::<optional-depth>)`.
 
 And, multiple values should be comma separated.
 
@@ -310,7 +315,7 @@ Observe HTTrack with the following actions:
    # Make a POST request with curl to the /spider route
    curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=1"
    ```
-- Use the `SNAPSHOT_SCHEDULE` environment variable to schedule a snapshot.
+- Use the `SNAPSHOT_SCHEDULE_##` environment variable to schedule a snapshot.
 
 ## Configuration
 
@@ -324,7 +329,7 @@ When the application is deployed:
 | ------------------------------------| ------------------------------------------------------------------- | ----------------------------- |
 | **Application Config**                                                                                                                    |
 | `ALLOWED_AGENCIES`                  | A comma separated list of agencies that are allowed to be archived. | `hq,hmcts`                    |
-| `SNAPSHOT_SCHEDULE`                 | A comma separated of formatted schedules for the snapshots.         | `dev::hq::Mon::17:30::3`      |
+| `SNAPSHOT_SCHEDULE_##`              | A comma separated of formatted schedules for the snapshots.         | `dev::hq::Mon::17:30::3`      |
 | **Intranet Secrets**                                                                                                                      |
 | `INTRANET_JWT_DEV`                  | JWT for the dev intranet                                            | Header, payload and sig.      |
 | `INTRANET_JWT_STAGING`              | JWT for the staging intranet                                        | 〃                            |

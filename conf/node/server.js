@@ -225,16 +225,13 @@ console.log("Server started on port", port);
  * Schedule
  */
 
-// For now, only schedule to run on the first instance.
-if (ordinalNumber === 0) {
-  // Schedule the main function to run at the specified times
-  getSnapshotSchedule().forEach(({ env, agency, depth, ...schedule }) => {
-    scheduleFunction(schedule, () => {
-      main({ env, agency, depth });
-    });
-    console.log("Scheduled", env, agency, schedule, depth ?? "");
+// Schedule the main function to run at the specified times
+getSnapshotSchedule().forEach(({ env, agency, depth, ...schedule }) => {
+  scheduleFunction(schedule, () => {
+    main({ env, agency, depth });
   });
-}
+  console.log("Scheduled", env, agency, schedule, depth ?? "");
+});
 
 // Schedule the deleteOldSnapshots function to run at 1:45 AM every day
 scheduleFunction({ min: 45, hour: 1 }, deleteOldSnapshots);
