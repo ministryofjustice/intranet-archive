@@ -4,5 +4,5 @@ metadata:
   name: intranet-archive-staging-config
   namespace: intranet-archive-staging
 data:
-  ALLOWED_AGENCIES: "hmcts,jac"
+  ALLOWED_AGENCIES: "hmcts,hq,jac"
   SNAPSHOT_SCHEDULE: "staging::hmcts::Tue::14:45,staging::jac::Tue::16:45::3"
