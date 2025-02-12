@@ -57,7 +57,7 @@ spec:
         # - - - - - - - - - - - - - - -
         alert: CloudFrontAbsentAccessPolicy
         # A service is up, and the metric is absent. This accounts for the service being down, i.e. out of office hours on development environments.
-        expr: up{namespace="intranet-archive-dev"} == 1 AND absent(cdn_forbidden{namespace="intranet-archive-dev"}) == 1
+        expr: up{namespace="intranet-archive-dev"} AND ON() absent(cdn_forbidden{namespace="intranet-archive-dev"})
         for: 20m
         labels:
           severity: intranet-dev
