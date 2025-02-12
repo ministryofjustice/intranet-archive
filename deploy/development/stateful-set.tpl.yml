@@ -5,6 +5,8 @@ metadata:
 spec:
   replicas: 2
   revisionHistoryLimit: 5
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: intranet-archive
