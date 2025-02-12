@@ -3,6 +3,7 @@ import { parseScheduleString } from "./controllers/schedule.js";
 export const isCi = !!process.env.CI;
 export const isLocal = process.env.NODE_ENV === "development";
 export const ordinalNumber = parseInt(process.env.ORDINAL_NUMBER);
+export const ordinalString = ordinalNumber.toString().padStart(2, "0");
 export const port = 2000;
 
 /**
@@ -85,7 +86,7 @@ export const allowedTargetAgencies =
  */
 
 export const getSnapshotSchedule = () =>
-  parseScheduleString(process.env.SNAPSHOT_SCHEDULE);
+  parseScheduleString(process.env[`SNAPSHOT_SCHEDULE_${ordinalString}`]);
 
 /**
  * Httrack
