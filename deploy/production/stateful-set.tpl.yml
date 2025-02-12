@@ -3,8 +3,10 @@ kind: StatefulSet
 metadata:
   name: ${KUBE_NAMESPACE}
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 5
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: intranet-archive
