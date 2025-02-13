@@ -43,7 +43,7 @@ const __dirname = import.meta.dirname;
 const app = express();
 
 // Trust the first proxy (Cloud Platform) to report the correct IP address. Used for to rate limiting middleware.
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // An in-memory cache to store the status data (so this endpoint can be open).
 const cache = {
@@ -129,15 +129,35 @@ app.get("/status", async function (_req, res, next) {
   }
 });
 
-app.get("/metrics", async function (_req, res, next) {
-  try {
-    const metrics = await getAllMetrics();
-    const metricsString = getMetricsString(metrics);
-    res.setHeader("Content-Type", "text/plain");
-    res.status(200).send(metricsString);
-  } catch (err) {
-    next(err);
+app.get("/metrics", async function (_req, res) {
+  let attempts = 0;
+  const errors = [];
+
+  while (attempts++ < 3) {
+    try {
+      const metrics = await getAllMetrics();
+      const metricsString = getMetricsString(metrics);
+      res
+        .setHeader("Content-Type", "text/plain")
+        .status(200)
+        .send(metricsString);
+      return;
+    } catch (err) {
+      errors.push(err);
+      // Wait for before trying again
+      await new Promise((resolve) => setTimeout(resolve, attempts * 1000));
+    }
   }
+
+  // Log the errors if we failed to get the metrics after 3 attempts
+  console.error("Failed to get metrics after 3 attempts:");
+  errors.forEach((err) => console.error(err));
+
+  // Return a 500 error if the metrics could not be fetched.
+  res
+    .setHeader("Content-Type", "text/plain")
+    .status(500)
+    .send("Error fetching metrics, check logs");
 });
 
 app.post("/spider", function (req, res) {
@@ -193,7 +213,7 @@ app.post("/access", async function (req, res, next) {
     });
 
     // Clear the agency cookie from the CDN domain, it can cause a redirect loop.
-    res.clearCookie('dw_agency', { domain: cdnUrl.hostname });
+    res.clearCookie("dw_agency", { domain: cdnUrl.hostname });
 
     // Redirect to the CDN URL.
     res.redirect(`${cdnUrl.origin}/${getAgencyPath(env, agency)}/index.html`);
