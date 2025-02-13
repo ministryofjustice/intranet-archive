@@ -1,0 +1,99 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  namespace: intranet-archive-production
+  labels:
+    prometheus: prometheus-operator
+    role: alert-rules
+    release: prometheus-operator
+  name: monitoring-rules-intranet-archive
+spec:
+  groups:
+    - name: application-rules
+      rules:
+      - # - - - - - - - - - - - - - - -
+        # System
+        # - service is down
+        # - low disk space
+        # - - - - - - - - - - - - - - -
+        alert: ServiceDown
+        expr: |
+          max by(service, namespace) (up{namespace="intranet-archive-production", service="intranet-archive-service"}) == 0
+        for: 20m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - the service is down.
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#ServiceDown
+      - alert: PersistentVolumeLowSpace
+        expr: kubelet_volume_stats_available_bytes{namespace="intranet-archive-production"} / 1e9 < 32
+        for: 10m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - volume is nearly full {{ $labels.persistentvolumeclaim }} {{ printf "%0.0f" $value}} GB available. 
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#PersistentVolumeLowSpace
+      - # - - - - - - - - - - - - - - -
+        # S3
+        # - failed bucket access
+        # - - - - - - - - - - - - - - -
+        alert: S3FailedBucketAccess
+        expr: bucket_access{namespace="intranet-archive-production"} != 1
+        for: 10m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - S3 bucket used for snapshots, is inaccessible.
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#S3FailedBucketAccess
+      - # - - - - - - - - - - - - - - -
+        # CloudFront
+        # - absent metric
+        # - insufficient access policy
+        # - - - - - - - - - - - - - - -
+        alert: CloudFrontAbsentAccessPolicy
+        expr: absent(cdn_forbidden{namespace="intranet-archive-dev"})
+        for: 20m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - CDN may be publicly accessible, metric is absent.
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#CloudFrontAbsentAccessPolicy
+      - alert: CloudFrontInsufficientAccessPolicy
+        expr: cdn_forbidden{namespace="intranet-archive-production"} != 1
+        for: 10m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - CDN is publicly accessible!
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#CloudFrontInsufficientAccessPolicy
+      - # - - - - - - - - - - - - - - -
+        # Intranet
+        # - insufficient http access
+        # - - - - - - - - - - - - - - -
+        alert: IntranetFailedHttpAccess
+        expr: min by(env, namespace) (intranet_access{namespace="intranet-archive-production"}) != 1
+        for: 10m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - the intranet ({{ $labels.env }}) returned a non-200 status code. 
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#IntranetFailedHttpAccess
+      - # - - - - - - - - - - - - - - -
+        # Application 
+        # - weekly snapshots failed
+        # - - - - - - - - - - - - - - -
+        alert: SnapshotScheduleFailed
+        expr: min by(agency, env, namespace) (most_recent_snapshot_age{namespace="intranet-archive-production"}) > 14
+        for: 10m
+        labels:
+          severity: intranet-archive
+        annotations:
+          message: Namespace {{ $labels.namespace }} - the most recent snapshot for {{ $labels.env }} {{ $labels.agency }} is {{ printf "%0.0f" $value}} days old. 
+          dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-production
+          runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#SnapshotScheduleFailed
