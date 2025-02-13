@@ -496,7 +496,7 @@ The Slack webhook secret is stored in the `ALERTS_SLACK_WEBHOOK` GitHub reposito
 
 The [Prometheus Graph view](https://prometheus.live.cloud-platform.service.justice.gov.uk/graph) is useful for debugging and understanding the alerts.
 
-Alerts and their state can be reviewed on the Prometheus [intranet-archive-dev alerts view](https://prometheus.live.cloud-platform.service.justice.gov.uk/alerts?search=intranet-dev).
+Alerts and their state can be reviewed on the Prometheus [intranet-archive alerts view](https://prometheus.live.cloud-platform.service.justice.gov.uk/alerts?search=intranet-archive).
 
 
 ## Commands

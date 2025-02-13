@@ -22,8 +22,7 @@ spec:
           max by(service, namespace) (up{namespace="intranet-archive-dev", service="intranet-archive-service"}) == 0 AND ON() (6 <= hour() < 22)
         for: 20m
         labels:
-          # TODO update severity when issued by Cloud Platform. Also update in README.md
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - the service is down.
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -32,7 +31,7 @@ spec:
         expr: kubelet_volume_stats_available_bytes{namespace="intranet-archive-dev"} / 1e9 < 32
         for: 10m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - volume is nearly full {{ $labels.persistentvolumeclaim }} {{ printf "%0.0f" $value}} GB available. 
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -45,7 +44,7 @@ spec:
         expr: bucket_access{namespace="intranet-archive-dev"} != 1
         for: 10m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - S3 bucket used for snapshots, is inaccessible.
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -60,7 +59,7 @@ spec:
         expr: up{namespace="intranet-archive-dev"} AND ON() absent(cdn_forbidden{namespace="intranet-archive-dev"})
         for: 20m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - CDN may be publicly accessible, metric is absent.
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -69,7 +68,7 @@ spec:
         expr: cdn_forbidden{namespace="intranet-archive-dev"} != 1
         for: 10m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - CDN is publicly accessible!
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -82,7 +81,7 @@ spec:
         expr: min by(env, namespace) (intranet_access{namespace="intranet-archive-dev"}) != 1
         for: 10m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - the intranet ({{ $labels.env }}) returned a non-200 status code. 
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
@@ -95,7 +94,7 @@ spec:
         expr: min by(agency, env, namespace) (most_recent_snapshot_age{namespace="intranet-archive-dev"}) > 14
         for: 10m
         labels:
-          severity: intranet-dev
+          severity: intranet-archive
         annotations:
           message: Namespace {{ $labels.namespace }} - the most recent snapshot for {{ $labels.env }} {{ $labels.agency }} is {{ printf "%0.0f" $value}} days old. 
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
