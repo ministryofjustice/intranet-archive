@@ -17,7 +17,7 @@ spec:
         # - low disk space
         # - - - - - - - - - - - - - - -
         alert: ServiceDown
-        # Service is down AND it's after 6am and it's before 10pm UK time - this accounts for the development environment's scheduled down time.
+        # Service is down AND it's after 6am and it's before 10pm UK time - this accounts for the non-production environment's scheduled down time.
         expr: |
           max by(service, namespace) (up{namespace="intranet-archive-staging", service="intranet-archive-service"}) == 0 AND ON() (6 <= hour() < 22)
         for: 20m
@@ -55,8 +55,8 @@ spec:
         # - insufficient access policy
         # - - - - - - - - - - - - - - -
         alert: CloudFrontAbsentAccessPolicy
-        # A service is up, and the metric is absent. This accounts for the service being down, i.e. out of office hours on development environments.
-        expr: up{namespace="intranet-archive-dev"} AND ON() absent(cdn_forbidden{namespace="intranet-archive-dev"})
+        # The metric is absent AND it's after 6am and it's before 10pm UK time - this accounts for the non-production environment's scheduled down time.
+        expr: absent(cdn_forbidden{namespace="intranet-archive-dev"}) AND ON() (6 <= hour() < 22)
         for: 20m
         labels:
           severity: intranet-archive
