@@ -54,21 +54,31 @@ export const createHeartbeat = async (
   bucket = s3BucketName,
   file = heartbeatEndpoint,
 ) => {
-  const objects = await client.send(
-    new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: file,
-    }),
-  );
+  // Use freshly created S3 client here to minimise the risk of connection issues
+  const client = new S3Client(s3Options);
 
-  if (!objects.Contents?.length) {
-    const response = await client.send(
-      new PutObjectCommand({
+  try {
+    const objects = await client.send(
+      new ListObjectsV2Command({
         Bucket: bucket,
-        Key: file,
-        Body: "OK",
+        Prefix: file,
       }),
     );
+
+    if (!objects.Contents?.length) {
+      const response = await client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: file,
+          Body: "OK",
+        }),
+      );
+    }
+  } catch (error) {
+    console.error("Error creating /auth/heartbeat", error);
+  } finally {
+    // Destroy the dedicated (non-global) client
+    client.destroy();
   }
 
   return;
@@ -90,7 +100,7 @@ export const sync = async (source, destination, options = {}) => {
     ContentType: mime.lookup(input.Key) || "text/html",
   });
 
-  // Use freshly created S3 client here to minimise the risk of connnection issues
+  // Use freshly created S3 client here to minimise the risk of connection issues
   const client = new S3Client(s3Options);
 
   // Create a new S3 sync client
@@ -99,12 +109,18 @@ export const sync = async (source, destination, options = {}) => {
   return new Promise((resolve, reject) => {
     syncClient(source, destination, options)
       .then((output) => {
-        // Destroy the dedicated (non-global) client
-        client.destroy();
         // Resolve the output
         resolve(output);
       })
-      .catch(reject);
+      .catch((error) => {
+        console.error("Error syncing", error);
+        // Reject the error
+        reject(error)
+      })
+      .finally(() => {
+        // Destroy the dedicated (non-global) client
+        client.destroy();
+      });
   });
 };
 

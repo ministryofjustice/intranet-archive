@@ -229,7 +229,7 @@ export const getHttrackProgress = async (dest) => {
 
 export const waitForHttrackComplete = async (
   dest,
-  timeOutSeconds = 24 * 60 * 60 /* 24 hours */,
+  timeOutSeconds = 36 * 60 * 60 /* 36 hours */,
 ) => {
   const intervalSeconds = 1;
   const maxIterations = timeOutSeconds / intervalSeconds;
