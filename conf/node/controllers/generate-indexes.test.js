@@ -17,6 +17,14 @@ beforeAll(async () => {
   await client.send(
     new PutObjectCommand({
       Bucket: s3BucketName,
+      Key: "laa/2024-01-01/index.html",
+      Body: "test",
+    }),
+  );
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: s3BucketName,
       Key: "dev-hmcts/2024-01-01/index.html",
       Body: "test",
     }),
@@ -33,6 +41,13 @@ beforeAll(async () => {
 
 afterAll(() => {
   // Remove the test folder
+  client.send(
+    new DeleteObjectCommand({
+      Bucket: s3BucketName,
+      Key: "laa/",
+    }),
+  );
+
   client.send(
     new DeleteObjectCommand({
       Bucket: s3BucketName,
