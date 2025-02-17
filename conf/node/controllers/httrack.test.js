@@ -1,17 +1,91 @@
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import http from "node:http";
 import { afterAll, it, jest } from "@jest/globals";
 
+import { intranetUrls, intranetJwts } from "../constants.js";
 import {
+  removeSrcsetCommand,
+  getAgencySwitcherCommand,
   getHttrackArgs,
   runHttrack,
   getHttrackProgress,
   waitForHttrackComplete,
-} from "./httrack";
-import { intranetUrls, intranetJwts } from "../constants.js";
+} from "./httrack.js";
 
 // Skip long tests when running in watch mode.
 const skipLongTests = process.env.npm_lifecycle_event === "test:watch";
+
+describe("httrackCommands", () => {
+  const srcsetTestPath = "/tmp/httrack-test-srcset.html";
+
+  beforeAll(() => {
+    fs.writeFileSync(
+      srcsetTestPath,
+      `
+      <html>
+        <body>
+          <img src="https://example.com/image.jpg" srcset="https://example.com/image.jpg 1x, https://example.com/image.jpg 2x">
+        </body>
+      </html>
+    `,
+    );
+  });
+
+  it("should remove srcset when passed a file", () => {
+    const command = removeSrcsetCommand.replace("$0", srcsetTestPath);
+
+    execSync(command);
+
+    const fileContents = fs.readFileSync(srcsetTestPath, "utf-8");
+
+    expect(fileContents).not.toContain("srcset=");
+  });
+
+  // The test cases in the format [env, index]
+  const cases = [
+    ["dev", "dev.html"],
+    ["staging", "staging.html"],
+    ["demo", "demo.html"],
+    ["production", "index.html"],
+  ];
+
+  it.each(cases)(
+    "should replace the %p agency switcher URL with %p",
+    (env, index) => {
+      const url = new URL(intranetUrls[env]);
+      const testFile = `/tmp/httrack-test-${env}.html`;
+
+      // Create a file to test the commands on.
+      fs.writeFileSync(
+        testFile,
+        `
+        <html>
+          <body>
+            <a href="https://${url.hostname}/agency-switcher/">Agency Switcher</a>
+            <a href="https://${url.hostname}/agency-switcher">Agency Switcher</a>
+            <a href="http://${url.hostname}/agency-switcher/">Agency Switcher</a>
+            <a href="http://${url.hostname}/agency-switcher">Agency Switcher</a>
+            <a href="://${url.hostname}/agency-switcher/">Agency Switcher</a>
+            <a href="://${url.hostname}/agency-switcher">Agency Switcher</a>
+            <a href="/agency-switcher/">Agency Switcher</a>
+            <a href="/agency-switcher">Agency Switcher</a>
+          </body>
+        </html>
+        `,
+      );
+
+      const command = getAgencySwitcherCommand(index).replace("$0", testFile);
+
+      execSync(command);
+
+      const fileContents = fs.readFileSync(testFile, "utf-8");
+
+      expect(fileContents).toContain(`href="/${index}"`);
+      expect(fileContents).not.toContain("/agency-switcher/");
+    },
+  );
+});
 
 describe("getHttrackArgs", () => {
   it("should return an array of arguments", async () => {
@@ -24,6 +98,7 @@ describe("getHttrackArgs", () => {
       dest: "/tmp/test-snapshot",
       agency: "hq",
       jwt,
+      environmentIndex: "index.html",
     };
 
     const args = getHttrackArgs(options);

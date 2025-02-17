@@ -1,6 +1,6 @@
 import { intranetUrls, s3BucketName, indexCss } from "../constants.js";
+import { getEnvironmentIndex, getAgencyPath } from "./paths.js";
 import { getAgenciesFromS3, getSnapshotsFromS3 } from "./s3.js";
-import { getAgencyPath } from "./paths.js";
 
 /**
  * Generate the root index html
@@ -21,13 +21,43 @@ export const generateRootIndex = async (bucket = s3BucketName, env) => {
 
   const hostname = new URL(intranetUrls[env]).hostname;
 
+  // Get any other envs that have agencies, so that we can link to them.
+  // This will only be shown on dev, so the presentation is not a priority.
+  const otherLinks = (
+    await Promise.all(
+      Object.keys(intranetUrls)
+        // Remove the current env
+        .filter((e) => e !== env)
+        // Check if each env has agencies and map to an object with the href and label
+        .map(async (e) => ({
+          hasAgencies: (await getAgenciesFromS3(bucket, e))?.length > 0,
+          href: `/${getEnvironmentIndex(e)}`,
+          label: `${e}`,
+        })),
+    )
+  )
+    // Only show links to envs with agencies
+    .filter(({ hasAgencies }) => hasAgencies);
+
   const html = `<!doctype html><html lang="en">
     <head><title>Intranet Archive Index</title><style>${indexCss}</style></head>
     <body>
       <main>
-        <div class="container px-4 py-5">
+        <div class="container container--flex">
           <h1>Ministry of Justice Intranet Archive</h1>
-          <h2 class="pb-2 border-bottom">${hostname}</h2>
+          ${
+            otherLinks.length > 0
+              ? `<nav class="top-links">
+                  Switch target environment: 
+                  ${otherLinks
+                    .map((link) => `<a href="${link.href}" >${link.label}</a>`)
+                    .join(" | ")}
+                </nav>`
+              : ``
+          }
+        </div>
+        <div class="container">
+          <h2>${hostname}</h2>
           <ul class="list-group">
             ${agencies
               .map(
@@ -36,7 +66,7 @@ export const generateRootIndex = async (bucket = s3BucketName, env) => {
                   <a href="/${getAgencyPath(
                     env,
                     agency,
-                  )}/index.html" target="_blank">${agency}</a>
+                  )}/index.html">${agency}</a>
                 </li>`,
               )
               .join("\n")}
@@ -81,9 +111,14 @@ export const generateAgencyIndex = async (
     <head><title>Intranet Archive Index</title><style>${indexCss}</style></head>
     <body>
       <main>
-        <div class="container px-4 py-5">
+        <div class="container container--flex">
           <h1>Ministry of Justice Intranet Archive</h1>
-          <h2 class="pb-2 border-bottom">${url.hostname} - ${agency}</h2>
+          <nav class="top-links">
+            <a href="/${getEnvironmentIndex(env)}">Switch to other intranet</a>
+          </nav>
+        </div>
+        <div class="container">
+          <h2>${url.hostname} - ${agency}</h2>
           <ul class="list-group">
             ${snapshots
               .map(

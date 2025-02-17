@@ -4,19 +4,43 @@ import fs from "node:fs";
 import { isLocal, intranetJwts } from "../constants.js";
 
 /**
+ * A collection of commands to be executed after httrack has completed.
+ */
+
+export const removeSrcsetCommand = `sed -i 's/srcset="[^"]*"//g' $0`;
+
+/**
+ * A function to return a sed command, to replace the agency switcher URL with the environment's root URL.
+ *
+ * @param {string} index - The index file to replace the agency switcher URL with.
+ * @returns {string} - The sed command to replace the agency switcher URL.
+ */
+
+export const getAgencySwitcherCommand = (index) =>
+  `sed -i -r 's|href="((https?)?://(dev.)?(staging.)?(demo.)?intranet.justice.gov.uk)?/agency-switcher/?"|href="/${index}"|g' $0`;
+
+/**
  * Get arguments for httrack cli.
  *
  * @param {Object} props
- * @param {URL} props.url
- * @param {string} props.dest
- * @param {string} props.agency
- * @param {string} props.jwt
+ * @param {URL} props.url - The URL to snapshot.
+ * @param {string} props.dest - The destination folder for the snapshot.
+ * @param {string} props.agency - The agency to use for the request.
+ * @param {string} props.jwt - The JWT to use for the request.
+ * @param {string} props.environmentIndex - The index file to replace the agency switcher URL with.
  * @param {number} [props.depth] - Optional depth parameter
  *
  * @returns {string[]}
  */
 
-export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
+export const getHttrackArgs = ({
+  url,
+  dest,
+  agency,
+  jwt,
+  environmentIndex,
+  depth,
+}) => {
   /** @type {string[]} */
   let options = [url.href];
 
@@ -55,13 +79,6 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     );
   }
 
-  const commands = {
-    // Remove srcset attributes
-    removeSrcset: `sed -i 's/srcset="[^"]*"//g' $0`,
-    // Replace the agency switcher URL with '/'
-    replaceAgencySwitcher: `sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0`,
-  };
-
   let cookie = `dw_agency=${agency}`;
 
   if (jwt) {
@@ -72,7 +89,7 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
   const settings = [
     "-s0", // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
-    `"${commands.removeSrcset} && ${commands.replaceAgencySwitcher}"`,
+    `"${removeSrcsetCommand} && ${getAgencySwitcherCommand(environmentIndex)}"`,
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
     "-F",
     "intranet-archive",
@@ -152,7 +169,7 @@ export const runHttrack = (cliArgs) => {
  */
 
 export const getHttrackProgress = async (dest) => {
-  // Validate dest, ensure it is a string and cannot execute arbitary commands.
+  // Validate dest, ensure it is a string and cannot execute arbitrary commands.
   if (typeof dest !== "string" || dest.includes(";")) {
     throw new Error("Invalid destination");
   }
