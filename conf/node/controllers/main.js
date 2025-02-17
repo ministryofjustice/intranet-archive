@@ -12,7 +12,11 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
-import { getAgencyPath, getSnapshotPaths } from "./paths.js";
+import {
+  getEnvironmentIndex,
+  getAgencyPath,
+  getSnapshotPaths,
+} from "./paths.js";
 import { retryAsync } from "./retry-async.js";
 import { createHeartbeat, sync, writeToS3 } from "./s3.js";
 import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
@@ -39,6 +43,7 @@ export const main = async ({ env, agency, depth }) => {
       dest: paths.fs,
       agency,
       jwt: intranetJwts[env],
+      environmentIndex: getEnvironmentIndex(env),
       depth,
     });
 
@@ -86,7 +91,7 @@ export const main = async ({ env, agency, depth }) => {
   await retryAsync(() =>
     writeToS3(
       s3BucketName,
-      "production" === env ? `index.html` : `${env}.html`,
+      getEnvironmentIndex(env),
       rootIndexHtml,
       {
         cacheMaxAge: 600,

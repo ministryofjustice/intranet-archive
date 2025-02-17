@@ -129,6 +129,9 @@ export const indexCss = `
   }
   .container:after,.container:before{display:table;content:" "}
   .container:after{clear:both}.list-group{-webkit-box-shadow:0 1px 2px rgba(0,0,0,.075);box-shadow:0 1px 2px rgba(0,0,0,.075)}
+  .container--flex{display:flex;align-items:center;justify-content:space-between}
+  .container--flex:after,.container--flex:before{display:none}
+  .top-links{padding-left:1em;display:block}
 `;
 
 /**

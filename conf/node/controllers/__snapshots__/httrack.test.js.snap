@@ -28,7 +28,7 @@ exports[`getHttrackArgs should return an array of arguments 1`] = `
   "-intranet.docker/wp/*",
   "-s0",
   "-V",
-  ""sed -i 's/srcset="[^"]*"//g' $0 && sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0"",
+  ""sed -i 's/srcset="[^"]*"//g' $0 && sed -i -r 's|href="((https?)?://(dev.)?(staging.)?(demo.)?intranet.justice.gov.uk)?/agency-switcher/?"|href="/index.html"|g' $0"",
   "-%k",
   "-F",
   "intranet-archive",
