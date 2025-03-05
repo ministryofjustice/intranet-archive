@@ -490,6 +490,19 @@ A Grafana dashboard has been configured to visualise the metrics data. The dashb
 
 https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive
 
+### Alerts
+
+Various alerts have been set up, so that the team are notified via Slack if there are any issues with the application.
+
+Cloud Platform's guide: [Creating your own custom alerts](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html)  
+was used to setup the alerts.
+
+The Slack webhook secret is stored in the `ALERTS_SLACK_WEBHOOK` GitHub repository secret. This is then stored in a Kubernetes secret in the `intranet-archive-dev` namespace, as part of the deploy workflow.
+
+The [Prometheus Graph view](https://prometheus.live.cloud-platform.service.justice.gov.uk/graph) is useful for debugging and understanding the alerts.
+
+Alerts and their state can be reviewed on the Prometheus [intranet-archive alerts view](https://prometheus.live.cloud-platform.service.justice.gov.uk/alerts?search=intranet-archive).
+
 
 ## Commands
 
