@@ -1,6 +1,21 @@
 import { intranetUrls, allowedTargetAgencies } from "../constants.js";
 
 /**
+ * A helper function to get the index page for an environment.
+ *
+ * @param {string} env
+ * @returns {string} the index page
+ */
+
+export const getEnvironmentIndex = (env) => {
+  if (!Object.keys(intranetUrls).includes(env)) {
+    throw new Error(`Invalid environment: ${env}`);
+  }
+
+  return env === "production" ? "index.html" : `${env}.html`;
+};
+
+/**
  * A helper function to get the folder for the agency.
  *
  * The folder is prefixed with the environment if it is not production.

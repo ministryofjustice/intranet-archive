@@ -1,11 +1,11 @@
 import { createHmac } from "node:crypto";
 
 import {
+  rateLimitConfig,
   intranetUrls,
   sharedSecret,
   defaultEnv,
   defaultAgency,
-  allowedTargetHosts,
   allowedTargetAgencies,
 } from "./constants.js";
 
@@ -34,6 +34,56 @@ export class HttpError extends Error {
   }
 }
 
+// A map to store the IP addresses of the clients and the number of requests they have made
+const ipAddresses = new Map();
+
+/**
+ * In memory rate limiter
+ *
+ * @param {import('express').Request} req
+ * @param {import('express').Response} _res
+ * @param {import('express').NextFunction} next
+ * @returns {void}
+ */
+
+export const rateLimiter = ({ ip, path }, _res, next) => {
+  const { maxRequests, timeWindow, ignoreRoutes } = rateLimitConfig;
+
+  // If the path is in the ignore list, then skip the rate limiting
+  if (ignoreRoutes.includes(path)) {
+    return next();
+  }
+
+  const now = Date.now();
+
+  // If the ip is not in the map, then add it with a count of 1
+  if (!ipAddresses.has(ip)) {
+    ipAddresses.set(ip, { lastRequest: now, count: 1 });
+    return next();
+  }
+
+  // Time since the last request in milliseconds
+  const timeSinceLastRequest = now - ipAddresses.get(ip).lastRequest;
+
+  // If the time since the last request is greater than the time window, reset the count
+  if (timeSinceLastRequest > timeWindow) {
+    ipAddresses.set(ip, { lastRequest: now, count: 1 });
+    return next();
+  }
+
+  // If the count is less than the maximum requests, increment the count and update the last request time
+  if (ipAddresses.get(ip).count < maxRequests) {
+    ipAddresses.set(ip, {
+      lastRequest: now,
+      count: ++ipAddresses.get(ip).count,
+    });
+    return next();
+  }
+
+  // If the count is greater than the maximum requests, return a 429 error
+  return next(new HttpError("Rate limit exceeded", 429));
+};
+
 /**
  * @typedef {import('express').Request & { mirror: { env: string, agency: string, depth: number } }} SpiderRequest
  * @typedef {import('express').Request & { isValid: ?boolean, agency: string, env: string }} AccessRequest
@@ -49,7 +99,7 @@ export class HttpError extends Error {
  */
 
 export const parseBody = (req, _res, next) => {
-  if (req.method !== "POST") {
+  if (req.method !== "POST" || req.path !== "/spider") {
     return next();
   }
 
@@ -162,6 +212,14 @@ export const checkSignature = (req, _res, next) => {
  */
 
 export const errorHandler = (err, _req, res, _next) => {
+  if (err.status === 429) {
+    res.status(429).send("Rate limit exceeded. Please try again later.");
+    return;
+  }
+
+  // Log the error to the console - will be available in Kibana logs.
+  console.error(err);
+
   if (err.status === 400) {
     res
       .status(400)
@@ -176,6 +234,6 @@ export const errorHandler = (err, _req, res, _next) => {
     return;
   }
 
-  // For everthing else, return a 500 error
+  // For everything else, return a 500 error
   res.status(500).sendFile("static/error-pages/500.html", { root: __dirname });
 };

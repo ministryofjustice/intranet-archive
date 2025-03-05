@@ -1,8 +1,78 @@
 import { createHmac } from "node:crypto";
 import { jest } from "@jest/globals";
 
-import { sharedSecret } from "./constants.js";
-import { checkSignature } from "./middleware.js";
+import { rateLimitConfig, sharedSecret } from "./constants.js";
+import { rateLimiter, checkSignature } from "./middleware.js";
+
+describe("rateLimiter middleware", () => {
+  let req, res, next;
+
+  const { maxRequests, timeWindow } = rateLimitConfig;
+
+  jest.useFakeTimers();
+
+  afterAll(() => {
+    jest.clearAllTimers();
+    jest.restoreAllMocks();
+  });
+
+  beforeEach(() => {
+    req = {
+      ip: "192.168.1.1",
+      path: "/access",
+    };
+    res = {};
+    next = jest.fn();
+  });
+
+  it("should call next if ip is not in the map", () => {
+    rateLimiter(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should call next if ip is in the map and count is less than maxRequests", () => {
+    req.ip = "192.168.1.2";
+    rateLimiter(req, res, next);
+    rateLimiter(req, res, next);
+    expect(next).toHaveBeenCalledTimes(2);
+    expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should call next with HttpError 429 if ip is in the map and count is greater than or equal to maxRequests", () => {
+    for (let i = 0; i <= maxRequests; i++) {
+      rateLimiter(req, res, next);
+    }
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+    expect(next.mock.calls[20][0].status).toBe(429);
+  });
+
+  it("should call next if time since last request is greater than timeWindow", () => {
+    req.ip = "192.168.1.3";
+    for (let i = 0; i <= maxRequests; i++) {
+      rateLimiter(req, res, next);
+    }
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+
+    // Wait for 60.001 seconds
+    jest.advanceTimersByTime(timeWindow + 1);
+    next.mockClear();
+
+    rateLimiter(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should call next if path is in the ignore list", () => {
+    req.path = "/health";
+    for (let i = 0; i <= maxRequests * 2; i++) {
+      rateLimiter(req, res, next);
+    }
+    expect(next).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+  });
+});
 
 describe("checkSignature middleware", () => {
   let req, res, next;
@@ -42,7 +112,7 @@ describe("checkSignature middleware", () => {
 
   it("should call next with HttpError 400 if payload is not valid base64", () => {
     req.body = { sig: "signature", payload: "invalid-base64" };
-    checkSignature(req, res, next); 
+    checkSignature(req, res, next);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
     expect(next.mock.calls[0][0].status).toBe(400);
   });

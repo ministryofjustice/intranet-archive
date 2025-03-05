@@ -1,6 +1,38 @@
 import { it } from "@jest/globals";
 
-import { getAgencyPath, getSnapshotPaths } from "./paths.js";
+import {
+  getEnvironmentIndex,
+  getAgencyPath,
+  getSnapshotPaths,
+} from "./paths.js";
+
+describe("getEnvironmentIndexPath", () => {
+  const cases = [
+    ["local", "local.html"],
+    ["dev", "dev.html"],
+    ["staging", "staging.html"],
+    ["demo", "demo.html"],
+    ["production", "index.html"],
+  ];
+
+  it.each(cases)("should return the index page - %p %p", (env, index) => {
+    expect(getEnvironmentIndex(env)).toBe(index);
+  });
+
+  it("should throw an error - invalid env", () => {
+    const env = "invalid";
+
+    expect(() => getEnvironmentIndex(env)).toThrowError(
+      `Invalid environment: ${env}`,
+    );
+  });
+
+  it("should throw an error - missing env", () => {
+    expect(() => getEnvironmentIndex()).toThrowError(
+      "Invalid environment: undefined",
+    );
+  });
+});
 
 describe("getAgencyPath", () => {
   it("should return the folder name - production", () => {

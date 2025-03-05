@@ -5,6 +5,8 @@ metadata:
 spec:
   replicas: 2
   revisionHistoryLimit: 5
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: intranet-archive
@@ -37,6 +39,7 @@ spec:
             memory: 250Mi
         ports:
         - containerPort: 2000
+          name: http
         volumeMounts:
         - name: snapshots
           mountPath: "/tmp/snapshots"
@@ -46,6 +49,11 @@ spec:
               secretKeyRef:
                 name: s3-bucket-output
                 key: bucket_name
+          - name: AWS_CLOUDFRONT_ALIAS
+            valueFrom:
+              secretKeyRef:
+                name: cloudfront-output
+                key: cloudfront_alias
           - name: AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT
             valueFrom:
               secretKeyRef:

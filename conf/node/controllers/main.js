@@ -12,7 +12,12 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
-import { getAgencyPath, getSnapshotPaths } from "./paths.js";
+import {
+  getEnvironmentIndex,
+  getAgencyPath,
+  getSnapshotPaths,
+} from "./paths.js";
+import { retryAsync } from "./retry-async.js";
 import { createHeartbeat, sync, writeToS3 } from "./s3.js";
 import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
 
@@ -38,6 +43,7 @@ export const main = async ({ env, agency, depth }) => {
       dest: paths.fs,
       agency,
       jwt: intranetJwts[env],
+      environmentIndex: getEnvironmentIndex(env),
       depth,
     });
 
@@ -57,32 +63,40 @@ export const main = async ({ env, agency, depth }) => {
   );
 
   // Add a file at /auth/heartbeat for the intranet's heartbeat script.
-  await createHeartbeat();
+  await retryAsync(() => createHeartbeat());
 
   // Sync the snapshot to S3
-  await sync(paths.fs, `s3://${s3BucketName}/${paths.s3}`);
+  await retryAsync(() => sync(paths.fs, `s3://${s3BucketName}/${paths.s3}`));
 
   // Clean up the snapshot directory
   await fs.rm(paths.fs, { recursive: true, force: true });
 
   // Generate and write content for the agency index file.
-  const agencyIndexHtml = await generateAgencyIndex(s3BucketName, env, agency);
-  await writeToS3(
-    s3BucketName,
-    `${getAgencyPath(env, agency)}/index.html`,
-    agencyIndexHtml,
-    { cacheMaxAge: 600 },
+  const agencyIndexHtml = await retryAsync(() =>
+    generateAgencyIndex(s3BucketName, env, agency),
+  );
+  await retryAsync(() =>
+    writeToS3(
+      s3BucketName,
+      `${getAgencyPath(env, agency)}/index.html`,
+      agencyIndexHtml,
+      { cacheMaxAge: 600 },
+    ),
   );
 
   // Generate and write content for the root index file.
-  const rootIndexHtml = await generateRootIndex(s3BucketName, env);
-  await writeToS3(
-    s3BucketName,
-    "production" === env ? `index.html` : `${env}.html`,
-    rootIndexHtml,
-    {
-      cacheMaxAge: 600,
-    },
+  const rootIndexHtml = await retryAsync(() =>
+    generateRootIndex(s3BucketName, env),
+  );
+  await retryAsync(() =>
+    writeToS3(
+      s3BucketName,
+      getEnvironmentIndex(env),
+      rootIndexHtml,
+      {
+        cacheMaxAge: 600,
+      },
+    ),
   );
 
   console.log("Snapshot complete", { url: url.href, agency, depth });

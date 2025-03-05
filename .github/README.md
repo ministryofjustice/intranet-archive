@@ -20,6 +20,23 @@ Archiving the Intranet, thankfully, is a task made simple using the following te
 4. HTTrack Cli
 5. NodeJS Server
 
+## Infrastructure overview
+
+This diagram shows the flow of data from the intranet to the user. 
+
+```mermaid
+graph LR
+    A[Intranet] -->|Content| B[NodeJS & HTTrack]
+    B -->|Snapshot| C[S3]
+    C -->|Content| D[CloudFront]
+    D -->|Content| E[User]
+```
+
+> [!NOTE]  
+> The first part, where the content is moved from the Intranet to the S3 bucket, is handled by the Archiver, and this is a scheduled task.  
+> The second part where the user accesses a snapshot from S3, is handled by the CloudFront distribution.
+
+
 ## Viewing the latest snapshot
 
 Access is granted to the snapshot if, you:
@@ -44,17 +61,36 @@ information.
 4. The NodeJS responds by redirecting to the CloudFront distribution.
    The redirect URL contains cookies, so that the user can access the snapshot.
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant Intranet
+    participant Archive (NodeJS)
+    participant CloudFront
+    User->>Intranet: Login
+    User->>Intranet: Click archive link
+    Intranet->>Archive (NodeJS): POST /access
+    Archive (NodeJS)->>Archive (NodeJS): Validate request
+    Archive (NodeJS)->>CloudFront: Redirect
+    CloudFront->>User: Snapshot
+```
+
 ## Scheduling a snapshot
 
 Find the config file at `deploy/<namespace>/config.yml`.
 
-Update the `SNAPSHOT_SCHEDULE` environment variable with values for the desired agency.
+Update the `SNAPSHOT_SCHEDULE_##` environment variable with values for the desired agency.
 
-It should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>`.
+> [!NOTE]  
+> Replace ## with the number of the pod in the stateful set. Use 00 for the first pod, 01 for the second, and so on.
+> This is so that the load of multiple snapshots is distributed across the pods,  
+> even though, it is technically possible to run multiple snapshots at the same time.
+
+The value should be in the following pattern `<namespace>::<agency>::<day-of-week>::<hh:mm>(::<optional-depth>)`.
 
 And, multiple values should be comma separated.
 
-e.g. `dev::hq::Mon::17:30::3,dev::hmcts::Thu::17:30::3`
+e.g. `dev::hq::Mon::17:30,dev::hmcts::Thu::17:30::3`
 
 ## Manually creating a snapshot
 
@@ -71,26 +107,52 @@ See the Cloud Platform and Commands sections below.
 
 ## Local development
 
-> It's important to note that creating a snapshot of the intranet from a local machine proved to present resource
-> related issues, such as VPN timeouts and rate limiting. 
-
 Requires
 
 - Docker
+
+Optional
+
+- Local instance of the Intranet
+
+### Local Intranet
+
+For reference, the code related to this project in the [intranet repository](https://github.com/ministryofjustice/intranet/) is at:
+
+- [app/themes/clarity/inc/agency.php](https://github.com/ministryofjustice/intranet/blob/main/public/app/themes/clarity/inc/agency.php)
+- [app/themes/clarity/inc/admin/intranet-archive-link.php](https://github.com/ministryofjustice/intranet/blob/main/public/app/themes/clarity/inc/admin/intranet-archive-link.php)
+
+If you want to test scraping of the intranet from a local source then the intranet must be running locally at [http://intranet.docker].
+
+For the archive link on the intranet dashboard to work correctly:
+
+- At least one agency should have `'has_archive' => true` set in `agency.php -> getList()`.
+- The environment variables: `INTRANET_ARCHIVE_URL` and `INTRANET_ARCHIVE_SHARED_SECRET` must be set. See [Configuration section](#configuration).
 
 ### Installation
 
 Clone to your machine:
 
-```
+```bash
 git clone https://github.com/ministryofjustice/intranet-archive.git && cd intranet-archive
 ```
 
+Prepare the environment:
+
+```bash
+make env
+```
+
+This command, will create a `.env` file in the root of the project. 
+
+Open the .env file and set the variables, annotated with the numbers 1 - 7.
+
 Start docker compose:
 
-```
+```bash
 make run
 ```
+
 There is a script designed to help you install the [Dory Proxy](https://github.com/FreedomBen/dory), if you'd like to.
 
 If you chose to install Dory, you can access the application here:
@@ -101,29 +163,262 @@ Otherwise, access the application here:
 
 [localhost:2000](http://localhost:2000/)
 
+## Application routes
+
+Locally, request can be made to these routes as part of familiarisation with the application.
+
+Ensure that previous steps have been followed:
+
+- populate the .env file of this project
+- populate the .env file of the intranet project
+- both projects are running and the intranet is accessible at [http://intranet.docker]
+
+### `/status`
+
+There is a private `/status` route that will return a JSON response with the applications status, 
+including if it has access to the S3 bucket and intranet URLs.
+
+```bash
+# Make a GET request with curl to the /status route
+curl http://app.archive.intranet.docker/status
+curl http://localhost:2000/status
+```
+
+The response should include `{"fetchStatuses":[{"env":"local","status":200}],"s3Status":true}`
+
+### `/metrics`
+
+There is a `/metrics` route for exporting metrics in OpenMetrics format.
+
+The response include various metrics to indicate that the application is working as expected.
+
+e.g. do we have access to the S3 bucket for storage, do we have access to the intranet?
+
+An exhaustive list, with help text, can be found in [constants.js](./conf/node/constants.js).
+
+```bash
+# Make a GET request with curl to the /metrics route
+curl http://localhost:2000/metrics
+```
+
+The response should look like the following example:
+
+```
+# HELP bucket_access Can the service access the S3 bucket
+# TYPE bucket_access gauge
+bucket_access 1
+...
+```
+
+### `/spider`
+
+This is a private route that will trigger a snapshot, it should only be used for debugging purposes.
+
+```bash
+# Make a POST request with curl to the /spider route
+curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=2"
+```
+
+The response should be `{"status":200}` and the container logs should show the snapshot being created.
+
+> [!NOTE]
+> The progress logs can be found in the terminal where the application is running.
+> The updates interval is every second for the first second, then every 5 minutes after that.
+
+A scrape depth of 2 is sufficient to validate that HTTrack is working correctly. It will take approx. 1 minute to complete.
+
+For a more thorough scrape, set the depth to 3, that will take approx. 20 minutes.
+
+For a full scrape, remove the optional depth parameter, that will take approx. 12 hours.
+
+### `/access`
+
+The primary route is `/access`, this is the only public route and it redirects to the CloudFront distribution. 
+For this to work, you should be running the intranet project locally, on the Intranet Dashboard click on the link to the archive.
+Your browser will be sent to `http://app.archive.intranet.docker/access` and you will be redirected to a URL like `http://archive.intranet.docker/local-hmcts/index.html`.
+
+### Additional local endpoints
+
+It may help with local debugging to browse the S3 bucket. Minio is used as an alternative to AWS S3, and can be accessed at [http://minio.archive.intranet.docker] or [http://localhost:9010]. 
+
+Refer to `AWS_ACCESS_KEY_ID` & `AWS_SECRET_ACCESS_KEY` in the `.env` file - these are the web interface credentials.
+
 ## Understanding application logic
 
-Let's begin with servers and their interactions within... 
+Let's begin with the main controller...
 
-The Archiver has an Nginx server. This is used to display responses from the underlying NodeJS 
-server where Node processes form requests and decides how to treat them. Essentially, if happy with the request, Node 
-will instruct HTTrack to perform a website copy operation, and it does this with predefined options, and a custom plugin.
+The main controller, [main.js](./conf/node/controllers/main.js), is a script that runs all necessary functions in order to create a snapshot and then upload it to S3.
+
+The entrypoint script is [server.js](./conf/node/server.js). This script is responsible for setting up the server and scheduling the main controller to run at specific times.
+
+As we are running an Express server, we use middleware, located at [middleware.js](./conf/node/middleware.js), in order to parse and validate incoming requests.
+
+Along side the main controller are various distinct controllers. These controllers are each concerned with one distinct aspect of the snapshot process. 
+For example, the [cloudfront.js](./conf/node/controllers/cloudfront.js) controller is responsible for various functions related to the CloudFront distribution, including creating signed cookies.
+
+## Tests and TDD
+
+In an aim to make the application robust and easy to maintain, we have implemented tests using Jest.
+
+Middleware, and the controllers have tests, the tests are adjacent to the files they are testing e.g. `middleware.test.js` will be found next to `middleware.js`.
+
+When making a change to the application, you can run the tests with the following command:
+
+```bash
+# Exec into the container
+make bash
+# Run the tests
+npm run test
+# Or, run tests while watching for changes
+npm run test:watch
+# Or, append a particular test file
+npm run test middleware
+# Or, append a particular test file and watch for changes
+npm run test:watch middleware
+```
+
+The main test requires access to dev and live intranet sites. If you see the following logs:
+
+> Could not access production.  
+  Add JWT to your .env file to access the intranet.
+
+... and the main test is failing, you should add a JWT to the `.env` file.
+
+Visit dev.intranet.justice.gov.uk, wait for one heartbeat request (30s), and copy the JWT from the browser's cookies.
+
+> [!NOTE]  
+> As dev.intranet.justice.gov.uk uses an Entra App that is on the development tenant, 
+> you will need to use your `@devl.justice.gov.uk` email address to log in.
+
+Save this to `INTRANET_JWT_DEV` in `.env`. 
+
+Similarly, visit the production intranet and save the JWT to `INTRANET_JWT_PROD` in `.env`.
+
+The main test should run successfully.
+
+> [!NOTE]  
+> These JWTs are short lived credentials and will expire after 60 minutes.
+> It is therefore recommended to run the complete test suite `npm run test` immediately after obtaining the JWTs.
 
 ## HTTrack
 
-At the very heart of the Archiver sits [HTTrack](https://en.wikipedia.org/wiki/HTTrack). This application is configured 
-by Node to take a snapshot of the MoJ Intranet. Potentially, you can point the Archiver at any website address and, 
-using the settings for the Intranet, it will attempt to create an isolated copy of it.
+At the very heart of the Archiver sits [HTTrack](https://en.wikipedia.org/wiki/HTTrack). This application is configured by Node to take a snapshot of the MoJ Intranet. 
 
-### Debugging
+Node's `spawn` and `exec` functions are used to run HTTrack in the background. The functions are located at [httrack.js](./conf/node/httrack.js), and the test suite is at [httrack.test.js](./conf/node/httrack.test.js).
 
-The output of HTTrack can be noted in Docker Composes' `stdout` in the running terminal window however, a more 
-detailed and linear output stream is available in the `hts-log.txt` file. You can find this in the root of the snapshot. 
+Observe HTTrack with the following actions:
 
-### Custom commands
+- HTTrack functions can be tested with the command `npm run test httrack`.
+- It is also a dependency of `main`, that can be tested with the command `npm run test main`.
+- And, it can be seen in action if the `/spider` route is requested.
+   ```bash
+   # Make a POST request with curl to the /spider route
+   curl -X POST http://app.archive.intranet.docker/spider -d "agency=hmcts&env=local&depth=1"
+   ```
+- Use the `SNAPSHOT_SCHEDULE_##` environment variable to schedule a snapshot.
+
+## Configuration
+
+The following table lists the environment variables that can be set in the `.env` file.
+
+When the application is deployed: 
+- the secrets are stored in the [Github Actions secrets](https://github.com/ministryofjustice/intranet-archive/settings/secrets/actions).
+- config values (that are not secret) are stored in each environment's [config.yml](./deploy/dev/config.yml) file.
+
+| Variable                            | Description                                                         | Format/Example                |
+| ------------------------------------| ------------------------------------------------------------------- | ----------------------------- |
+| **Application Config**                                                                                                                    |
+| `ALLOWED_AGENCIES`                  | A comma separated list of agencies that are allowed to be archived. | `hq,hmcts`                    |
+| `SNAPSHOT_SCHEDULE_##`              | A comma separated of formatted schedules for the snapshots.         | `dev::hq::Mon::17:30::3`      |
+| **Intranet Secrets**                                                                                                                      |
+| `INTRANET_JWT_DEV`                  | JWT for the dev intranet                                            | Header, payload and sig.      |
+| `INTRANET_JWT_STAGING`              | JWT for the staging intranet                                        | 〃                            |
+| `INTRANET_JWT_PRODUCTION`           | JWT for the production intranet                                     | 〃                            |
+| `INTRANET_ARCHIVE_SHARED_SECRET`    | Shared secret for, for signing `/access` requests                   | 64 bit base64 string          |
+| **WS Secrets (local only)**                                                                                                               |
+| `AWS_ACCESS_KEY_ID`                 | AWS access key (for minio)                                          | `local-key-id`                |
+| `AWS_SECRET_ACCESS_KEY`             | AWS secret access key (for minio)                                   | `local-access-key`            |
+| **S3**                                                                                                                                    |
+| `S3_BUCKET_NAME`                    | The S3 bucket on Cloud Platform this is an output of S3 module      | `local-bucket` `cloud-platf…` |
+| **Cloudfront**                                                                                                                            |
+| `AWS_CLOUDFRONT_PRIVATE_KEY`        | The private key for signing CloudFront cookies                      | RSA private key               |
+| `AWS_CLOUDFRONT_PUBLIC_KEY`         | The public that CloudFront uses to verify the signed access policy  | RSA public key                |
+| `AWS_CLOUDFRONT_PUBLIC_KEYS_OBJECT` | Active keys from the CF module (used to lookup ID from public key)  | [{"id":"*","comment":"hash"}] |
+| **Cloud Platform**                                                                                                                        |
+| `ALERTS_SLACK_WEBHOOK`              | The Slack webhook for alerts, see [Alerts section](#alerts)         | `https://hooks.slack.com/…`   |
+
+### JWTs for local development
+
+Obtaining JWTs when working locally is a manual process. 
+
+Visit dev.intranet.justice.gov.uk, wait for one heartbeat request (30s), and copy the JWT from the browser's cookies.
+
+Save this to `INTRANET_JWT_DEV` in `.env`. 
+
+Similarly, visit the production intranet and save the JWT to `INTRANET_JWT_PROD` in `.env`.
+
+### JWTs for the Cloud Platform
+
+To obtain JWTs that will be used by the application on Cloud Platform, you will need to run a command on an intranet FPM container.
+
+There is a helper script for this in the [intranet-tools](https://github.com/ministryofjustice/intranet-tools) repository.
+
+```bash
+# Clone the intranet-tools repository
+# Set NSP=intranet-dev, NSP=intranet-staging or NSP=intranet-production in .env
+# Run this command from the project root
+make gen-jwt role=intranet-archive
+```
+
+These JWTs should be stored in GitHub repository secrets.
+
+Note: these JWTs are valid for 3 years, and are only valid for requests originating from Cloud Platform's egress.
+
+### Shared secret
+
+The shared secret is used to sign requests to the `/access` route. This is to ensure that only authorised requests are able to access the snapshots.
+
+For local development:
+
+- Run `make key-gen` from the intranet project.
+- Copy `INTRANET_ARCHIVE_SHARED_SECRET` from the intranet project's `.env` file to the intranet-archive project's `.env` file.
+
+For Cloud Platform:
+
+- Run `key-gen-shared-secret` from the root of this project.
+- Paste the output to the GitHub repository secrets for both the intranet and intranet-archive repositories.
+- Repeat this step for each environment: so that dev keys are different to staging keys, and staging keys are different to production keys.
+
+### CloudFront keys
+
+In this project, CloudFront keys are used to sign cookies. The keys are always generated locally by running `make key-gen-` commands.
+
+For local development:
+
+A set of dummy keys, that are not actually valid for a CloudFront distribution, are required so that the application can run and be tested. 
+
+These keys are generated by running the following command: `key-gen-private`. Follow the instructions in the terminal (marked as A) to generate the keys for your .env file.
+
+For CI/CD:
+
+Again,  set of dummy keys, that are not actually valid for a CloudFront distribution, are required so that the application can tested.
+
+Run: `key-gen-private`. Follow the instructions in the terminal (marked as B) to generate the keys for the `TEST_AWS_CLOUDFRONT_*` GitHub repository secrets.
+
+For Cloud Platform:
+
+The keys are generated by running the following command: `key-gen-private`. Follow the instructions in the terminal (marked as C) to generate the keys for the `AWS_CLOUDFRONT_*` GitHub repository secrets.
+
+## Debugging
+
+The output of the controllers and HTTrack can be noted in Docker Composes' `stdout` in the running terminal window.
+
+Fot HHTrack, a detailed and linear output stream is available in the `hts-log.txt` file. You can find this in the root of the snapshot. e.g. `/tmp/snapshots/hq/2021-09-01/hts-log.txt`.
+
+## Custom HTTrack commands
 
 During the build of the Archiver, we came across many challenges, two of which almost prevented our proof of concept 
-from succeeding. The first was an inability to display images. The second was an inability to download them.
+from succeeding. The first was an inability to display images. The second was changing the Agency Switcher link destination.
 
 **1) The HTTrack `srcset` problem**
 
@@ -157,13 +452,6 @@ This link to the root of the cdn domain will show the index page, and allow the 
 sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0
 ```
 
-### Testing and making modifications to the application
-
-All processing for HTTrack is managed in the `process.js` file located in the NodeJS application. You will find all the 
-options used to set HTTrack up.
-
-To understand the build process further, please look at the Makefile.
-
 ## Cloud Platform
 
 In an aim to towards good security practices, when this application is deployed to the Cloud Platform, the `/access` is the only route that is open publicly.
@@ -171,13 +459,37 @@ The `/access` route allows users to be redirected to the CloudFront distribution
 
 Private routes, `/status` and `/spider` are used for developer purposes only. To access these endpoints, port-forward to the service. See the command below.
 
-It may be possible to 
+It is possible to 
 [interact with running pods with help from this cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods).
-Please be aware that with every call to the CP k8s cluster, you will need to provide the namespace, as shown below:
+Please be aware that with every call to the Cloud Platform k8s cluster, you will need to provide the namespace, as shown below:
 
 ```bash
 kubectl -n intranet-archive-dev
 ```
+
+### Metrics 
+
+The metrics endpoint exposes important information about the application. 
+
+The metrics can be manually requested directly from the `/metrics` route by port forwarding and making a curl request. This may be useful for debugging.
+
+```bash
+kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
+curl http://localhost:2000/metrics
+```
+
+We can verify that the Prometheus is scraping the metrics by visiting the Prometheus targets page.
+
+e.g. for the dev environment:
+
+https://prometheus.cloud-platform.service.justice.gov.uk/targets?search=&scrapePool=serviceMonitor%2Fintranet-archive-dev%2Fintranet-archive-metrics%2F0
+
+### Grafana Dashboards
+
+A Grafana dashboard has been configured to visualise the metrics data. The dashboards can be accessed at the following URL:
+
+https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive
+
 
 ## Commands
 
@@ -191,15 +503,25 @@ kubectl -n intranet-archive-dev get pods
 kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snapshots/intranet.justice.gov.uk/<agency>/<date>/hts-log.txt ~/hts-log.txt
 
 # port-forward to a running pod
-kubectl -n intranet-archive-dev service/intranet-archive-service 2000:80
+kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
 ```
 
 **Make**
 
-| Command             | Description                                                                                                                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make image`        | Used by GitHub action, cd.yml, during build step                                                                                                      |
-| `make launch`       | Checks if the intranet docker instance is running; if not, launch dory and docker in the background and open the site in the systems default browser  |
-| `make run`          | Launch the application locally with `docker compose up`, requiring `env` + `dory`                                                                     |
-| `make down`         | Alias of `docker compose down`.                                                                                                                       |
-| `make bash`         | Open a bash shell on the spider container. The application must already be running (e.g. via `make run`) before this can be used.                     |
+| Command                      | Description                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------|
+| **Local Development**        |                                                                                                                                   |
+| `make launch`                | Checks if the intranet docker instance is running; if not, launch dory and docker in the background                               |
+| `make run`                   | Launch the application locally with `docker compose up`, requiring `env` + `dory`                                                 |
+| `make down`                  | Alias of `docker compose down`.                                                                                                   |
+| `make bash`                  | Open a bash shell on the spider container. The application must already be running (e.g. via `make run`) before this can be used. |
+| **Verify prod. locally**     |                                                                                                                                   |
+| `make build-prod`            | Build the production image (for verifying that the production image can be built locally).                                        |
+| `make up-prod`               | Launch the production image locally (for verifying that the production image can be launched locally).                            |
+| **Intranet Secrets**         |                                                                                                                                   |
+| `make key-gen-shared-secret` | Generate a shared secret for the application, see [Shared Secret](#shared-secret).                                                |
+| **CloudFront**               |                                                                                                                                   |
+| `make key-gen-private`       | Generate a private key for CloudFront, see [CloudFront keys](#cloudfront-keys).                                                   |
+| `make key-gen-public`        | Generate a public key for CloudFront, see [CloudFront keys](#cloudfront-keys).                                                    |
+| `make key-gen-object`        | Generate an object for CloudFront, see [CloudFront keys](#cloudfront-keys).                                                       |
+| `make key-gen-clean`         | Remove all generated keys.                                                                                                        |

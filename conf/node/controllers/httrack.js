@@ -1,22 +1,46 @@
 import { spawn, execSync } from "node:child_process";
 import fs from "node:fs";
 
-import { intranetJwts } from "../constants.js";
+import { isLocal, intranetJwts } from "../constants.js";
+
+/**
+ * A collection of commands to be executed after httrack has completed.
+ */
+
+export const removeSrcsetCommand = `sed -i 's/srcset="[^"]*"//g' $0`;
+
+/**
+ * A function to return a sed command, to replace the agency switcher URL with the environment's root URL.
+ *
+ * @param {string} index - The index file to replace the agency switcher URL with.
+ * @returns {string} - The sed command to replace the agency switcher URL.
+ */
+
+export const getAgencySwitcherCommand = (index) =>
+  `sed -i -r 's|href="((https?)?://(dev.)?(staging.)?(demo.)?intranet.justice.gov.uk)?/agency-switcher/?"|href="/${index}"|g' $0`;
 
 /**
  * Get arguments for httrack cli.
  *
  * @param {Object} props
- * @param {URL} props.url
- * @param {string} props.dest
- * @param {string} props.agency
- * @param {string} props.jwt
+ * @param {URL} props.url - The URL to snapshot.
+ * @param {string} props.dest - The destination folder for the snapshot.
+ * @param {string} props.agency - The agency to use for the request.
+ * @param {string} props.jwt - The JWT to use for the request.
+ * @param {string} props.environmentIndex - The index file to replace the agency switcher URL with.
  * @param {number} [props.depth] - Optional depth parameter
  *
  * @returns {string[]}
  */
 
-export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
+export const getHttrackArgs = ({
+  url,
+  dest,
+  agency,
+  jwt,
+  environmentIndex,
+  depth,
+}) => {
   /** @type {string[]} */
   let options = [url.href];
 
@@ -34,32 +58,43 @@ export const getHttrackArgs = ({ url, dest, agency, jwt, depth }) => {
     "+*.woff",
     "-ad.doubleclick.net/*",
     "-justiceuk.sharepoint.com/*",
+    // Exclude the agency switcher and WordPress URLs (on *.intranet.justice.gov.uk)
     "-*intranet.justice.gov.uk/agency-switcher/",
     "-*intranet.justice.gov.uk/?*agency=*",
     "-*intranet.justice.gov.uk/?p=*",
     "-*intranet.justice.gov.uk/?page_id=*",
     "-*intranet.justice.gov.uk/wp-json/*/embed*",
     "-*intranet.justice.gov.uk/wp/*",
-    "+*intranet.justice.gov.uk/?*agency=" + agency,
   ];
 
-  const commands = {
-    // Remove srcset attributes
-    removeSrcset: `sed -i 's/srcset="[^"]*"//g' $0`,
-    // Replace the agency switcher URL with '/'
-    replaceAgencySwitcher: `sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0`,
-  };
+  if (isLocal) {
+    // Exclude the agency switcher and WordPress URLs (on intranet.docker)
+    rules.push(
+      "-intranet.docker/agency-switcher/",
+      "-intranet.docker/?*agency=*",
+      "-intranet.docker/?p=*",
+      "-intranet.docker/?page_id=*",
+      "-intranet.docker/wp-json/*/embed*",
+      "-intranet.docker/wp/*",
+    );
+  }
+
+  let cookie = `dw_agency=${agency}`;
+
+  if (jwt) {
+    cookie += `; jwt=${jwt}`;
+  }
 
   /** @type {string[]} */
   const settings = [
     "-s0", // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
-    `"${commands.removeSrcset} && ${commands.replaceAgencySwitcher}"`,
+    `"${removeSrcsetCommand} && ${getAgencySwitcherCommand(environmentIndex)}"`,
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
     "-F",
     "intranet-archive",
     "-%X",
-    `Cookie: dw_agency=${agency}; jwt=${jwt}`,
+    `Cookie: ${cookie}`,
     ...(depth ? [`-r${depth}`] : []), // set the mirror depth
     "-O", // path for snapshot/logfiles+cache: https://www.mankier.com/1/httrack#-O
     dest,
@@ -134,7 +169,7 @@ export const runHttrack = (cliArgs) => {
  */
 
 export const getHttrackProgress = async (dest) => {
-  // Validate dest, ensure it is a string and cannot execute arbitary commands.
+  // Validate dest, ensure it is a string and cannot execute arbitrary commands.
   if (typeof dest !== "string" || dest.includes(";")) {
     throw new Error("Invalid destination");
   }
@@ -211,7 +246,7 @@ export const getHttrackProgress = async (dest) => {
 
 export const waitForHttrackComplete = async (
   dest,
-  timeOutSeconds = 24 * 60 * 60 /* 24 hours */,
+  timeOutSeconds = 36 * 60 * 60 /* 36 hours */,
 ) => {
   const intervalSeconds = 1;
   const maxIterations = timeOutSeconds / intervalSeconds;
