@@ -14,12 +14,11 @@ import {
 } from "./httrack.js";
 import {
   getEnvironmentIndex,
-  getAgencyPath,
   getSnapshotPaths,
 } from "./paths.js";
 import { retryAsync } from "./retry-async.js";
-import { createHeartbeat, sync, writeToS3 } from "./s3.js";
-import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
+import { createHeartbeat, sync } from "./s3.js";
+import { generateAndWriteIndexesToS3 } from "./generate-indexes.js";
 
 /**
  *
@@ -71,33 +70,8 @@ export const main = async ({ env, agency, depth }) => {
   // Clean up the snapshot directory
   await fs.rm(paths.fs, { recursive: true, force: true });
 
-  // Generate and write content for the agency index file.
-  const agencyIndexHtml = await retryAsync(() =>
-    generateAgencyIndex(s3BucketName, env, agency),
-  );
-  await retryAsync(() =>
-    writeToS3(
-      s3BucketName,
-      `${getAgencyPath(env, agency)}/index.html`,
-      agencyIndexHtml,
-      { cacheMaxAge: 600 },
-    ),
-  );
-
-  // Generate and write content for the root index file.
-  const rootIndexHtml = await retryAsync(() =>
-    generateRootIndex(s3BucketName, env),
-  );
-  await retryAsync(() =>
-    writeToS3(
-      s3BucketName,
-      getEnvironmentIndex(env),
-      rootIndexHtml,
-      {
-        cacheMaxAge: 600,
-      },
-    ),
-  );
+  // Generate and write content for the agency and root index files.
+  await generateAndWriteIndexesToS3(s3BucketName, env, agency);
 
   console.log("Snapshot complete", { url: url.href, agency, depth });
 };

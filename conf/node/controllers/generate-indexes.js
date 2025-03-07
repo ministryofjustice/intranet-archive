@@ -1,6 +1,7 @@
 import { intranetUrls, s3BucketName, indexCss } from "../constants.js";
 import { getEnvironmentIndex, getAgencyPath } from "./paths.js";
-import { getAgenciesFromS3, getSnapshotsFromS3 } from "./s3.js";
+import { retryAsync } from "./retry-async.js";
+import { getAgenciesFromS3, getSnapshotsFromS3, writeToS3 } from "./s3.js";
 
 /**
  * Generate the root index html
@@ -137,4 +138,52 @@ export const generateAgencyIndex = async (
   </html>`;
 
   return html;
+};
+
+/**
+ * Generates and writes the index files to S3
+ *
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @param {string} env - The environment for the intranet e.g. production or dev
+ * @param {string} agency - The agency to get snapshots for e.g. hq, hmcts etc.
+ * @returns {Promise<string[]>}
+ *
+ * @throws {Error}
+ */
+
+export const generateAndWriteIndexesToS3 = async (
+  bucket = s3BucketName,
+  env,
+  agency,
+) => {
+  if (!env) {
+    throw new Error("Env is required");
+  }
+
+  if (!agency) {
+    throw new Error("Agency is required");
+  }
+  
+  // Generate and write content for the agency index file.
+  const agencyIndexHtml = await retryAsync(() =>
+    generateAgencyIndex(bucket, env, agency),
+  );
+  const agencyIndexPromise = retryAsync(() =>
+    writeToS3(
+      s3BucketName,
+      `${getAgencyPath(env, agency)}/index.html`,
+      agencyIndexHtml,
+      { cacheMaxAge: 600 },
+    ),
+  );
+
+  // Generate and write content for the root index file.
+  const rootIndexHtml = await retryAsync(() => generateRootIndex(bucket, env));
+  const rootIndexPromise = retryAsync(() =>
+    writeToS3(s3BucketName, getEnvironmentIndex(env), rootIndexHtml, {
+      cacheMaxAge: 600,
+    }),
+  );
+
+  return Promise.all([agencyIndexPromise, rootIndexPromise]);
 };

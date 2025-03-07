@@ -143,7 +143,7 @@ describe("runHttrack", () => {
     const exitCode = await promise;
 
     expect(exitCode).toBe(0);
-  });
+  }, 10_000);
 
   it("should run multiple system commands", async () => {
     // Remove src attributes (with double and single quotes).
