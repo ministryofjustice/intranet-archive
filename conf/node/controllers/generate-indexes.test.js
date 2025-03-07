@@ -1,11 +1,17 @@
 import {
   S3Client,
   DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
 import { s3BucketName } from "../constants.js";
-import { generateRootIndex, generateAgencyIndex } from "./generate-indexes.js";
+import {
+  generateRootIndex,
+  generateAgencyIndex,
+  generateAndWriteIndexesToS3,
+} from "./generate-indexes.js";
 import { s3Options } from "./s3.js";
 
 let client;
@@ -73,33 +79,117 @@ describe("generateRootIndex", () => {
   });
 
   it("should return the agencies as a string", async () => {
-    const result = await generateRootIndex(
-      s3BucketName,
-      "dev",
-    );
+    const result = await generateRootIndex(s3BucketName, "dev");
     expect(result).toMatchSnapshot();
   });
 });
 
 describe("generateAgencyIndex", () => {
   it("should throw an error if the env is not provided", async () => {
-    await expect(generateAgencyIndex(undefined, undefined, undefined)).rejects.toThrow(
-      "Env is required",
-    );
+    await expect(
+      generateAgencyIndex(undefined, undefined, undefined),
+    ).rejects.toThrow("Env is required");
   });
 
   it("should throw an error if the agency is not provided", async () => {
-    await expect(generateAgencyIndex(undefined, "dev", undefined)).rejects.toThrow(
-      "Agency is required",
-    );
+    await expect(
+      generateAgencyIndex(undefined, "dev", undefined),
+    ).rejects.toThrow("Agency is required");
   });
 
   it("should return the snapshots as a string", async () => {
-    const result = await generateAgencyIndex(
-      s3BucketName,
-      "dev",
-      "hmcts",
-    );
+    const result = await generateAgencyIndex(s3BucketName, "dev", "hmcts");
     expect(result).toMatchSnapshot();
+  });
+});
+
+describe("generateAndWriteIndexesToS3", () => {
+  beforeEach(async () => {
+    // Delete the root index file
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "dev.html",
+      }),
+    );
+
+    // Delete the agency index file
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: s3BucketName,
+        Key: "dev-hmcts/index.html",
+      }),
+    );
+  });
+
+  it("should throw an error if the env is not provided", async () => {
+    await expect(
+      generateAndWriteIndexesToS3(undefined, undefined, undefined),
+    ).rejects.toThrow("Env is required");
+  });
+
+  it("should throw an error if the agency is not provided", async () => {
+    await expect(
+      generateAndWriteIndexesToS3(undefined, "dev", undefined),
+    ).rejects.toThrow("Agency is required");
+  });
+
+  it("should return an array of promises", async () => {
+    const promise = generateAndWriteIndexesToS3(s3BucketName, "dev", "hmcts");
+    expect(promise).toBeInstanceOf(Promise);
+    const result = await promise;
+    expect(result).toHaveLength(2);
+  });
+
+  it("should write the root index file to s3", async () => {
+    // Read the root index file
+    const rootHtmlList = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "dev.html",
+      }),
+    );
+
+    // Expect it to be empty
+    expect(rootHtmlList.KeyCount).toBe(0);
+
+    await generateAndWriteIndexesToS3(s3BucketName, "dev", "hmcts");
+
+    // Read the root index file
+    const rootHtml = await client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: "dev.html",
+      }),
+    );
+
+    // Expect it to be there
+    expect(rootHtml).toBeDefined();
+  });
+
+  it("should write the agency index file to s3", async () => {
+    // Read the agency index file
+    const rootHtmlList = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "dev-hmcts/index.html",
+      }),
+    );
+
+    // Expect it to be empty
+    expect(rootHtmlList.KeyCount).toBe(0);
+
+    await generateAndWriteIndexesToS3(s3BucketName, "dev", "hmcts");
+
+    // Read the agency index file
+    const rootHtml = await client.send(
+      new GetObjectCommand({
+        Bucket: s3BucketName,
+        Key: "dev-hmcts/index.html",
+      }),
+    );
+
+    // Expect it to be there
+    expect(rootHtml).toBeDefined();
   });
 });

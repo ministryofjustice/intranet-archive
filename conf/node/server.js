@@ -9,7 +9,6 @@ import express from "express";
 // Relative
 import {
   isLocal,
-  ordinalNumber,
   intranetUrls,
   intranetJwts,
   port,
@@ -28,6 +27,7 @@ import {
   getDateLessThan,
   getCookiesToClear,
 } from "./controllers/cloudfront.js";
+import { generateAndWriteIndexesToS3 } from "./controllers/generate-indexes.js";
 import { deleteOldSnapshots } from "./controllers/lifecycle.js";
 import { main } from "./controllers/main.js";
 import { getAllMetrics, getMetricsString } from "./controllers/metrics.js";
@@ -163,6 +163,15 @@ app.get("/metrics", async function (_req, res) {
 app.post("/spider", function (req, res) {
   // Start the main function - without awaiting for the result.
   main(req.mirror);
+  // Handle the response
+  res.status(200).send({ status: 200 });
+});
+
+app.post("/regenerate-indexes", async function (req, res) {
+  // Run the generate function - without awaiting for the result.
+  await generateAndWriteIndexesToS3(undefined, req.mirror.env, req.mirror.agency);
+  // Log the status
+  console.log("Regenerated indexes for", req.mirror.env, req.mirror.agency);
   // Handle the response
   res.status(200).send({ status: 200 });
 });
