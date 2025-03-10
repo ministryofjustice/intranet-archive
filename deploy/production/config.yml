@@ -5,5 +5,5 @@ metadata:
   namespace: intranet-archive-production
 data:
   ALLOWED_AGENCIES: "hmcts,hq,jac"
-  SNAPSHOT_SCHEDULE_00: "production::hmcts::Tue::16:45"
+  SNAPSHOT_SCHEDULE_00: "production::hmcts::Mon::15:25"
   SNAPSHOT_SCHEDULE_01: "production::jac::Wed::16:45"
