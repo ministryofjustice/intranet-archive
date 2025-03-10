@@ -115,7 +115,7 @@ export const sync = async (source, destination, options = {}) => {
       .catch((error) => {
         console.error("Error syncing", error);
         // Reject the error
-        reject(error)
+        reject(error);
       })
       .finally(() => {
         // Destroy the dedicated (non-global) client
@@ -327,4 +327,49 @@ export const syncErrorPages = async (
   } catch (err) {
     console.error("Error syncing error pages", err);
   }
+};
+
+/**
+ * Copy CSS and JS assets from the archive to the bucket.
+ *
+ * These assets will allow for changes to the way the intranet looks and behaves.
+ * A change in these assets will be reflected on every page of the intranet,
+ * even on historic snapshots.
+ *
+ * @param {string} bucket - The bucket name, defaults to the s3BucketName constant
+ * @returns {Promise<void>}
+ */
+
+export const syncArchiveModAssets = async (bucket = s3BucketName) => {
+  // Use freshly created S3 client here to minimise the risk of connection issues
+  const client = new S3Client(s3Options);
+
+  try {
+    // Copy the CSS file
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: "assets/archive-mod.css",
+        Body: await fs.readFile("static/assets/archive-mod.css"),
+        ContentType: "text/css",
+      }),
+    );
+
+    // Copy the JS file
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: "assets/archive-mod.js",
+        Body: await fs.readFile("static/assets/archive-mod.js"),
+        ContentType: "application/javascript",
+      }),
+    );
+  } catch (error) {
+    console.error("Error copying archive assets", error);
+  } finally {
+    // Destroy the dedicated (non-global) client
+    client.destroy();
+  }
+
+  return;
 };
