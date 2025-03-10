@@ -52,14 +52,14 @@ beforeAll(async () => {
   const agencies = snapshots.map(({ agency }) => agency);
 
   for (const agency of [...new Set(agencies)]) {
-    await s3EmptyDir(`local-${agency}`);
+    await s3EmptyDir(`dev-${agency}`);
   }
 
   // Let's put some snapshots into the bucket with the agency name 'hq'
   const createPromises = snapshots.map(async ({ agency, date }) => {
     const putObjectCommand = new PutObjectCommand({
       Bucket: s3BucketName,
-      Key: `local-${agency}/${date}/contents`,
+      Key: `dev-${agency}/${date}/contents`,
       Body: "contents",
     });
     return client.send(putObjectCommand);
@@ -73,7 +73,7 @@ afterAll(async () => {
   const promises = snapshots.map(async ({ agency, date }) => {
     const deleteObjectCommand = new DeleteObjectCommand({
       Bucket: s3BucketName,
-      Key: `local-${agency}/${date}/contents`,
+      Key: `dev-${agency}/${date}/contents`,
     });
 
     await client.send(deleteObjectCommand);
@@ -93,16 +93,16 @@ describe("getAgencySnapshotMetrics", () => {
   const agency = "hq";
 
   it("should return metrics for an agency", async () => {
-    const metrics = await getAgencySnapshotMetrics("local", agency);
+    const metrics = await getAgencySnapshotMetrics("dev", agency);
 
     expect(metrics).toStrictEqual([
       {
         name: "snapshot_count",
-        facets: [{ env: "local", agency, value: 3 }],
+        facets: [{ env: "dev", agency, value: 3 }],
       },
       {
         name: "most_recent_snapshot_age",
-        facets: [{ env: "local", agency, value: 2 }],
+        facets: [{ env: "dev", agency, value: 2 }],
       },
     ]);
   });
@@ -115,7 +115,7 @@ describe("getAllMetrics", () => {
   }
 
   it("should return metrics for all agencies", async () => {
-    const metrics = await getAllMetrics(["local"]);
+    const metrics = await getAllMetrics(["dev"]);
 
     expect(metrics).toStrictEqual([
       {
@@ -130,7 +130,7 @@ describe("getAllMetrics", () => {
         name: "intranet_access",
         facets: [
           {
-            env: "local",
+            env: "dev",
             value: 1,
           },
         ],
@@ -140,12 +140,12 @@ describe("getAllMetrics", () => {
         facets: [
           {
             agency: "hmcts",
-            env: "local",
+            env: "dev",
             value: 2,
           },
           {
             agency: "hq",
-            env: "local",
+            env: "dev",
             value: 3,
           },
         ],
@@ -153,8 +153,8 @@ describe("getAllMetrics", () => {
       {
         name: "most_recent_snapshot_age",
         facets: [
-          { env: "local", agency: "hmcts", value: 1 },
-          { env: "local", agency: "hq", value: 2 },
+          { env: "dev", agency: "hmcts", value: 1 },
+          { env: "dev", agency: "hq", value: 2 },
         ],
       },
     ]);

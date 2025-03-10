@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { main } from "./main.js";
-import { getSnapshotPaths } from "./paths.js";
+import { getSnapshotPaths, getAgencyPath } from "./paths.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
 import { intranetUrls, intranetJwts, s3BucketName } from "../constants.js";
 
@@ -61,13 +61,19 @@ describe.each(envs)("main - %s", (env) => {
       );
     }
 
+    // Empty the bucket
+    await s3EmptyDir("");
+
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     // Restore console.log
     jest.restoreAllMocks();
+
+    // Empty the bucket
+    await s3EmptyDir("");
 
     // Close the client
     s3Client.destroy();
@@ -163,7 +169,7 @@ describe.each(envs)("main - %s", (env) => {
     const agencyIndexHtml = await s3Client.send(
       new GetObjectCommand({
         Bucket: s3BucketName,
-        Key: `${agency}/index.html`,
+        Key: `${getAgencyPath(env, agency)}/index.html`,
       }),
     );
 
