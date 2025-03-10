@@ -168,6 +168,11 @@ export const getMetricsString = (metrics) => {
     // Find the metric from this functions parameter.
     const metric = metrics.find((metric) => metric.name === key);
 
+    if(['snapshot_count','most_recent_snapshot_age'].includes(key) && !metric?.facets?.length && typeof metric?.value === "undefined")  {
+      console.log(`Metric ${key} not found. this could be OK, if the server has no snapshots.`);
+      return;
+    }
+
     if (!metric?.facets?.length && typeof metric?.value === "undefined") {
       console.log(metric);
       throw new Error(`Metric ${key} has no value or facets.`);
