@@ -173,7 +173,7 @@ export const getMetricsString = (metrics) => {
       typeof metric?.value === "undefined"
     ) {
       console.log(
-        `Metric ${key} not found. this could be OK, if the server has no snapshots.`,
+        `Metric ${key} not found. This could be OK, if the server has no snapshots.`,
       );
       return;
     }
