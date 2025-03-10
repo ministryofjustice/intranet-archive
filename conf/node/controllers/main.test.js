@@ -72,9 +72,6 @@ describe.each(envs)("main - %s", (env) => {
     // Restore console.log
     jest.restoreAllMocks();
 
-    // Empty the bucket
-    await s3EmptyDir("");
-
     // Close the client
     s3Client.destroy();
   });

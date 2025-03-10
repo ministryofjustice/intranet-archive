@@ -3,4 +3,4 @@
 // It can be used for modifying the page content,
 // e.g. to add a banner or modal, to let users know that they are viewing a snapshot.
 
-console.log('injected.js loaded');
+console.log('archive-mod.js loaded');
