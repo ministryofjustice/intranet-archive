@@ -6,6 +6,7 @@ import { afterAll, it, jest } from "@jest/globals";
 import { intranetUrls, intranetJwts } from "../constants.js";
 import {
   removeSrcsetCommand,
+  addAchiveModsToHead,
   getAgencySwitcherCommand,
   getHttrackArgs,
   runHttrack,
@@ -24,6 +25,9 @@ describe("httrackCommands", () => {
       srcsetTestPath,
       `
       <html>
+        <head>
+          <title>Test</title>
+        </head>
         <body>
           <img src="https://example.com/image.jpg" srcset="https://example.com/image.jpg 1x, https://example.com/image.jpg 2x">
         </body>
@@ -40,6 +44,19 @@ describe("httrackCommands", () => {
     const fileContents = fs.readFileSync(srcsetTestPath, "utf-8");
 
     expect(fileContents).not.toContain("srcset=");
+  });
+
+  it("should add CSS and JS before closing head tag", () => {
+    const command = addAchiveModsToHead.replace("$0", srcsetTestPath);
+
+    execSync(command);
+
+    const fileContents = fs.readFileSync(srcsetTestPath, "utf-8");
+
+    expect(fileContents).toContain(
+      '<link rel="stylesheet" href="/assets/archive-mod.css">',
+    );
+    expect(fileContents).toContain('<script type="text/javascript" src="/assets/archive-mod.js"></script>');
   });
 
   // The test cases in the format [env, index]

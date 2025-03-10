@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { main } from "./main.js";
-import { getSnapshotPaths } from "./paths.js";
+import { getSnapshotPaths, getAgencyPath } from "./paths.js";
 import { s3Options, s3EmptyDir } from "./s3.js";
 import { intranetUrls, intranetJwts, s3BucketName } from "../constants.js";
 
@@ -61,11 +61,14 @@ describe.each(envs)("main - %s", (env) => {
       );
     }
 
+    // Empty the bucket
+    await s3EmptyDir("");
+
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     // Restore console.log
     jest.restoreAllMocks();
 
@@ -144,28 +147,6 @@ describe.each(envs)("main - %s", (env) => {
     expect(pathExists).toBe(false);
   }, 10_000);
 
-  it("should create an auth/heartbeat file", async () => {
-    if (!access) {
-      return expect(access).toBe(true);
-    }
-
-    await main({ env, agency, depth: 1 });
-
-    // The snapshot should be on s3
-    const objects = await s3Client.send(
-      new ListObjectsV2Command({
-        Bucket: s3BucketName,
-        Prefix: "auth/heartbeat",
-      }),
-    );
-
-    const heartbeat = objects.Contents.find(
-      (object) => object.Key === "auth/heartbeat",
-    );
-
-    expect(heartbeat).toBeDefined();
-  }, 10_000);
-
   it("should create root and agency index files", async () => {
     if (!access) {
       return expect(access).toBe(true);
@@ -185,7 +166,7 @@ describe.each(envs)("main - %s", (env) => {
     const agencyIndexHtml = await s3Client.send(
       new GetObjectCommand({
         Bucket: s3BucketName,
-        Key: `${agency}/index.html`,
+        Key: `${getAgencyPath(env, agency)}/index.html`,
       }),
     );
 

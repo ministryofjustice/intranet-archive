@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch server.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node  --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:watch": "node  --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll --runInBand"
   },
   "type": "module",
   "repository": {

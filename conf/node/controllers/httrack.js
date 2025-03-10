@@ -9,6 +9,11 @@ import { isLocal, intranetJwts } from "../constants.js";
 
 export const removeSrcsetCommand = `sed -i 's/srcset="[^"]*"//g' $0`;
 
+const cssMod = `<link rel="stylesheet" href="\\/assets\\/archive-mod.css">`;
+const jsMod = `<script type="text\\/javascript" src="\\/assets\\/archive-mod.js"><\\/script>`;
+
+export const addAchiveModsToHead = `sed -i 's/<\\/head>/${cssMod}\\n${jsMod}\\n<\\/head>/' $0`;
+
 /**
  * A function to return a sed command, to replace the agency switcher URL with the environment's root URL.
  *
@@ -89,7 +94,7 @@ export const getHttrackArgs = ({
   const settings = [
     "-s0", // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
-    `"${removeSrcsetCommand} && ${getAgencySwitcherCommand(environmentIndex)}"`,
+    `"${removeSrcsetCommand} && ${addAchiveModsToHead} && ${getAgencySwitcherCommand(environmentIndex)}"`,
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
     "-F",
     "intranet-archive",

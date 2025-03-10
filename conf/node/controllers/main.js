@@ -12,12 +12,9 @@ import {
   getHttrackProgress,
   waitForHttrackComplete,
 } from "./httrack.js";
-import {
-  getEnvironmentIndex,
-  getSnapshotPaths,
-} from "./paths.js";
+import { getEnvironmentIndex, getSnapshotPaths } from "./paths.js";
 import { retryAsync } from "./retry-async.js";
-import { createHeartbeat, sync } from "./s3.js";
+import { sync } from "./s3.js";
 import { generateAndWriteIndexesToS3 } from "./generate-indexes.js";
 
 /**
@@ -60,9 +57,6 @@ export const main = async ({ env, agency, depth }) => {
   await Promise.all(
     sensitiveFiles.map((file) => fs.rm(`${paths.fs}/${file}`, { force: true })),
   );
-
-  // Add a file at /auth/heartbeat for the intranet's heartbeat script.
-  await retryAsync(() => createHeartbeat());
 
   // Sync the snapshot to S3
   await retryAsync(() => sync(paths.fs, `s3://${s3BucketName}/${paths.s3}`));

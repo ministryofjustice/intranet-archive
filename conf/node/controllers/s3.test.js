@@ -12,6 +12,7 @@ import {
   s3Options,
   checkAccess,
   createHeartbeat,
+  syncArchiveModAssets,
   sync,
   syncWithRetries,
   s3EmptyDir,
@@ -58,6 +59,30 @@ describe("createHeartbeat", () => {
     );
 
     expect(objects.Contents.length).toBe(1);
+  });
+});
+
+describe("syncArchiveModAssets", () => {
+  let client;
+
+  beforeAll(async () => {
+    client = new S3Client(s3Options);
+
+    // Empty the assets folder
+    await s3EmptyDir("assets");
+  });
+
+  it("should copy the archive assets", async () => {
+    await syncArchiveModAssets();
+
+    const objects = await client.send(
+      new ListObjectsV2Command({
+        Bucket: s3BucketName,
+        Prefix: "assets",
+      }),
+    );
+
+    expect(objects.Contents.length).toBe(2);
   });
 });
 
@@ -453,15 +478,14 @@ describe("getSnapshotsFromS3", () => {
   });
 });
 
-describe.only("syncErrorPages", () => {
-
+describe("syncErrorPages", () => {
   let client;
 
   beforeAll(async () => {
     client = new S3Client(s3Options);
     await s3EmptyDir("error_pages");
   });
-  
+
   afterAll(async () => {
     await s3EmptyDir("error_pages");
     client.destroy();

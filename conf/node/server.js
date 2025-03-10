@@ -34,6 +34,8 @@ import { getAllMetrics, getMetricsString } from "./controllers/metrics.js";
 import { getAgencyPath } from "./controllers/paths.js";
 import {
   checkAccess as checkS3Access,
+  createHeartbeat,
+  syncArchiveModAssets,
   syncErrorPages,
 } from "./controllers/s3.js";
 import { scheduleFunction } from "./controllers/schedule.js";
@@ -169,7 +171,11 @@ app.post("/spider", function (req, res) {
 
 app.post("/regenerate-indexes", async function (req, res) {
   // Run the generate function - without awaiting for the result.
-  await generateAndWriteIndexesToS3(undefined, req.mirror.env, req.mirror.agency);
+  await generateAndWriteIndexesToS3(
+    undefined,
+    req.mirror.env,
+    req.mirror.agency,
+  );
   // Log the status
   console.log("Regenerated indexes for", req.mirror.env, req.mirror.agency);
   // Handle the response
@@ -269,4 +275,11 @@ scheduleFunction({ min: 45, hour: 1 }, deleteOldSnapshots);
  * Other Function(s)
  */
 
+// Sync error pages to S3.
 syncErrorPages();
+
+// Sync archive assets - a CSS file and JS file that will be loaded on every page.
+syncArchiveModAssets();
+
+// Add a file at /auth/heartbeat for the intranet's heartbeat script.
+createHeartbeat();

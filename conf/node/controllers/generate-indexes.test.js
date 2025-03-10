@@ -12,12 +12,15 @@ import {
   generateAgencyIndex,
   generateAndWriteIndexesToS3,
 } from "./generate-indexes.js";
-import { s3Options } from "./s3.js";
+import { s3Options, s3EmptyDir } from "./s3.js";
 
 let client;
 
 beforeAll(async () => {
   client = new S3Client(s3Options);
+
+  // Empty the bucket
+  await s3EmptyDir("");
 
   // Make a folder on s3 for the test
   await client.send(
@@ -45,30 +48,11 @@ beforeAll(async () => {
   );
 });
 
-afterAll(() => {
-  // Remove the test folder
-  client.send(
-    new DeleteObjectCommand({
-      Bucket: s3BucketName,
-      Key: "laa/",
-    }),
-  );
+afterAll(async () => {
+  // Empty the bucket
+  await s3EmptyDir("");
 
-  client.send(
-    new DeleteObjectCommand({
-      Bucket: s3BucketName,
-      Key: "dev-hmcts/",
-    }),
-  );
-
-  client.send(
-    new DeleteObjectCommand({
-      Bucket: s3BucketName,
-      Key: "dev-hq/",
-    }),
-  );
-
-  client.destroy();
+  await client.destroy();
 });
 
 describe("generateRootIndex", () => {

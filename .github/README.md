@@ -452,6 +452,17 @@ This link to the root of the cdn domain will show the index page, and allow the 
 sed -i 's|href="https://intranet.justice.gov.uk/agency-switcher/"|href="/"|g' $0
 ```
 
+**3) The HTTrack global CSS and JS solution**
+
+In an effort to be future proof, this repository contains a global CSS and JS file that is pushed to S3 on every deployment.
+
+And, there is a httrack command that will inject these files into every page that is downloaded.
+
+This way, if we need to add a banner to all snapshots at a later date, we can do so by updating these CSS and JS files.
+
+- The CSS file is located at [static/assets/archive-mod.css](./conf/node/static/assets/archive-mod.css).
+- The JS file is located at [static/assets/archive-mod.js](./conf/node/static/assets/archive-mod.js).
+
 ## Cloud Platform
 
 In an aim to towards good security practices, when this application is deployed to the Cloud Platform, the `/access` is the only route that is open publicly.
