@@ -56,7 +56,7 @@ spec:
         # - - - - - - - - - - - - - - -
         alert: CloudFrontAbsentAccessPolicy
         # The metric is absent AND it's after 6am and it's before 10pm UK time - this accounts for the non-production environment's scheduled down time.
-        expr: absent(cdn_forbidden{namespace="intranet-archive-dev"}) AND ON() (6 <= hour() < 22)
+        expr: absent(cdn_forbidden{namespace="intranet-archive-staging"}) AND ON() (6 <= hour() < 22)
         for: 20m
         labels:
           severity: intranet-archive
