@@ -54,7 +54,7 @@ spec:
         # - insufficient access policy
         # - - - - - - - - - - - - - - -
         alert: CloudFrontAbsentAccessPolicy
-        expr: absent(cdn_forbidden{namespace="intranet-archive-dev"})
+        expr: absent(cdn_forbidden{namespace="intranet-archive-production"})
         for: 20m
         labels:
           severity: intranet-archive
