@@ -4,6 +4,10 @@ metadata:
   name: intranet-archive-dev-config
   namespace: intranet-archive-dev
 data:
-  ALLOWED_AGENCIES: "hq,hmcts"
-  SNAPSHOT_SCHEDULE_00: "dev::hmcts::Thu::17:30::3"
-  SNAPSHOT_SCHEDULE_01: "dev::hq::Mon::17:30::3"
+  ALLOWED_AGENCIES: >-
+    hq,
+    hmcts
+  SNAPSHOT_SCHEDULE_00: >-
+    dev::hmcts::Thu::17:30::3
+  SNAPSHOT_SCHEDULE_01: >-
+    dev::hq::Mon::17:30::3

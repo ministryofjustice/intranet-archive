@@ -13,6 +13,7 @@ export const parseScheduleString = (scheduleString) => {
   const scheduleArray = scheduleString?.split(",") ?? [];
 
   return scheduleArray
+    .map((schedule) => schedule.trim())
     .filter((schedule) => schedule?.length)
     .map((schedule) => {
       const [env, agency, dayOfWeek, timeString, optionalDepth] =
