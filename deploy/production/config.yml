@@ -10,6 +10,7 @@ data:
     hq,
     jac,
     judicial-office,
+    laa,
     law-commission,
     opg,
     ospt
@@ -23,3 +24,6 @@ data:
     production::jac::Wed::16:45,
     production::judicial-office::Fri::16:45,
     production::law-commission::Sat::16:45
+  SNAPSHOT_SCHEDULE_02: >-
+    production::laa::Wed::16:45
+

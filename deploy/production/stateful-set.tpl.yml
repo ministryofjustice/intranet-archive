@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: ${KUBE_NAMESPACE}
 spec:
-  replicas: 2
+  replicas: 3
   revisionHistoryLimit: 5
   updateStrategy:
     type: RollingUpdate
