@@ -37,6 +37,31 @@ describe("parseScheduleString", () => {
     ]);
   });
 
+  it("should handle spaces in the schedule string", () => {
+    const scheduleString =
+      "dev::hq::Mon::17:30::1, production::hmcts::Tue::17:30";
+
+    const result = parseScheduleString(scheduleString);
+
+    expect(result).toEqual([
+      {
+        env: "dev",
+        agency: "hq",
+        dayIndexes: [1],
+        hour: 17,
+        min: 30,
+        depth: 1,
+      },
+      {
+        env: "production",
+        agency: "hmcts",
+        dayIndexes: [2],
+        hour: 17,
+        min: 30,
+      },
+    ]);
+  });
+
   it("should throw an error for an invalid environment", () => {
     const scheduleString = "preprod::hq::Mon::17:30";
 

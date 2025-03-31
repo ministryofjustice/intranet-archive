@@ -79,7 +79,9 @@ export const allowedTargetHosts = Object.values(intranetUrls).map(
 );
 
 export const allowedTargetAgencies =
-  process.env.ALLOWED_AGENCIES?.split(",") ?? [];
+  process.env.ALLOWED_AGENCIES?.split(",")
+    ?.map((agency) => agency.trim())
+    ?.filter((agency) => agency?.length) ?? [];
 
 /**
  * Schedule
