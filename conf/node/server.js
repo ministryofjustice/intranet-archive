@@ -5,6 +5,7 @@
 
 // npm packages
 import express from "express";
+import helmet from "helmet";
 
 // Relative
 import {
@@ -43,6 +44,8 @@ import { scheduleFunction } from "./controllers/schedule.js";
 const __dirname = import.meta.dirname;
 
 const app = express();
+
+app.use(helmet());
 
 // Trust the first proxy (Cloud Platform) to report the correct IP address. Used for to rate limiting middleware.
 app.set("trust proxy", 1);
