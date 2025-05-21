@@ -216,7 +216,7 @@ describe("getHttrackProgress", () => {
 
   it("should return progress", async () => {
     // Delete the folder fontents /tmp/www.all.net
-    fs.rmSync("/tmp/www.all.net", { recursive: true });
+    fs.rmSync("/tmp/www.all.net", { recursive: true, force: true });
 
     // console.log(process.env);
     // Get some test data.
@@ -229,15 +229,25 @@ describe("getHttrackProgress", () => {
       "-r10",
     ]);
 
-    // await promise;
-
-    // Wait for 0.5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     /**
      * 1️⃣ Get the progress for the 1st time.
      */
-    const results1 = await getHttrackProgress("/tmp/www.all.net");
+
+    let results1;
+
+    // Wait for the process to start.
+    for (let i = 0; i < 100; i++) {
+      
+      // Get the progress
+      results1 = await getHttrackProgress("/tmp/www.all.net");
+
+      if(results1.requestCount > 0) {
+        // Exit the loop if the request count is greater than 0.
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
     expect(results1.complete).toBe(false);
     expect(results1.rate).toBeGreaterThan(0);

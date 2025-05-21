@@ -2,9 +2,8 @@ FROM node:23-alpine AS base
 
 # Set the time-zone.
 RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/Europe/London /etc/localtime && \
-    echo "Europe/London" >  /etc/timezone && \
-    apk del tzdata
+    ln -s /usr/share/zoneinfo/Europe/London /etc/localtime && \
+    echo "Europe/London" >  /etc/timezone
 
 # Install HTTrack.
 RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
