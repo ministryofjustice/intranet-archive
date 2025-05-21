@@ -235,7 +235,6 @@ describe("getHttrackProgress", () => {
 
     let results1;
 
-    // Wait for the process to start.
     for (let i = 0; i < 100; i++) {
       
       // Get the progress
