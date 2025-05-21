@@ -236,7 +236,6 @@ describe("getHttrackProgress", () => {
     let results1;
 
     for (let i = 0; i < 100; i++) {
-      
       // Get the progress
       results1 = await getHttrackProgress("/tmp/www.all.net");
 
