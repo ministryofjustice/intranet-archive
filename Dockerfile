@@ -1,4 +1,4 @@
-FROM node:23-alpine AS base
+FROM node:24-alpine AS base
 
 # Set the time-zone.
 RUN apk add --no-cache tzdata && \
