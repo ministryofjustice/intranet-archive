@@ -133,7 +133,7 @@ describe("runHttrack", () => {
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
 
-    fs.rmSync("/tmp/www.all.net", { recursive: true, force: true });
+    fs.rmSync("/tmp/www.gov.uk", { recursive: true, force: true });
     fs.rmSync("/tmp/news.ycombinator.com", { recursive: true, force: true });
   });
 
@@ -141,17 +141,18 @@ describe("runHttrack", () => {
     // Wait for httrack close message to log
     await new Promise((resolve) => setTimeout(resolve, 500));
     // Restore console.log
-    jest.restoreAllMocks();
+    // jest.restoreAllMocks();
   });
 
   it("should run httrack with arguments", async () => {
     const { listener, promise } = runHttrack([
-      "http://www.all.net/",
+      "https://www.gov.uk/",
       "-O",
-      "/tmp/www.all.net",
-      "+*.all.net/*",
+      "/tmp/www.gov.uk",
+      "+*.gov.uk/*",
       "-v",
       "-r2",
+      "--max-time=5",
     ]);
 
     // listener should have a pid, it should be a number
@@ -160,7 +161,7 @@ describe("runHttrack", () => {
     const exitCode = await promise;
 
     expect(exitCode).toBe(0);
-  }, 10_000);
+  }, 15_000);
 
   it("should run multiple system commands", async () => {
     // Remove src attributes (with double and single quotes).
@@ -207,6 +208,8 @@ describe("getHttrackProgress", () => {
   beforeAll(() => {
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
+
+    fs.rmSync("/tmp/www.gov.uk", { recursive: true, force: true });
   });
 
   afterAll(() => {
@@ -215,18 +218,15 @@ describe("getHttrackProgress", () => {
   });
 
   it("should return progress", async () => {
-    // Delete the folder fontents /tmp/www.all.net
-    fs.rmSync("/tmp/www.all.net", { recursive: true, force: true });
-
-    // console.log(process.env);
     // Get some test data.
     const { listener, promise } = runHttrack([
-      "http://www.all.net/",
+      "https://www.gov.uk/",
       "-O",
-      "/tmp/www.all.net",
-      "+*.all.net/*",
+      "/tmp/www.gov.uk",
+      "+*.gov.uk/*",
       "-v",
       "-r10",
+      "--max-time=10",
     ]);
 
     /**
@@ -237,7 +237,7 @@ describe("getHttrackProgress", () => {
 
     for (let i = 0; i < 100; i++) {
       // Get the progress
-      results1 = await getHttrackProgress("/tmp/www.all.net");
+      results1 = await getHttrackProgress("/tmp/www.gov.uk");
 
       if(results1.requestCount > 0) {
         // Exit the loop if the request count is greater than 0.
@@ -257,7 +257,7 @@ describe("getHttrackProgress", () => {
 
     await promise;
 
-    const results2 = await getHttrackProgress("/tmp/www.all.net");
+    const results2 = await getHttrackProgress("/tmp/www.gov.uk");
 
     expect(results2.complete).toBe(true);
     expect(results2.rate).toBeGreaterThan(0);
@@ -269,7 +269,7 @@ describe("getHttrackProgress", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const results3 = await getHttrackProgress("/tmp/www.all.net");
+    const results3 = await getHttrackProgress("/tmp/www.gov.uk");
 
     expect(results3.rate).toBe(0);
     expect(results3.complete).toBe(true);
@@ -278,8 +278,8 @@ describe("getHttrackProgress", () => {
 
 describe("waitForHttrackComplete", () => {
   beforeAll(() => {
-    // Delete the folder fontents /tmp/www.all.net
-    fs.rmSync("/tmp/www.all.net", { recursive: true });
+    // Delete the folder fontents /tmp/www.gov.uk
+    fs.rmSync("/tmp/www.gov.uk", { recursive: true });
 
     // Mock console.log so the tests are quiet.
     jest.spyOn(console, "log").mockImplementation(() => {});
@@ -292,15 +292,16 @@ describe("waitForHttrackComplete", () => {
 
   it("should resolve when httrack is complete", async () => {
     const { promise } = runHttrack([
-      "http://www.all.net/",
+      "https://www.gov.uk/",
       "-O",
-      "/tmp/www.all.net",
-      "+*.all.net/*",
+      "/tmp/www.gov.uk",
+      "+*.gov.uk/*",
       "-v",
       "-r1",
+      "--max-time=5",
     ]);
 
-    const httrackComplete = await waitForHttrackComplete("/tmp/www.all.net");
+    const httrackComplete = await waitForHttrackComplete("/tmp/www.gov.uk");
 
     expect(httrackComplete).toStrictEqual({ timedOut: false });
 
@@ -311,15 +312,16 @@ describe("waitForHttrackComplete", () => {
 
   it("should resolve when timeout is reached", async () => {
     const { promise } = runHttrack([
-      "http://www.all.net/",
+      "https://www.gov.uk/",
       "-O",
-      "/tmp/www.all.net",
-      "+*.all.net/*",
+      "/tmp/www.gov.uk",
+      "+*.gov.uk/*",
       "-v",
       "-r5",
+      "--max-time=5",
     ]);
 
-    const httrackComplete = await waitForHttrackComplete("/tmp/www.all.net", 2);
+    const httrackComplete = await waitForHttrackComplete("/tmp/www.gov.uk", 2);
 
     expect(httrackComplete).toStrictEqual({ timedOut: true });
 
