@@ -86,12 +86,15 @@ spec:
           message: Namespace {{ $labels.namespace }} - the intranet ({{ $labels.env }}) returned a non-200 status code. 
           dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/xywyqxz07sxkwg/cdpt-intranet-archive?var-namespace=intranet-archive-dev
           runbook_url: https://dsdmoj.atlassian.net/wiki/spaces/CDPT/pages/5124292758/Alerts+runbooks#IntranetFailedHttpAccess
-      - # - - - - - - - - - - - - - - -
+      - # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         # Application 
-        # - weekly snapshots failed
-        # - - - - - - - - - - - - - - -
+        # - 4 x weekly snapshots failed
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # This alert has been temporarily modified to 4 fails, since:
+        # - missed snapshots on dev are not critical
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         alert: SnapshotScheduleFailed
-        expr: min by(agency, env, namespace) (most_recent_snapshot_age{namespace="intranet-archive-dev"}) > 14
+        expr: min by(agency, env, namespace) (most_recent_snapshot_age{namespace="intranet-archive-dev"}) > 30
         for: 10m
         labels:
           severity: intranet-archive
