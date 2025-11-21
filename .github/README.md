@@ -92,6 +92,11 @@ And, multiple values should be comma separated.
 
 e.g. `dev::hq::Mon::17:30,dev::hmcts::Thu::17:30::3`
 
+> [!NOTE]
+> Since the archiver has been in operation, it has been observed that approximately 5% of snapshots fail due to an undetermined error.
+> For now, this failure rate is considered acceptable, but if it becomes problematic, we may need to implement a retry mechanism in the future.
+> If a given agency's snapshot fails, it will be retried at the next scheduled time for that agency. Two consecutive failures is will trigger an alert.
+
 ## Manually creating a snapshot
 
 Snapshot scheduling should cover the project's use-case; manually creating a snapshot is limited to developers for debugging.
