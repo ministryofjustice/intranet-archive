@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`generateAgencyIndex should return the snapshots as a string 1`] = `
 "<!doctype html><html lang="en">
