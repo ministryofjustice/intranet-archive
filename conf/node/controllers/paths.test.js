@@ -22,13 +22,13 @@ describe("getEnvironmentIndexPath", () => {
   it("should throw an error - invalid env", () => {
     const env = "invalid";
 
-    expect(() => getEnvironmentIndex(env)).toThrowError(
+    expect(() => getEnvironmentIndex(env)).toThrow(
       `Invalid environment: ${env}`,
     );
   });
 
   it("should throw an error - missing env", () => {
-    expect(() => getEnvironmentIndex()).toThrowError(
+    expect(() => getEnvironmentIndex()).toThrow(
       "Invalid environment: undefined",
     );
   });
@@ -57,7 +57,7 @@ describe("getAgencyPath", () => {
     const env = "invalid";
     const agency = "hq";
 
-    expect(() => getAgencyPath(env, agency)).toThrowError(
+    expect(() => getAgencyPath(env, agency)).toThrow(
       `Invalid environment: ${env}`,
     );
   });
@@ -66,7 +66,7 @@ describe("getAgencyPath", () => {
     const env = "production";
     const agency = "invalid";
 
-    expect(() => getAgencyPath(env, agency)).toThrowError(
+    expect(() => getAgencyPath(env, agency)).toThrow(
       `Invalid agency: ${agency}`,
     );
   });
@@ -103,7 +103,7 @@ describe("getSnapshotPaths", () => {
     const env = "invalid";
     const agency = "hq";
 
-    expect(() => getSnapshotPaths({ env, agency })).toThrowError(
+    expect(() => getSnapshotPaths({ env, agency })).toThrow(
       `Invalid environment: ${env}`,
     );
   });
