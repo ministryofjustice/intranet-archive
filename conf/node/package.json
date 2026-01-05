@@ -20,9 +20,9 @@
   },
   "homepage": "https://github.com/ministryofjustice/intranet-archive#readme",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.940.0",
+    "@aws-sdk/client-s3": "^3.943.0",
     "@aws-sdk/cloudfront-signer": "^3.946.0",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "helmet": "^8.1.0",
     "mime-types": "^3.0.2",
     "s3-sync-client": "^4.3.1"
