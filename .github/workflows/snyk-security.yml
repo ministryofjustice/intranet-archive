@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Snyk CLI to check for security issues
-        uses: snyk/actions/setup9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
+        uses: snyk/actions/setup@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
 
         # Runs Snyk Code (SAST) analysis and uploads results into GitHub.
       - name: Code (SAST) test
@@ -40,7 +40,7 @@ jobs:
         run: snyk iac test --report || true
 
       - name: Node test
-        uses: snyk/actions/node9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
+        uses: snyk/actions/node@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
         with:
           command: test conf/node
         continue-on-error: true
