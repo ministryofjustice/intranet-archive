@@ -59,6 +59,46 @@ describe("httrackCommands", () => {
     expect(fileContents).toContain('<script type="text/javascript" src="/assets/archive-mod.js"></script>');
   });
 
+  it("should handle files with spaces in the path", () => {
+    const spacedPath = "/tmp/httrack test spaces/Has Spaces.html";
+
+    fs.mkdirSync("/tmp/httrack test spaces", { recursive: true });
+    fs.writeFileSync(
+      spacedPath,
+      `
+      <html>
+        <head>
+          <title>Spaces Test</title>
+        </head>
+        <body>
+          <img src="https://example.com/image.jpg" srcset="https://example.com/image.jpg 1x, https://example.com/image.jpg 2x">
+          <a href="https://intranet.justice.gov.uk/agency-switcher/">Agency Switcher</a>
+        </body>
+      </html>
+    `,
+    );
+
+    const command = removeSrcsetCommand.replace('"$0"', `"${spacedPath}"`);
+    execSync(command);
+
+    const command2 = addAchiveModsToHead.replace('"$0"', `"${spacedPath}"`);
+    execSync(command2);
+
+    const command3 = getAgencySwitcherCommand("index.html").replace('"$0"', `"${spacedPath}"`);
+    execSync(command3);
+
+    const fileContents = fs.readFileSync(spacedPath, "utf-8");
+
+    expect(fileContents).not.toContain("srcset=");
+    expect(fileContents).toContain(
+      '<link rel="stylesheet" href="/assets/archive-mod.css">',
+    );
+    expect(fileContents).toContain('href="/index.html"');
+    expect(fileContents).not.toContain("/agency-switcher/");
+
+    fs.rmSync("/tmp/httrack test spaces", { recursive: true, force: true });
+  });
+
   // The test cases in the format [env, index]
   const cases = [
     ["dev", "dev.html"],
