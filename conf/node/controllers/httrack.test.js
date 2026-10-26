@@ -239,6 +239,90 @@ describe("runHttrack", () => {
   }, 10_000);
 });
 
+describe("getHttrackArgs -V hook", () => {
+  const dest = "/tmp/httrack-v-hook";
+  const host = "127.0.0.1_4001";
+  let server;
+
+  beforeAll(() => {
+    // Mock console.log so the tests are quiet.
+    jest.spyOn(console, "log").mockImplementation(() => {});
+
+    fs.rmSync(dest, { recursive: true, force: true });
+
+    const html = `
+      <html>
+        <head>
+          <title>Hook Test</title>
+          <link rel="stylesheet" href="/style.css">
+        </head>
+        <body>
+          <img src="/image.png" srcset="/image.png 1x, /image.png 2x">
+          <a href="https://intranet.justice.gov.uk/agency-switcher/">Agency Switcher</a>
+          <a href="/has space.html">Has Space</a>
+        </body>
+      </html>
+    `;
+
+    server = http.createServer((req, res) => {
+      if (req.url === "/style.css") {
+        res.setHeader("Content-Type", "text/css");
+        return res.end('/* srcset="should-stay" */ body { color: red; }');
+      }
+      if (req.url === "/image.png") {
+        res.setHeader("Content-Type", "image/png");
+        return res.end("png");
+      }
+      res.setHeader("Content-Type", "text/html");
+      res.end(html);
+    });
+
+    server.listen(4001);
+  });
+
+  afterAll(() => {
+    server.close();
+    fs.rmSync(dest, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  it("should rewrite html files, including paths with spaces, and leave other files untouched", async () => {
+    // Use the exact -V hook that getHttrackArgs gives to httrack.
+    const args = getHttrackArgs({
+      url: new URL("http://127.0.0.1:4001/"),
+      dest,
+      agency: "hq",
+      jwt: "test-jwt",
+      environmentIndex: "index.html",
+    });
+    const hook = args[args.indexOf("-V") + 1];
+
+    const { promise } = runHttrack([
+      "http://127.0.0.1:4001/",
+      "-O",
+      dest,
+      "-s0",
+      "-r2",
+      "-V",
+      hook,
+    ]);
+
+    expect(await promise).toBe(0);
+
+    const index = fs.readFileSync(`${dest}/${host}/index.html`, "utf-8");
+    expect(index).not.toContain("srcset=");
+    expect(index).toContain('<link rel="stylesheet" href="/assets/archive-mod.css">');
+    expect(index).toContain('href="/index.html"');
+
+    const spaced = fs.readFileSync(`${dest}/${host}/has space.html`, "utf-8");
+    expect(spaced).not.toContain("srcset=");
+    expect(spaced).toContain('<link rel="stylesheet" href="/assets/archive-mod.css">');
+
+    const css = fs.readFileSync(`${dest}/${host}/style.css`, "utf-8");
+    expect(css).toContain('srcset="should-stay"');
+  }, 15_000);
+});
+
 describe("getHttrackProgress", () => {
   if (skipLongTests) {
     it.skip("should return progress", async () => {});

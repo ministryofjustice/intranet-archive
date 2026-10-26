@@ -96,7 +96,9 @@ export const getHttrackArgs = ({
   const settings = [
     "-s0", // never follow robots.txt and meta robots tags: https://www.mankier.com/1/httrack#-sN
     "-V", // execute system command after each file: https://www.mankier.com/1/httrack#-V
-    `"case \\"$0\\" in *.html|*.htm) ${removeSrcsetCommand} && ${addAchiveModsToHead} && ${getAgencySwitcherCommand(environmentIndex)};; esac"`,
+    // No shell runs between spawn() and httrack, so use plain quotes: httrack strips the outer
+    // quotes but keeps backslashes, so `\"` would reach sh as literal quote characters.
+    `"case "$0" in *.html|*.htm) ${removeSrcsetCommand} && ${addAchiveModsToHead} && ${getAgencySwitcherCommand(environmentIndex)};; esac"`,
 
     "-%k", // keep-alive if possible https://www.mankier.com/1/httrack#-%25k
     "-F",
