@@ -230,11 +230,12 @@ export const getHttrackProgress = async (dest) => {
    * 09:27:58  258/-1  ---M--  200     added ('OK') ...
    * 09:27:58  258/-1  ---M--  200     added ('OK') ...
    *
+   * The columns are tab separated, so split on any whitespace to get just the time.
    * Filter out the lines that are not from the last 5 seconds.
    */
 
   const recentRequests = lastLines.split("\n").filter((line) => {
-    const time = line.split(" ")[0];
+    const time = line.split(/\s/)[0];
     return time > fiveSecondsAgo;
   });
 

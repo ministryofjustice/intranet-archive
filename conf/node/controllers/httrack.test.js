@@ -316,6 +316,40 @@ describe("getHttrackProgress", () => {
   }, 20_000);
 });
 
+describe("getHttrackProgress rate", () => {
+  const dest = "/tmp/httrack-progress-rate";
+
+  beforeAll(() => {
+    fs.mkdirSync(`${dest}/hts-cache`, { recursive: true });
+    // new.txt columns are tab separated.
+    fs.writeFileSync(
+      `${dest}/hts-cache/new.txt`,
+      [
+        "date\tsize'/'remotesize\tflags\tstatuscode",
+        "12:00:04\t617/617\t---M-Z\t200",
+        "12:00:05\t617/617\t---M-Z\t200",
+        "12:00:06\t617/617\t---M-Z\t200",
+        "12:00:09\t617/617\t---M-Z\t200",
+        "",
+      ].join("\n"),
+    );
+    jest.useFakeTimers({ now: new Date(2026, 0, 1, 12, 0, 10) });
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+    fs.rmSync(dest, { recursive: true, force: true });
+  });
+
+  it("should only count requests after the 5 second cutoff", async () => {
+    const results = await getHttrackProgress(dest);
+
+    expect(results.requestCount).toBe(4);
+    // Only 12:00:06 and 12:00:09 are after 12:00:05.
+    expect(results.rate).toBe(2 / 5);
+  });
+});
+
 describe("waitForHttrackComplete", () => {
   beforeAll(() => {
     // Delete the folder fontents /tmp/www.gov.uk
