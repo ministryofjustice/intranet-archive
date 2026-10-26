@@ -237,6 +237,12 @@ export const errorHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Compressed request bodies are rejected by the body parser (inflate: false).
+  if (err.status === 415) {
+    res.status(415).send("Unsupported content encoding.");
+    return;
+  }
+
   // For everything else, return a 500 error
   res.status(500).sendFile("static/error-pages/500.html", { root: __dirname });
 };

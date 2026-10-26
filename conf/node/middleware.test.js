@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { jest } from "@jest/globals";
 
 import { rateLimitConfig, sharedSecret } from "./constants.js";
-import { rateLimiter, checkSignature } from "./middleware.js";
+import { rateLimiter, checkSignature, errorHandler } from "./middleware.js";
 
 describe("rateLimiter middleware", () => {
   let req, res, next;
@@ -177,5 +177,43 @@ describe("checkSignature middleware", () => {
     checkSignature(req, res, next);
     expect(next).toHaveBeenCalled();
     expect(req.isValid).toBe(true);
+  });
+});
+
+describe("errorHandler middleware", () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn().mockReturnThis(),
+      sendFile: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("should respond 415 if the body encoding is unsupported", () => {
+    const err = Object.assign(new Error("unsupported content encoding \"br\""), {
+      status: 415,
+      type: "encoding.unsupported",
+    });
+    errorHandler(err, req, res, next);
+    expect(res.status).toHaveBeenCalledWith(415);
+    expect(res.send).toHaveBeenCalledWith("Unsupported content encoding.");
+  });
+
+  it("should respond 500 for unknown errors", () => {
+    errorHandler(new Error("Unknown"), req, res, next);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.sendFile).toHaveBeenCalledWith(
+      "static/error-pages/500.html",
+      expect.any(Object),
+    );
   });
 });

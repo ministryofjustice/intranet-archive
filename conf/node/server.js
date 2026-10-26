@@ -62,11 +62,15 @@ const cache = {
  * Middleware
  */
 
-// Middleware to parse incoming POST requests
-app.use(express.urlencoded({ extended: true }));
+// Rate limit first, so requests rejected by the body parser are still counted.
+app.use(rateLimiter);
+
+// Middleware to parse incoming POST requests.
+// Compressed bodies are rejected, so untrusted input never reaches the zlib/brotli decoders.
+app.use(express.urlencoded({ extended: true, inflate: false }));
 
 // Middleware to parse the url and agency
-app.use(rateLimiter, parseBody, checkSignature);
+app.use(parseBody, checkSignature);
 
 /**
  * Routes
