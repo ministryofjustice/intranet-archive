@@ -31,8 +31,12 @@ services:
       - "intranet.docker:host-gateway"
       - "cdn.intranet.docker:host-gateway"
 
+  # MinIO's images were removed from Docker Hub (Sep 2026), so use Chainguard's build.
+  # The -dev variant includes sh, bash and mc, which the healthcheck and minio-init need.
+  # Run as root (like the old image) so existing root-owned minio_storage volumes stay writable.
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest-dev@sha256:07c9af246c5900123b442508b7831afe389e93fb133a53d19e04816a1367701d
+    user: root
     container_name: intranet-archive-minio
     ports:
       - "9010:9010"
@@ -55,7 +59,7 @@ services:
       retries: 2
 
   minio-init:
-    image: minio/mc
+    image: cgr.dev/chainguard/minio:latest-dev@sha256:07c9af246c5900123b442508b7831afe389e93fb133a53d19e04816a1367701d
     container_name: intranet-archive-minio-init
     depends_on:
       minio:
