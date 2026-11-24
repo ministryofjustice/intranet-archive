@@ -101,12 +101,23 @@ e.g. `dev::hq::Mon::17:30,dev::hmcts::Thu::17:30::3`
 
 Snapshot scheduling should cover the project's use-case; manually creating a snapshot is limited to developers for debugging.
 
-As such, it's required to `port-forward` to the running service, and make a POST request to the `/spider` endpoint.
+The `/spider` endpoint is not exposed publicly, so the POST request must be made from inside the cluster.
+
+The simplest approach is to `exec` into a running pod and make the request with `wget`.
+
+> [!NOTE]
+> `curl` is not available in the running pods/containers. Use `wget` (provided by BusyBox in the Alpine image) instead.
 
 ```bash
-# example POST request
-curl -X POST http://localhost:2000/spider -d "agency=hq&env=dev&depth=2"
+# example POST request, made from inside a pod
+kubectl -n intranet-archive-production exec intranet-archive-production-0 -- \
+  wget -qO- --post-data "agency=hq&env=production" http://localhost:2000/spider
 ```
+
+- `--post-data` makes `wget` send a POST request, with a `application/x-www-form-urlencoded` body.
+- `-qO-` prints the response (`{"status":200}`) to the terminal, instead of saving it to a file.
+- Add `&depth=<n>` to the post data to limit the depth of the snapshot, e.g. for testing.
+- The snapshot runs in the background on the pod that received the request; follow its progress with `kubectl -n intranet-archive-production logs -f intranet-archive-production-0`.
 
 See the Cloud Platform and Commands sections below.
 
@@ -473,7 +484,10 @@ This way, if we need to add a banner to all snapshots at a later date, we can do
 In an aim to towards good security practices, when this application is deployed to the Cloud Platform, the `/access` is the only route that is open publicly.
 The `/access` route allows users to be redirected to the CloudFront distribution, where they can access the snapshot.
 
-Private routes, `/status` and `/spider` are used for developer purposes only. To access these endpoints, port-forward to the service. See the command below.
+Private routes, `/status` and `/spider` are used for developer purposes only. To access these endpoints, either port-forward to the service, or `exec` into a pod and use `wget`. See the commands below.
+
+> [!NOTE]
+> `curl` is not available in the running pods/containers, use `wget` when making requests from inside a pod.
 
 It is possible to 
 [interact with running pods with help from this cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods).
@@ -533,6 +547,11 @@ kubectl -n intranet-archive-dev cp intranet-archive-dev-<pod-id>:/archiver/snaps
 
 # port-forward to a running pod
 kubectl -n intranet-archive-dev port-forward service/intranet-archive-service 2000:80
+
+# trigger a snapshot from inside a pod (curl is not available in the pods, use wget)
+# update pod-id, agency and env
+kubectl -n intranet-archive-dev exec intranet-archive-dev-<pod-id> -- \
+  wget -qO- --post-data "agency=<agency>&env=<env>" http://localhost:2000/spider
 ```
 
 **Make**

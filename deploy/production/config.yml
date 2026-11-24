@@ -17,12 +17,12 @@ data:
   SNAPSHOT_SCHEDULE_00: >-
     production::hmcts::Mon::16:45,
     production::opg::Wed::16:45,
-    production::ospt::Fri::16:45,
     production::hq::Sat::16:45
   SNAPSHOT_SCHEDULE_01: >-
     production::cica::Mon::16:45,
     production::jac::Wed::16:45,
-    production::judicial-office::Fri::16:45,
     production::law-commission::Sat::16:45
   SNAPSHOT_SCHEDULE_02: >-
-    production::laa::Wed::16:45
+    production::ospt::Mon::16:45,
+    production::laa::Wed::16:45,
+    production::judicial-office::Sat::16:45
